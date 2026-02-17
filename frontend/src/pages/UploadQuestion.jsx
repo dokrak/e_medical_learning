@@ -61,8 +61,8 @@ export default function UploadQuestion(){
     <div className="card container">
       <h3>Upload question (clinician)</h3>
       <form onSubmit={submit}>
-        <div><textarea placeholder="Question (first line = title, rest = question details)" value={question} onChange={e=>setQuestion(e.target.value)} rows={3} /></div>
-        <div style={{ marginTop: 8 }}><textarea placeholder="Detail (clinical information, findings, vital signs, etc.)" value={detail} onChange={e=>setDetail(e.target.value)} rows={4} /></div>
+        <div><input type="text" placeholder="Question title (first line = title)" value={question} onChange={e=>setQuestion(e.target.value)} style={{ width: '100%' }} /></div>
+        <div style={{ marginTop: 8 }}><textarea placeholder="Detail (clinical information, findings, vital signs, etc.)" value={detail} onChange={e=>setDetail(e.target.value)} rows={3} /></div>
         <div style={{ marginTop: 8 }}>
           <label>Difficulty (1-5):</label>
           <input type="number" min={1} max={5} value={difficulty} onChange={e=>setDifficulty(Number(e.target.value))} />
