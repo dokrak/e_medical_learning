@@ -4,6 +4,7 @@ import api from '../api'
 export default function ExamBuilder(){
   const [title, setTitle] = useState('')
   const [num, setNum] = useState(5)
+  const [passingScore, setPassingScore] = useState(50)
   const [msg, setMsg] = useState('')
   const [preview, setPreview] = useState([])
   const [specialties, setSpecialties] = useState([])
@@ -68,7 +69,7 @@ export default function ExamBuilder(){
     }
 
     try{
-      let payload = { title, specialtyId, subspecialtyId, selectionMode }
+      let payload = { title, specialtyId, subspecialtyId, selectionMode, passingScore: Number(passingScore) }
       if (!useDistribution) payload.difficultyLevel = difficultyLevel
       else {
         // normalize distribution so it sums to 100
@@ -89,6 +90,7 @@ export default function ExamBuilder(){
       setTitle('')
       setSpecialtyId('')
       setSubspecialtyId('')
+      setPassingScore(50)
       setPreview([])
       setAvailableQuestions([])
       setSelectedQuestions([])
@@ -115,6 +117,12 @@ export default function ExamBuilder(){
             <option value="">-- select subspecialty --</option>
             {(specialties.find(s=>s.id===specialtyId)?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
           </select>
+        </div>
+
+        <div style={{ marginTop: 8 }}>
+          <label>Passing Score (%) *</label>
+          <input type="number" min={0} max={100} value={passingScore} onChange={e=>setPassingScore(Number(e.target.value))} required />
+          <div className="small" style={{ marginTop: 4 }}>Students must score at least {passingScore}% to pass</div>
         </div>
         
         <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center' }}>

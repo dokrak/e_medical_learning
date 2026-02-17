@@ -176,10 +176,11 @@ app.delete('/api/questions/:id', authMiddleware, requireRole(['clinician','admin
 
 // Exams (simple generator)
 app.post('/api/exams', authMiddleware, requireRole(['admin','clinician']), (req, res) => {
-  let { title, numQuestions, specialtyId, subspecialtyId, difficultyLevel, selectionMode, selectedQuestionIds, difficultyDistribution } = req.body;
+  let { title, numQuestions, specialtyId, subspecialtyId, difficultyLevel, selectionMode, selectedQuestionIds, difficultyDistribution, passingScore } = req.body;
   // allow alternative field names
   numQuestions = numQuestions || req.body.num_questions || 10;
   selectionMode = selectionMode || 'random';
+  passingScore = passingScore !== undefined ? Number(passingScore) : 50;
 
   const allQs = readJson('questions.json').filter(q => q.status === 'approved');
 
@@ -286,6 +287,7 @@ app.post('/api/exams', authMiddleware, requireRole(['admin','clinician']), (req,
     difficultyLevel: difficultyLevel || null,
     difficultyDistribution: difficultyDistribution || null,
     selectionMode: selectionMode || 'random',
+    passingScore: passingScore,
     created_at: new Date().toISOString()
   };
   exams.push(exam);
@@ -445,11 +447,13 @@ app.post('/api/student-exams/:examId/submit', authMiddleware, (req, res) => {
     if ((a.answer || '').trim().toLowerCase() === (q.answer || '').trim().toLowerCase()) correct += 1;
   });
   const score = Math.round((correct / exam.questions.length) * 100);
+  const passingScore = exam.passingScore !== undefined ? exam.passingScore : 50;
+  const passed = score >= passingScore;
   const studentExams = readJson('student_exams.json');
-  const se = { id: uuidv4(), examId, studentId: req.user.id, answers, score, taken_at: new Date().toISOString() };
+  const se = { id: uuidv4(), examId, studentId: req.user.id, answers, score, passed, total: exam.questions.length, correct, passingScore, taken_at: new Date().toISOString() };
   studentExams.push(se);
   writeJson('student_exams.json', studentExams);
-  res.json({ score, total: exam.questions.length, correct });
+  res.json({ score, total: exam.questions.length, correct, passed, passingScore });
 });
 
 app.get('/api/student-exams', authMiddleware, (req, res) => {

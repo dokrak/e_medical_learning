@@ -43,6 +43,9 @@ export default function ExamTake(){
       {exam.specialty && <div style={{ color: '#666', marginBottom: 8 }}>{exam.specialty.name}{exam.subspecialty ? ' — ' + exam.subspecialty.name : ''}</div>}
       {exam.difficultyLevel && <div className="small" style={{ marginBottom: 6 }}>Difficulty: <strong>{exam.difficultyLevel}</strong></div>}
       {exam.selectionMode && <div className="small" style={{ marginBottom: 6 }}>Selection: <strong>{exam.selectionMode}</strong></div>}
+      <div className="small" style={{ marginBottom: 12, padding: 8, background: 'rgba(21,128,61,0.08)', borderRadius: 6, border: '1px solid rgba(21,128,61,0.2)' }}>
+        <strong>✓ Passing Score:</strong> {exam.passingScore || 50}%
+      </div>
       <form onSubmit={submit}>
         {exam.questions.map(q => (
           <div key={q.id} style={{ marginBottom: 12 }}>
@@ -77,7 +80,18 @@ export default function ExamTake(){
         <div><button className="btn btn-primary">Submit exam</button></div>
       </form>
       {msg && <div>{msg}</div>}
-      {result && <div style={{ marginTop: 12 }}><strong>Score:</strong> {result.score} ({result.correct}/{result.total})</div>}
+      {result && (
+        <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: result.passed ? 'rgba(16,185,129,0.08)' : 'rgba(220,38,38,0.08)', border: `2px solid ${result.passed ? '#10b981' : '#dc2626'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: '24px' }}>{result.passed ? '✓' : '✗'}</span>
+            <strong style={{ color: result.passed ? '#10b981' : '#dc2626', fontSize: '18px' }}>
+              {result.passed ? 'PASSED' : 'FAILED'}
+            </strong>
+          </div>
+          <div><strong>Score:</strong> {result.score}% ({result.correct}/{result.total} correct)</div>
+          <div style={{ marginTop: 6 }}>Passing score: <strong>{result.passingScore}%</strong></div>
+        </div>
+      )}
     </div>
   )
 }
