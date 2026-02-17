@@ -182,6 +182,10 @@ export default function ManageQuestionsExams(){
                     ))}
                   </div>
                 )}
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #ddd', display: 'flex', gap: 8 }}>
+                  <button className="btn btn-primary" onClick={()=>startEdit(item)} style={{ flex: 1 }}>✏ Edit & Resubmit</button>
+                  <button className="btn btn-danger" onClick={()=>deleteItem(item.id)} style={{ flex: 1 }}>Delete</button>
+                </div>
               </div>
             )}
             {editId === item.id ? (
@@ -307,10 +311,14 @@ export default function ManageQuestionsExams(){
               <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
                 {currentUser && (item.createdBy === currentUser.id || currentUser.role === 'admin') ? (
                   <>
-                    <button className="btn" onClick={()=>startEdit(item)} style={{ flex: 1, fontWeight: item.status === 'rejected' ? 600 : 'normal', background: item.status === 'rejected' ? '#ffc107' : undefined, color: item.status === 'rejected' ? '#222' : undefined }}>
-                      {item.status === 'rejected' ? '✏ Edit & Resubmit' : 'Edit'}
-                    </button>
-                    <button className="btn btn-danger" onClick={()=>deleteItem(item.id)} style={{ flex: 1 }}>Delete</button>
+                    {!(tab==='questions' && item.status === 'rejected') && (
+                      <>
+                        <button className="btn" onClick={()=>startEdit(item)} style={{ flex: 1, fontWeight: item.status === 'rejected' ? 600 : 'normal', background: item.status === 'rejected' ? '#ffc107' : undefined, color: item.status === 'rejected' ? '#222' : undefined }}>
+                          {item.status === 'rejected' ? '✏ Edit & Resubmit' : 'Edit'}
+                        </button>
+                        <button className="btn btn-danger" onClick={()=>deleteItem(item.id)} style={{ flex: 1 }}>Delete</button>
+                      </>
+                    )}
                   </>
                 ) : (
                   <div className="small" style={{ color: '#999', fontStyle: 'italic' }}>You can only edit/delete your own items</div>
