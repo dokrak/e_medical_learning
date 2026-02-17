@@ -23,7 +23,12 @@ export default function ManageQuestionsExams(){
     try{
       if (tab === 'questions'){
         const r = await api.get('/my-questions');
-        setItems(r.data);
+        const sorted = r.data.sort((a, b) => {
+          if (a.status === 'rejected' && b.status !== 'rejected') return -1;
+          if (a.status !== 'rejected' && b.status === 'rejected') return 1;
+          return 0;
+        });
+        setItems(sorted);
       } else {
         const r = await api.get('/exams');
         setItems(r.data);
@@ -146,18 +151,37 @@ export default function ManageQuestionsExams(){
       {msg && <div className={msg.includes('failed') ? 'msg error' : 'msg success'} style={{ marginBottom: 8 }}>{msg}</div>}
       <div>
         {items.map(item => (
-          <div key={item.id} className="card" style={{ padding: 12, marginBottom: 12 }}>
+          <div key={item.id} className="card" style={{ padding: 12, marginBottom: 12, borderLeft: item.status === 'rejected' ? '6px solid #dc3545' : 'none', background: item.status === 'rejected' ? '#fff8f8' : 'white' }}>
             <div>
-              <strong>{item.title}</strong> {tab==='questions' && <span className="small">(Difficulty: {item.difficulty})</span>}
-              {tab==='questions' && (
-                <span className="small" style={{ marginLeft: 8 }}>
-                  Status: <strong>{item.status || 'pending'}</strong>
-                </span>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <strong>{item.title}</strong>
+                {tab==='questions' && <span className="small">(Difficulty: {item.difficulty})</span>}
+                {tab==='questions' && item.status === 'rejected' && <span className="badge" style={{ background: '#dc3545', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>REJECTED</span>}
+                {tab==='questions' && item.status === 'pending' && <span className="badge" style={{ background: '#ffc107', color: '#333', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>PENDING</span>}
+                {tab==='questions' && item.status === 'approved' && <span className="badge" style={{ background: '#28a745', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>APPROVED</span>}
+              </div>
             </div>
             {tab==='questions' && item.status === 'rejected' && item.moderationFeedback && (
-              <div className="small" style={{ marginTop: 6, padding: 8, background: '#fff5f5', border: '1px solid #f5c2c7', borderRadius: 6 }}>
-                <strong>Moderator feedback:</strong> {item.moderationFeedback}
+              <div style={{ marginTop: 8, padding: 10, background: '#ffe6e6', border: '2px solid #dc3545', borderRadius: 6 }}>
+                <div style={{ fontWeight: 600, color: '#721c24', marginBottom: 6 }}>⚠ Moderator Feedback:</div>
+                <div className="small" style={{ color: '#721c24', lineHeight: 1.5 }}>{item.moderationFeedback}</div>
+              </div>
+            )}
+            {tab==='questions' && item.status === 'rejected' && !editId && (
+              <div style={{ marginTop: 8, padding: 10, background: '#f0f0f0', borderRadius: 6 }}>
+                <div className="small" style={{ fontWeight: 600, marginBottom: 8 }}>📋 Question Preview:</div>
+                <div className="small" style={{ marginBottom: 6 }}><strong>Stem:</strong> {item.stem || '(no stem)'}</div>
+                <div className="small" style={{ marginBottom: 6 }}><strong>Details:</strong> {item.body || '(no details)'}</div>
+                {item.choices && item.choices.length > 0 && (
+                  <div className="small" style={{ marginBottom: 6 }}>
+                    <strong>Choices:</strong>
+                    {item.choices.map((c, i) => (
+                      <div key={i} style={{ marginLeft: 12, marginTop: 2, fontSize: '12px' }}>
+                        {String.fromCharCode(65+i)}. {c} {c === item.answer && <span style={{ color: '#28a745', fontWeight: 600 }}>✓ Correct</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {editId === item.id ? (
@@ -280,11 +304,13 @@ export default function ManageQuestionsExams(){
                 <button className="btn btn-ghost" onClick={()=>setEditId(null)}>Cancel</button>
               </div>
             ) : (
-              <div style={{ marginTop: 8 }}>
+              <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
                 {currentUser && (item.createdBy === currentUser.id || currentUser.role === 'admin') ? (
                   <>
-                    <button className="btn" onClick={()=>startEdit(item)} style={{ marginRight: 6 }}>Edit</button>
-                    <button className="btn btn-danger" onClick={()=>deleteItem(item.id)}>Delete</button>
+                    <button className="btn" onClick={()=>startEdit(item)} style={{ flex: 1, fontWeight: item.status === 'rejected' ? 600 : 'normal', background: item.status === 'rejected' ? '#ffc107' : undefined, color: item.status === 'rejected' ? '#222' : undefined }}>
+                      {item.status === 'rejected' ? '✏ Edit & Resubmit' : 'Edit'}
+                    </button>
+                    <button className="btn btn-danger" onClick={()=>deleteItem(item.id)} style={{ flex: 1 }}>Delete</button>
                   </>
                 ) : (
                   <div className="small" style={{ color: '#999', fontStyle: 'italic' }}>You can only edit/delete your own items</div>
