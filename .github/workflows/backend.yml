@@ -1,0 +1,15 @@
+name: Backend CI (placeholder)
+
+on: [push, pull_request]
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+      - name: Run PHP checks (placeholder)
+        run: echo "Add PHPUnit / static analysis steps when Laravel backend is implemented"

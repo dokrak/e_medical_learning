@@ -1,0 +1,7 @@
+node_modules/
+frontend/dist/
+backend/mock-api/node_modules/
+backend/mock-api/uploads/
+backend/mock-api/data/*.json
+.env
+.DS_Store
