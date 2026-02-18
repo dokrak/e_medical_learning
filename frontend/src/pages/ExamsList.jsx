@@ -45,21 +45,61 @@ export default function ExamsList(){
       {msg && <div>{msg}</div>}
       {exams.map(ex => (
         <div key={ex.id} className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>
-              <strong>{ex.title}</strong>
-              <div style={{ fontSize: 12 }}>{ex.created_at ? new Date(ex.created_at).toLocaleString() : ''}</div>
-              {ex.specialty && <div style={{ fontSize: 12, color: '#666' }}>{ex.specialty.name}{ex.subspecialty ? ' — ' + ex.subspecialty.name : ''}</div>}
-              {ex.difficultyLevel && <div style={{ fontSize: 12, color: 'var(--muted)' }}>Difficulty: <strong>{ex.difficultyLevel}</strong></div>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <strong style={{ fontSize: 18, color: 'var(--brand-green)' }}>{ex.title}</strong>
+              
+              {/* Exam Details */}
+              <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
+                {/* Number of Questions */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 20 }}>📝</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--brand-green)' }}>
+                    {ex.questions?.length || 0} Questions
+                  </span>
+                </div>
+                
+                {/* Specialty */}
+                {ex.specialty && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 20 }}>🏥</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: '#666' }}>
+                      {ex.specialty.name}{ex.subspecialty ? ` › ${ex.subspecialty.name}` : ''}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Difficulty Level */}
+                {ex.difficultyLevel && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 20 }}>⚡</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted)' }}>
+                      {ex.difficultyLevel.charAt(0).toUpperCase() + ex.difficultyLevel.slice(1)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Additional Details */}
+              <div style={{ marginTop: 8, fontSize: 12, color: '#999' }}>
+                {ex.created_at ? `Created: ${new Date(ex.created_at).toLocaleDateString()}` : ''}
+              </div>
+              
               {ex.difficultyDistribution && (
-                <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
                   Distribution: <strong>{Object.entries(ex.difficultyDistribution).map(([k,v])=>`${k}:${v}%`).join(' • ')}</strong>
                 </div>
               )}
-              {ex.selectionMode && <div style={{ fontSize: 12, color: 'var(--muted)' }}>Selection: <strong>{ex.selectionMode}</strong> {ex.selectedQuestionIds?.length ? ` — ${ex.selectedQuestionIds.length} chosen` : ''}</div>}
+              {(ex.totalDifficultyScore !== undefined || ex.averageDifficultyScore !== undefined) && (
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+                  Difficulty Score: <strong>Total {ex.totalDifficultyScore ?? 0}</strong> • <strong>Avg {ex.averageDifficultyScore ?? 0}</strong>
+                  {ex.computedDifficultyLevel ? ` • ${ex.computedDifficultyLevel}` : ''}
+                </div>
+              )}
+              {ex.selectionMode && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>Selection: <strong>{ex.selectionMode}</strong> {ex.selectedQuestionIds?.length ? ` — ${ex.selectedQuestionIds.length} chosen` : ''}</div>}
             </div>
             <div>
-              <button className="btn" onClick={()=>nav(`/exams/${ex.id}/take`)}>Take exam</button>
+              <button className="btn btn-primary" onClick={()=>nav(`/exams/${ex.id}/take`)}>Take Exam</button>
             </div>
           </div>
         </div>

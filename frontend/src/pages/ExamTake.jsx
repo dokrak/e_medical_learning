@@ -35,6 +35,42 @@ export default function ExamTake(){
     }catch(err){ setMsg('Submit failed') }
   }
 
+  async function downloadPDF(){
+    if (!result || !result.resultId) {
+      setMsg('PDF download not available. Please contact support.')
+      return
+    }
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setMsg('Not authenticated. Please login again.')
+        return
+      }
+      const response = await api.get(`/student-exams/${result.resultId}/pdf`, { responseType: 'blob' })
+      
+      if (!response.data || response.data.size === 0) {
+        setMsg('PDF generation failed: Empty response')
+        return
+      }
+      
+      const url = window.URL.createObjectURL(response.data)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `exam-report-${result.resultId}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      
+      setTimeout(() => {
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      }, 100)
+    } catch(err) {
+      console.error('PDF download error:', err)
+      const errMsg = err.response?.data?.error || err.message || 'Unknown error'
+      setMsg('PDF download failed: ' + errMsg)
+    }
+  }
+
   if (!exam) return <div className="card container">Loading...</div>
 
   return (
@@ -90,6 +126,9 @@ export default function ExamTake(){
           </div>
           <div><strong>Score:</strong> {result.score}% ({result.correct}/{result.total} correct)</div>
           <div style={{ marginTop: 6 }}>Passing score: <strong>{result.passingScore}%</strong></div>
+          <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary" onClick={downloadPDF} style={{ flex: 1 }}>📥 Download PDF Report</button>
+          </div>
         </div>
       )}
     </div>

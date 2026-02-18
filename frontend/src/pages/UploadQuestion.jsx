@@ -64,8 +64,25 @@ export default function UploadQuestion(){
         <div><input type="text" placeholder="Question title (first line = title)" value={question} onChange={e=>setQuestion(e.target.value)} style={{ width: '100%' }} /></div>
         <div style={{ marginTop: 8 }}><textarea placeholder="Detail (clinical information, findings, vital signs, etc.)" value={detail} onChange={e=>setDetail(e.target.value)} rows={3} /></div>
         <div style={{ marginTop: 8 }}>
-          <label>Difficulty (1-5):</label>
-          <input type="number" min={1} max={5} value={difficulty} onChange={e=>setDifficulty(Number(e.target.value))} />
+          <label><strong>Difficulty Level:</strong></label>
+          <div style={{ display: 'flex', gap: 20, marginTop: 8, flexWrap: 'wrap' }}>
+            {[1, 2, 3, 4, 5].map(level => (
+              <label key={level} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '6px 12px', borderRadius: 8, border: difficulty === level ? '2px solid var(--brand-green)' : '2px solid var(--border)', background: difficulty === level ? 'rgba(21, 128, 61, 0.08)' : 'transparent', transition: 'all 0.2s' }}>
+                <input 
+                  type="radio" 
+                  name="difficulty" 
+                  value={level} 
+                  checked={difficulty === level} 
+                  onChange={() => setDifficulty(level)}
+                  style={{ cursor: 'pointer' }}
+                />
+                <span style={{ fontWeight: difficulty === level ? 700 : 400 }}>
+                  {level === 1 ? 'Very Easy' : level === 2 ? 'Easy' : level === 3 ? 'Medium' : level === 4 ? 'Hard' : 'Very Hard'}
+                </span>
+                <span style={{ fontSize: 11, color: '#999' }}>({level})</span>
+              </label>
+            ))}
+          </div>
         </div>
         <div style={{ marginTop: 8 }}>
           <label><strong>Choices (5)</strong></label>

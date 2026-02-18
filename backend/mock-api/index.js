@@ -3,6 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const PDFDocument = require('pdfkit');
 
 const app = express();
 app.use(cors());
@@ -55,6 +56,63 @@ app.post('/api/login', (req, res) => {
 });
 
 app.get('/api/me', authMiddleware, (req, res) => res.json({ user: req.user }));
+
+// Admin User Management
+app.get('/api/admin/users', authMiddleware, requireRole(['admin']), (req, res) => {
+  const users = readJson('users.json');
+  res.json(users.map(u => ({ id: u.id, name: u.name, email: u.email, role: u.role })));
+});
+
+app.post('/api/admin/users', authMiddleware, requireRole(['admin']), (req, res) => {
+  const { name, email, password, role } = req.body;
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ error: 'name, email, password, and role are required' });
+  }
+  const users = readJson('users.json');
+  if (users.find(u => u.email === email)) {
+    return res.status(400).json({ error: 'email already exists' });
+  }
+  const newUser = {
+    id: uuidv4(),
+    name,
+    email,
+    password,
+    role,
+    token: uuidv4()
+  };
+  users.push(newUser);
+  writeJson('users.json', users);
+  res.json({ id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role });
+});
+
+app.put('/api/admin/users/:id', authMiddleware, requireRole(['admin']), (req, res) => {
+  const { name, email, password, role } = req.body;
+  const users = readJson('users.json');
+  const user = users.find(u => u.id === req.params.id);
+  if (!user) return res.status(404).json({ error: 'user not found' });
+  
+  // Check if email is being changed to an existing email
+  if (email && email !== user.email && users.find(u => u.email === email)) {
+    return res.status(400).json({ error: 'email already exists' });
+  }
+  
+  if (name) user.name = name;
+  if (email) user.email = email;
+  if (password) user.password = password;
+  if (role) user.role = role;
+  
+  writeJson('users.json', users);
+  res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
+});
+
+app.delete('/api/admin/users/:id', authMiddleware, requireRole(['admin']), (req, res) => {
+  const users = readJson('users.json');
+  const idx = users.findIndex(u => u.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'user not found' });
+  const removed = users.splice(idx, 1)[0];
+  writeJson('users.json', users);
+  res.json({ id: removed.id, message: 'user deleted' });
+});
 
 // Questions
 app.get('/api/questions', (req, res) => {
@@ -178,7 +236,7 @@ app.delete('/api/questions/:id', authMiddleware, requireRole(['clinician','admin
 app.post('/api/exams', authMiddleware, requireRole(['admin','clinician']), (req, res) => {
   let { title, numQuestions, specialtyId, subspecialtyId, difficultyLevel, selectionMode, selectedQuestionIds, difficultyDistribution, passingScore } = req.body;
   // allow alternative field names
-  numQuestions = numQuestions || req.body.num_questions || 10;
+  numQuestions = Number(numQuestions || req.body.num_questions || 10);
   selectionMode = selectionMode || 'random';
   passingScore = passingScore !== undefined ? Number(passingScore) : 50;
 
@@ -273,6 +331,25 @@ app.post('/api/exams', authMiddleware, requireRole(['admin','clinician']), (req,
     selected = shuffled.slice(0, numQuestions).map(q => q.id);
   }
 
+  selected = [...new Set(selected)].slice(0, numQuestions);
+  const selectedQuestions = selected
+    .map(id => allQs.find(q => q.id === id))
+    .filter(Boolean);
+
+  const totalDifficultyScore = selectedQuestions.reduce((sum, q) => {
+    const score = Number(q.difficulty);
+    return sum + (Number.isFinite(score) ? score : 3);
+  }, 0);
+  const averageDifficultyScore = selectedQuestions.length
+    ? Number((totalDifficultyScore / selectedQuestions.length).toFixed(2))
+    : 0;
+
+  let computedDifficultyLevel = 'medium';
+  if (averageDifficultyScore <= 2) computedDifficultyLevel = 'easy';
+  else if (averageDifficultyScore <= 3) computedDifficultyLevel = 'medium';
+  else if (averageDifficultyScore <= 4) computedDifficultyLevel = 'difficult';
+  else computedDifficultyLevel = 'extreme';
+
   const specialties = readJson('specialties.json');
   const spec = specialties.find(s => s.id === specialtyId) || null;
   const subspec = spec && spec.subspecialties ? (spec.subspecialties.find(ss => ss.id === subspecialtyId) || null) : null;
@@ -288,6 +365,9 @@ app.post('/api/exams', authMiddleware, requireRole(['admin','clinician']), (req,
     difficultyDistribution: difficultyDistribution || null,
     selectionMode: selectionMode || 'random',
     passingScore: passingScore,
+    totalDifficultyScore,
+    averageDifficultyScore,
+    computedDifficultyLevel,
     created_at: new Date().toISOString()
   };
   exams.push(exam);
@@ -453,7 +533,7 @@ app.post('/api/student-exams/:examId/submit', authMiddleware, (req, res) => {
   const se = { id: uuidv4(), examId, studentId: req.user.id, answers, score, passed, total: exam.questions.length, correct, passingScore, taken_at: new Date().toISOString() };
   studentExams.push(se);
   writeJson('student_exams.json', studentExams);
-  res.json({ score, total: exam.questions.length, correct, passed, passingScore });
+  res.json({ score, total: exam.questions.length, correct, passed, passingScore, resultId: se.id });
 });
 
 app.get('/api/student-exams', authMiddleware, (req, res) => {
@@ -537,7 +617,7 @@ app.get('/api/my-stats', authMiddleware, (req, res) => {
 
   const attempts = studentExams.map(se => {
     const exam = exams.find(e => e.id === se.examId) || {};
-    return { id: se.id, examId: se.examId, examTitle: exam.title || 'Unknown', score: se.score, taken_at: se.taken_at };
+    return { id: se.id, examId: se.examId, examTitle: exam.title || 'Unknown', score: se.score, taken_at: se.taken_at, passed: se.passed, correct: se.correct, total: se.total, passingScore: se.passingScore };
   }).sort((a,b) => new Date(a.taken_at) - new Date(b.taken_at));
 
   const scores = attempts.map(a => a.score);
@@ -572,7 +652,7 @@ app.get('/api/student-stats/:studentId', authMiddleware, (req, res) => {
 
   const attempts = studentExams.map(se => {
     const exam = exams.find(e => e.id === se.examId) || {};
-    return { id: se.id, examId: se.examId, examTitle: exam.title || 'Unknown', score: se.score, taken_at: se.taken_at };
+    return { id: se.id, examId: se.examId, examTitle: exam.title || 'Unknown', score: se.score, taken_at: se.taken_at, passed: se.passed, correct: se.correct, total: se.total, passingScore: se.passingScore };
   }).sort((a,b) => new Date(a.taken_at) - new Date(b.taken_at));
 
   const scores = attempts.map(a => a.score);
@@ -589,10 +669,105 @@ app.get('/api/student-stats/:studentId', authMiddleware, (req, res) => {
     improvement = lastAvg - firstAvg;
   }
 
-  res.json({ studentId, attempts, avgScore: avg, bestScore: best, lastScore: last, improvement });
+  // per-exam stats
+  const perExam = {};
+  attempts.forEach(a => { perExam[a.examTitle] = perExam[a.examTitle] || { total:0, sum:0 }; perExam[a.examTitle].total++; perExam[a.examTitle].sum += a.score; });
+  const perExamStats = Object.entries(perExam).map(([title, v]) => ({ title, avg: Math.round(v.sum / v.total), attempts: v.total }));
+
+  res.json({ studentId, attempts, avgScore: avg, bestScore: best, lastScore: last, improvement, perExam: perExamStats });
+});
+
+// PDF Report generation
+app.get('/api/student-exams/:resultId/pdf', authMiddleware, (req, res) => {
+  try {
+    const resultId = req.params.resultId;
+    const studentExams = readJson('student_exams.json');
+    const se = studentExams.find(e => e.id === resultId);
+    if (!se) return res.status(404).json({ error: 'exam result not found' });
+    if (se.studentId !== req.user.id && req.user.role !== 'admin') return res.status(403).json({ error: 'not your exam' });
+
+    const exams = readJson('exams.json');
+    const exam = exams.find(e => e.id === se.examId);
+    const users = readJson('users.json');
+    const student = users.find(u => u.id === se.studentId);
+    const questions = readJson('questions.json');
+
+    const doc = new PDFDocument({ margin: 40 });
+    
+    // Set headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="exam-report-${se.id}.pdf"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    doc.pipe(res);
+
+    // Title
+    doc.fontSize(20).font('Helvetica-Bold').text('Medical Learning Exam Report', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(10).font('Helvetica').text(`Generated: ${new Date().toLocaleString()}`, { align: 'center' });
+    doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke();
+    doc.moveDown();
+
+    // Student Info
+    doc.fontSize(12).font('Helvetica-Bold').text('Student Information');
+    doc.fontSize(10).font('Helvetica');
+    doc.text(`Name: ${student?.name || 'Unknown'}`);
+    doc.text(`Email: ${student?.email || 'N/A'}`);
+    doc.text(`ID: ${se.studentId}`);
+    doc.moveDown();
+
+    // Exam Info
+    doc.fontSize(12).font('Helvetica-Bold').text('Exam Details');
+    doc.fontSize(10).font('Helvetica');
+    doc.text(`Exam: ${exam?.title || 'Unknown'}`);
+    doc.text(`Date Taken: ${new Date(se.taken_at).toLocaleString()}`);
+    doc.text(`Specialty: ${exam?.specialty?.name || 'N/A'}`);
+    if (exam?.subspecialty?.name) doc.text(`Subspecialty: ${exam.subspecialty.name}`);
+    doc.moveDown();
+
+    // Results
+    const passed = se.passed !== undefined ? se.passed : (se.score >= (se.passingScore || 50));
+    doc.fontSize(12).font('Helvetica-Bold').text('Exam Results');
+    doc.fontSize(10).font('Helvetica');
+    doc.text(`Score: ${se.score}%`, { underline: true });
+    doc.text(`Correct Answers: ${se.correct}/${se.total || exam?.questions?.length || 'N/A'}`);
+    doc.text(`Passing Score Required: ${se.passingScore || exam?.passingScore || 50}%`);
+    doc.fontSize(14).font('Helvetica-Bold');
+    const statusColor = passed ? [21, 128, 61] : [220, 38, 38]; // green or red
+    doc.fillColor(...statusColor).text(passed ? '✓ PASSED' : '✗ FAILED');
+    doc.fillColor('black');
+    doc.moveDown();
+
+    // Question Breakdown (if available)
+    if (se.answers && se.answers.length > 0) {
+      doc.fontSize(12).font('Helvetica-Bold').text('Question Breakdown');
+      doc.fontSize(9).font('Helvetica');
+      se.answers.slice(0, 10).forEach((ans, i) => {
+        const q = questions.find(x => x.id === ans.questionId);
+        const correct = q && (ans.answer || '').trim().toLowerCase() === (q.answer || '').trim().toLowerCase();
+        doc.text(`${i + 1}. ${q?.title || 'Unknown'}`);
+        doc.text(`   Your answer: ${ans.answer || '(none)'}`, { color: correct ? '#16a34a' : '#dc2626' });
+        if (!correct) doc.text(`   Correct answer: ${q?.answer || 'N/A'}`, { color: '#16a34a' });
+        doc.moveDown(0.3);
+      });
+      if (se.answers.length > 10) {
+        doc.text(`... and ${se.answers.length - 10} more questions`);
+      }
+    }
+
+    doc.moveDown();
+    doc.fontSize(9).font('Helvetica').fillColor('#666').text('This is an official exam report. For questions, contact your institution.', { align: 'center' });
+
+    doc.end();
+  } catch(err) {
+    console.error('PDF generation error:', err);
+    res.status(500).json({ error: 'Failed to generate PDF: ' + err.message });
+  }
 });
 
 app.get('/', (req, res) => res.send('med-km mock API is running'));
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Mock API listening on ${PORT}`));
