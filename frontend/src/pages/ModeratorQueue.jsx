@@ -105,6 +105,13 @@ export default function ModeratorQueue(){
                   ))}
                 </div>
 
+                {q.answerExplanation && (
+                  <div style={{ marginTop: 8, padding: 8, backgroundColor: '#f0f9ff', borderRadius: 4, border: '1px solid #bae6fd' }}>
+                    <div className="small" style={{ fontWeight: 600, marginBottom: 4 }}>Answer Explanation:</div>
+                    <div className="small">{q.answerExplanation}</div>
+                  </div>
+                )}
+
                 {q.specialtyId && (
                   <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
                     📌 Specialty: {specialtyName} {subspecialtyName ? ` → ${subspecialtyName}` : ''}

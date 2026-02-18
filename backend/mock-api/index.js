@@ -127,13 +127,14 @@ app.get('/api/questions', (req, res) => {
 });
 
 app.post('/api/questions', authMiddleware, requireRole(['clinician','admin']), (req, res) => {
-  const { title, stem, body, difficulty, answer, references, images, choices, specialtyId, subspecialtyId } = req.body;
+  const { title, stem, body, answerExplanation, difficulty, answer, references, images, choices, specialtyId, subspecialtyId } = req.body;
   const qs = readJson('questions.json');
   const q = {
     id: uuidv4(),
     title: title || '(no title)',
     stem: stem || '',
     body: body || '',
+    answerExplanation: answerExplanation || '',
     difficulty: difficulty || 3,
     answer: answer || '',
     choices: Array.isArray(choices) ? choices.slice(0,5) : [],
@@ -191,7 +192,7 @@ app.post('/api/questions/:id/reject', authMiddleware, requireRole(['admin','mode
 
 app.put('/api/questions/:id', authMiddleware, requireRole(['clinician','admin']), (req, res) => {
   const id = req.params.id;
-  const { title, stem, body, difficulty, answer, references, images, choices, specialtyId, subspecialtyId } = req.body;
+  const { title, stem, body, answerExplanation, difficulty, answer, references, images, choices, specialtyId, subspecialtyId } = req.body;
   const qs = readJson('questions.json');
   const q = qs.find(x => x.id === id);
   if (!q) return res.status(404).json({ error: 'not found' });
@@ -199,6 +200,7 @@ app.put('/api/questions/:id', authMiddleware, requireRole(['clinician','admin'])
   q.title = title !== undefined ? title : q.title;
   q.stem = stem !== undefined ? stem : q.stem;
   q.body = body !== undefined ? body : q.body;
+  q.answerExplanation = answerExplanation !== undefined ? answerExplanation : q.answerExplanation;
   q.difficulty = difficulty !== undefined ? difficulty : q.difficulty;
   q.answer = answer !== undefined ? answer : q.answer;
   q.references = references !== undefined ? references : q.references;

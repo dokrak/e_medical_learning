@@ -57,7 +57,9 @@ export default function ExamBuilder(){
 
   function toggleSelect(qid){
     setSelectedQuestions(prev => {
-      if (prev.includes(qid)) return prev.filter(x=>x!==qid)
+      const key = String(qid)
+      const hasItem = prev.some(x => String(x) === key)
+      if (hasItem) return prev.filter(x => String(x) !== key)
       if (prev.length >= num) {
         setMsg(`You can select up to ${num} questions.`)
         return prev
@@ -227,7 +229,12 @@ export default function ExamBuilder(){
                 </div>
               )}
               {availableQuestions.length === 0 && <div className="small">No questions loaded. Click "Load questions".</div>}
-              {availableQuestions.map((q, index) => (
+              {[...availableQuestions]
+                .sort((a, b) => Number(selectedQuestions.some(x => String(x) === String(b.id))) - Number(selectedQuestions.some(x => String(x) === String(a.id))))
+                .map((q, index) => (
+                (() => {
+                  const isSelected = selectedQuestions.some(x => String(x) === String(q.id))
+                  return (
                 <div
                   key={q.id}
                   onClick={() => toggleSelect(q.id)}
@@ -237,25 +244,30 @@ export default function ExamBuilder(){
                     gap: 8,
                     padding: 8,
                     borderBottom: '1px solid var(--border)',
+                    borderLeft: isSelected ? '6px solid var(--brand-green)' : '4px solid transparent',
+                    background: isSelected ? 'linear-gradient(90deg, var(--brand-light-green), var(--surface-2))' : 'transparent',
+                    boxShadow: isSelected ? '0 8px 20px rgba(21,128,61,0.10)' : 'none',
                     cursor: 'pointer',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    borderRadius: isSelected ? 8 : 0
                   }}
                 >
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0, cursor: 'pointer' }}>
                     <input
                       type="checkbox"
-                      checked={selectedQuestions.includes(q.id)}
+                      checked={isSelected}
                       onChange={() => toggleSelect(q.id)}
                       onClick={e => e.stopPropagation()}
                     />
                     <span className="small">#{index + 1}</span>
                   </label>
                   <div>
-                    <div style={{ fontWeight: 700 }}>{q.title}</div>
+                    <div style={{ fontWeight: 700 }}>{q.title} {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>Selected</span>}</div>
                     <div className="small">{q.stem}</div>
                   </div>
                   <div className="small" style={{ fontWeight: 700 }}>{q.difficulty}</div>
                 </div>
+                )})()
               ))}
             </div>
             <div className="small" style={{ marginTop: 8 }}>Selected: {selectedQuestions.length} / {num}</div>

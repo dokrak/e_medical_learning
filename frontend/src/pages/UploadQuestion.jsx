@@ -8,10 +8,10 @@ export default function UploadQuestion(){
   const navigate = useNavigate()
   const [question, setQuestion] = useState('')
   const [detail, setDetail] = useState('')
+  const [answerExplanation, setAnswerExplanation] = useState('')
   const [difficulty, setDifficulty] = useState(3)
   const [choices, setChoices] = useState(['','','','',''])
   const [correctIndex, setCorrectIndex] = useState(0)
-  const [answer, setAnswer] = useState('')
   const [msg, setMsg] = useState('')
   const [image, setImage] = useState(null)
   const [specialties, setSpecialties] = useState([])
@@ -33,7 +33,11 @@ export default function UploadQuestion(){
   }
 
   function setChoice(i, val){
-    setChoices(prev => { const copy = [...prev]; copy[i] = val; return copy })
+    setChoices(prev => {
+      const copy = [...prev]
+      copy[i] = val
+      return copy
+    })
   }
 
   async function submit(e){
@@ -51,9 +55,9 @@ export default function UploadQuestion(){
       const title = lines[0] || 'Question'
       const stem = lines.length > 1 ? lines.slice(1).join('\n') : lines[0]
       
-      const payload = { title, stem, body: detail, difficulty, answer: selectedAnswer, choices: normalizedChoices, references: [], images, specialtyId: specialtyId || null, subspecialtyId: subspecialtyId || null }
+      const payload = { title, stem, body: detail, answerExplanation, difficulty, answer: selectedAnswer, choices: normalizedChoices, references: [], images, specialtyId: specialtyId || null, subspecialtyId: subspecialtyId || null }
       await api.post('/questions', payload)
-      setQuestion(''); setDetail(''); setAnswer(''); setImage(null); setChoices(['','','','','']); setCorrectIndex(0); setSpecialtyId(''); setSubspecialtyId('')
+      setQuestion(''); setDetail(''); setAnswerExplanation(''); setImage(null); setChoices(['','','','','']); setCorrectIndex(0); setSpecialtyId(''); setSubspecialtyId('')
       navigate('/manage', { state: { msg: 'Question submitted successfully.', tab: 'questions' } })
     }catch(err){
       const detailMessage = err?.response?.data?.error || err?.response?.data?.message || err.message || 'Unknown error'
@@ -66,7 +70,7 @@ export default function UploadQuestion(){
       <h3>Upload question (clinician)</h3>
       <form onSubmit={submit}>
         <div><input type="text" placeholder="Question title (first line = title)" value={question} onChange={e=>setQuestion(e.target.value)} style={{ width: '100%' }} /></div>
-        <div style={{ marginTop: 8 }}><textarea placeholder="Detail (clinical information, findings, vital signs, etc.)" value={detail} onChange={e=>setDetail(e.target.value)} rows={3} /></div>
+        <div style={{ marginTop: 8 }}><textarea placeholder="Detail (clinical information, findings, vital signs, etc.)" value={detail} onChange={e=>setDetail(e.target.value)} rows={5} /></div>
         <div style={{ marginTop: 8 }}>
           <label><strong>Difficulty Level:</strong></label>
           <div style={{ display: 'flex', gap: 20, marginTop: 8, flexWrap: 'wrap' }}>
@@ -97,6 +101,10 @@ export default function UploadQuestion(){
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><input type="radio" name="correct" checked={correctIndex===i} onChange={()=>setCorrectIndex(i)} />correct</label>
             </div>
           ))}
+          <div style={{ marginTop: 8 }}>
+            <label><strong>Correct answer & explanation</strong></label>
+            <textarea placeholder="Describe why the selected correct choice is correct" value={answerExplanation} onChange={e=>setAnswerExplanation(e.target.value)} rows={5} />
+          </div>
         </div>
         <div style={{ marginTop: 8 }}>
           <label>Specialty:</label>

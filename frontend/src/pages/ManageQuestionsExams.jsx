@@ -64,6 +64,7 @@ export default function ManageQuestionsExams(){
         title: item.title,
         stem: item.stem,
         body: item.body,
+        answerExplanation: item.answerExplanation,
         difficulty: item.difficulty,
         answer: item.answer,
         references: item.references,
@@ -108,7 +109,11 @@ export default function ManageQuestionsExams(){
   }
 
   function toggleEditSelect(qid){
-    setEditSelectedQuestions(prev => prev.includes(qid) ? prev.filter(x=>x!==qid) : [...prev, qid])
+    setEditSelectedQuestions(prev => {
+      const key = String(qid)
+      const hasItem = prev.some(x => String(x) === key)
+      return hasItem ? prev.filter(x => String(x) !== key) : [...prev, qid]
+    })
   }
 
   async function saveEdit(){
@@ -151,6 +156,15 @@ export default function ManageQuestionsExams(){
     } catch(err){ setMsg('Delete failed: ' + (err.response?.data?.error || err.message)) }
   }
 
+  function cancelEdit(){
+    setEditId(null)
+    setNewImageFile(null)
+    setAvailableQuestionsForEdit([])
+    setEditSelectedQuestions([])
+  }
+
+  const visibleItems = editId ? items.filter(item => String(item.id) === String(editId)) : items
+
   return (
     <div className="card container">
       <h3>Manage questions & exams</h3>
@@ -160,8 +174,8 @@ export default function ManageQuestionsExams(){
       </div>
       {msg && <div className={msg.includes('failed') ? 'msg error' : 'msg success'} style={{ marginBottom: 8 }}>{msg}</div>}
       <div>
-        {items.map(item => (
-          <div key={item.id} className="card" style={{ padding: 12, marginBottom: 12, borderLeft: item.status === 'rejected' ? '6px solid #dc3545' : 'none', background: item.status === 'rejected' ? '#fff8f8' : 'white' }}>
+        {visibleItems.map(item => (
+          <div key={item.id} className="card" style={{ padding: 12, marginBottom: 12, borderLeft: item.status === 'rejected' ? '6px solid #dc3545' : 'none', background: item.status === 'rejected' ? '#fff8f8' : 'white', boxShadow: editId === item.id ? '0 12px 30px rgba(21,128,61,0.14)' : undefined }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <strong>{item.title}</strong>
@@ -182,6 +196,7 @@ export default function ManageQuestionsExams(){
                 <div className="small" style={{ fontWeight: 600, marginBottom: 8 }}>📋 Question Preview:</div>
                 <div className="small" style={{ marginBottom: 6 }}><strong>Stem:</strong> {item.stem || '(no stem)'}</div>
                 <div className="small" style={{ marginBottom: 6 }}><strong>Details:</strong> {item.body || '(no details)'}</div>
+                <div className="small" style={{ marginBottom: 6 }}><strong>Answer explanation:</strong> {item.answerExplanation || '(no explanation)'}</div>
                 {item.choices && item.choices.length > 0 && (
                   <div className="small" style={{ marginBottom: 6 }}>
                     <strong>Choices:</strong>
@@ -200,17 +215,26 @@ export default function ManageQuestionsExams(){
             )}
             {editId === item.id ? (
               <div style={{ marginTop: 8 }}>
+                <label><strong>Title</strong></label>
                 <input placeholder="Title" value={editForm.title||''} onChange={e=>setEditForm({...editForm, title: e.target.value})} style={{ width: '100%', marginBottom: 6 }} />
                 {tab === 'questions' ? (
                   <>
+                    <label><strong>Question (Stem)</strong></label>
                     <textarea placeholder="Stem" value={editForm.stem||''} onChange={e=>setEditForm({...editForm, stem: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={2} />
+                    <label><strong>Detail</strong></label>
                     <textarea placeholder="Body" value={editForm.body||''} onChange={e=>setEditForm({...editForm, body: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={2} />
+                    <label><strong>Correct Answer & Explanation</strong></label>
+                    <textarea placeholder="Answer explanation" value={editForm.answerExplanation||''} onChange={e=>setEditForm({...editForm, answerExplanation: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={3} />
+                    <label><strong>Difficulty (1-5)</strong></label>
                     <input type="number" min={1} max={5} placeholder="Difficulty" value={editForm.difficulty||3} onChange={e=>setEditForm({...editForm, difficulty: Number(e.target.value)})} style={{ width: '100%', marginBottom: 6 }} />
+                    <label><strong>Correct Answer</strong></label>
                     <input placeholder="Answer" value={editForm.answer||''} onChange={e=>setEditForm({...editForm, answer: e.target.value})} style={{ width: '100%', marginBottom: 6 }} />
+                    <label><strong>Specialty</strong></label>
                     <select value={editForm.specialtyId||''} onChange={e=>{ setEditForm({...editForm, specialtyId: e.target.value}); }} style={{ width: '100%', marginBottom: 6 }}>
                       <option value="">-- select specialty --</option>
                       {specialties.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
+                    <label><strong>Subspecialty</strong></label>
                     <select value={editForm.subspecialtyId||''} onChange={e=>setEditForm({...editForm, subspecialtyId: e.target.value})} style={{ width: '100%', marginBottom: 6 }}>
                       <option value="">-- select subspecialty --</option>
                       {(specialties.find(s=>s.id===editForm.specialtyId)?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
@@ -299,15 +323,19 @@ export default function ManageQuestionsExams(){
                           <span className="small" style={{ marginLeft: 8 }}>Choose questions to include in this exam</span>
                         </div>
                         <div style={{ maxHeight: 220, overflow: 'auto' }}>
-                          {availableQuestionsForEdit.map(q => (
-                            <div key={q.id} style={{ display: 'flex', gap: 8, padding: 6, borderBottom: '1px solid var(--border)' }}>
-                              <input type="checkbox" checked={editSelectedQuestions.includes(q.id)} onChange={()=>toggleEditSelect(q.id)} />
+                          {[...availableQuestionsForEdit]
+                            .sort((a, b) => Number(editSelectedQuestions.some(x => String(x) === String(b.id))) - Number(editSelectedQuestions.some(x => String(x) === String(a.id))))
+                            .map(q => {
+                              const isSelected = editSelectedQuestions.some(x => String(x) === String(q.id))
+                              return (
+                            <div key={q.id} style={{ display: 'flex', gap: 8, padding: 6, borderBottom: '1px solid var(--border)', borderLeft: isSelected ? '6px solid var(--brand-green)' : '4px solid transparent', background: isSelected ? 'linear-gradient(90deg, var(--brand-light-green), var(--surface-2))' : 'transparent', boxShadow: isSelected ? '0 8px 20px rgba(21,128,61,0.10)' : 'none', borderRadius: isSelected ? 8 : 0 }}>
+                              <input type="checkbox" checked={isSelected} onChange={()=>toggleEditSelect(q.id)} />
                               <div>
-                                <div style={{ fontWeight: 700 }}>{q.title} <span className="small">(diff {q.difficulty})</span></div>
+                                <div style={{ fontWeight: 700 }}>{q.title} <span className="small">(diff {q.difficulty})</span> {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>Selected</span>}</div>
                                 <div className="small">{q.stem}</div>
                               </div>
                             </div>
-                          ))}
+                          )})}
                         </div>
                         <div className="small" style={{ marginTop: 6 }}>Selected: {editSelectedQuestions.length}</div>
                       </div>
@@ -315,7 +343,7 @@ export default function ManageQuestionsExams(){
                   </>
                 )}
                 <button className="btn btn-primary" onClick={saveEdit} style={{ marginRight: 6 }}>Save</button>
-                <button className="btn btn-ghost" onClick={()=>setEditId(null)}>Cancel</button>
+                <button className="btn btn-ghost" onClick={cancelEdit}>Cancel</button>
               </div>
             ) : (
               <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>

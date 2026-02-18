@@ -29,8 +29,13 @@ class QuestionController extends Controller
         }
 
         $data = $request->validate([
-            'title'=>'required', 'stem'=>'nullable', 'body'=>'nullable', 'difficulty'=>'integer|min:1|max:5', 'answer'=>'nullable', 'references'=>'nullable|array', 'choices'=>'nullable|array', 'images'=>'nullable|array'
+            'title'=>'required', 'stem'=>'nullable', 'body'=>'nullable', 'answer_explanation'=>'nullable|string', 'answerExplanation'=>'nullable|string', 'difficulty'=>'integer|min:1|max:5', 'answer'=>'nullable', 'references'=>'nullable|array', 'choices'=>'nullable|array', 'images'=>'nullable|array'
         ]);
+
+        if (array_key_exists('answerExplanation', $data) && !array_key_exists('answer_explanation', $data)) {
+            $data['answer_explanation'] = $data['answerExplanation'];
+        }
+        unset($data['answerExplanation']);
 
         $question = Question::create(array_merge($data, ['status'=>'pending','author_id'=>$request->user()->id]));
 

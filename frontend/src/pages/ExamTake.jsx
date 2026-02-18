@@ -135,7 +135,7 @@ export default function ExamTake(){
       <form onSubmit={submit}>
         {exam.questions.map((q, index) => (
           <div key={q.id} ref={el => { questionRefs.current[q.id] = el }} style={{ marginBottom: 12 }}>
-            <div><strong>ข้อที่ {index + 1}</strong></div>
+            <div><span className="question-order-badge">ข้อที่ {index + 1}</span></div>
             <div style={{ marginTop: 2 }}><strong>{q.title}</strong></div>
             <div>{q.stem}</div>
             {q.images && q.images.length > 0 && (
