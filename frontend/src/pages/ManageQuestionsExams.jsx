@@ -12,11 +12,13 @@ export default function ManageQuestionsExams(){
   const [editImages, setEditImages] = useState([])
   const [newImageFile, setNewImageFile] = useState(null)
   const [msg, setMsg] = useState('')
+  const [search, setSearch] = useState('')
   const [specialties, setSpecialties] = useState([])
   const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
 
   useEffect(()=>{ loadSpecialties() }, [])
   useEffect(()=>{ loadItems() }, [tab])
+  useEffect(()=>{ setSearch('') }, [tab])
 
   useEffect(() => {
     if (!location.state) return
@@ -163,7 +165,23 @@ export default function ManageQuestionsExams(){
     setEditSelectedQuestions([])
   }
 
-  const visibleItems = editId ? items.filter(item => String(item.id) === String(editId)) : items
+  const visibleItems = editId
+    ? items.filter(item => String(item.id) === String(editId))
+    : items.filter(item => {
+        const keyword = search.trim().toLowerCase()
+        if (!keyword) return true
+        if (tab === 'questions') {
+          const titleText = (item.title || '').toLowerCase()
+          const stemText = (item.stem || '').toLowerCase()
+          const statusText = (item.status || '').toLowerCase()
+          return [titleText, stemText, statusText].some(text => text.includes(keyword))
+        }
+        const titleText = (item.title || '').toLowerCase()
+        const specialtyText = (item.specialty?.name || '').toLowerCase()
+        const subspecialtyText = (item.subspecialty?.name || '').toLowerCase()
+        const modeText = (item.selectionMode || '').toLowerCase()
+        return [titleText, specialtyText, subspecialtyText, modeText].some(text => text.includes(keyword))
+      })
 
   return (
     <div className="card container">
@@ -172,6 +190,16 @@ export default function ManageQuestionsExams(){
         <button onClick={()=>setTab('questions')} style={{ fontWeight: tab==='questions'?'bold':'normal' }}>Questions ({items.length})</button>
         <button onClick={()=>setTab('exams')} style={{ marginLeft: 8, fontWeight: tab==='exams'?'bold':'normal' }}>Exams ({items.length})</button>
       </div>
+      {!editId && (
+        <div style={{ marginBottom: 12 }}>
+          <input
+            className="search-box"
+            placeholder={tab === 'questions' ? 'Search questions by title, content, status...' : 'Search exams by title, specialty, mode...'}
+            value={search}
+            onChange={e=>setSearch(e.target.value)}
+          />
+        </div>
+      )}
       {msg && <div className={msg.includes('failed') ? 'msg error' : 'msg success'} style={{ marginBottom: 8 }}>{msg}</div>}
       <div>
         {visibleItems.map(item => (
@@ -365,6 +393,7 @@ export default function ManageQuestionsExams(){
             )}
           </div>
         ))}
+        {!editId && visibleItems.length === 0 && <div className="small">No items found</div>}
       </div>
     </div>
   )

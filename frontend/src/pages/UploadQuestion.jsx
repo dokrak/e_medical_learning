@@ -66,8 +66,8 @@ export default function UploadQuestion(){
   }
 
   return (
-    <div className="card container">
-      <h3>Upload question (clinician)</h3>
+    <div className="card container" style={{ background: 'linear-gradient(145deg, rgba(15,81,50,0.10) 0%, rgba(15,118,110,0.10) 45%, rgba(22,78,99,0.10) 100%)', border: '1px solid rgba(15,118,110,0.30)' }}>
+      <h3 style={{ color: '#0f5132', marginBottom: 14 }}>Upload question (clinician)</h3>
       <form onSubmit={submit}>
         <div><input type="text" placeholder="Question title (first line = title)" value={question} onChange={e=>setQuestion(e.target.value)} style={{ width: '100%' }} /></div>
         <div style={{ marginTop: 8 }}><textarea placeholder="Detail (clinical information, findings, vital signs, etc.)" value={detail} onChange={e=>setDetail(e.target.value)} rows={5} /></div>

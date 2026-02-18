@@ -31,3 +31,6 @@ Notes:
 - CI/stubs and Laravel placeholders are included in the repo.
 
 Next recommended step: run the mock API + frontend and try uploading a question as `clinician@example.com`.
+
+Production migration guide:
+- See `PRODUCTION_MIGRATION.md`

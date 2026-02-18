@@ -56,9 +56,9 @@ function Nav(){
 
 export default function App(){
   return (
-    <div>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Nav />
-      <div style={{ padding: 20 }}>
+      <div style={{ padding: 20, flex: 1 }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
@@ -77,6 +77,9 @@ export default function App(){
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '14px 20px', textAlign: 'center', color: 'var(--muted)', background: 'var(--surface-1)' }}>
+        © {new Date().getFullYear()} Dr. Ekkawit Iamthongin. All rights reserved.
+      </footer>
     </div>
   )
 }

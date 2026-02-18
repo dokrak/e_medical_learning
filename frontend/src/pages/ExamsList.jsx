@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 export default function ExamsList(){
   const [exams, setExams] = useState([])
+  const [search, setSearch] = useState('')
   const [title, setTitle] = useState('New exam')
   const [num, setNum] = useState(5)
   const [msg, setMsg] = useState('')
@@ -25,9 +26,27 @@ export default function ExamsList(){
     }catch(err){ setMsg('Create failed — ensure you are authenticated') }
   }
 
+  const filteredExams = exams.filter(ex => {
+    const keyword = search.trim().toLowerCase()
+    if (!keyword) return true
+    const titleText = (ex.title || '').toLowerCase()
+    const specialtyText = (ex.specialty?.name || '').toLowerCase()
+    const subspecialtyText = (ex.subspecialty?.name || '').toLowerCase()
+    const difficultyText = (ex.difficultyLevel || '').toLowerCase()
+    return [titleText, specialtyText, subspecialtyText, difficultyText].some(text => text.includes(keyword))
+  })
+
   return (
     <div className="card container">
       <h3>Exams</h3>
+      <div style={{ marginBottom: 12 }}>
+        <input
+          className="search-box"
+          placeholder="Search exams by name, specialty, difficulty..."
+          value={search}
+          onChange={e=>setSearch(e.target.value)}
+        />
+      </div>
       <form onSubmit={create} style={{ marginBottom: 12, padding: 12, backgroundColor: '#f0f4ff', borderRadius: 6 }}>
         <div className="small" style={{ marginBottom: 8, fontWeight: 600 }}>กำหนดการสอบด้วยตัวเอง</div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
@@ -43,7 +62,7 @@ export default function ExamsList(){
         </div>
       </form>
       {msg && <div>{msg}</div>}
-      {exams.map(ex => (
+      {filteredExams.map(ex => (
         <div key={ex.id} className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
@@ -104,6 +123,7 @@ export default function ExamsList(){
           </div>
         </div>
       ))}
+      {filteredExams.length === 0 && <div className="small">No exams found</div>}
     </div>
   )
 }
