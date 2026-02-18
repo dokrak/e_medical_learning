@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import api from '../api'
+import { useNavigate } from 'react-router-dom'
 
 export default function ExamBuilder(){
+  const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [num, setNum] = useState(5)
   const [passingScore, setPassingScore] = useState(50)
@@ -26,6 +28,12 @@ export default function ExamBuilder(){
     if (selectionMode === 'manual') loadAvailableQuestions()
   }, [selectionMode, specialtyId, subspecialtyId, difficultyLevel, useDistribution])
 
+  useEffect(() => {
+    if (selectionMode !== 'manual') return
+    if (selectedQuestions.length <= num) return
+    setSelectedQuestions(prev => prev.slice(0, num))
+  }, [num, selectionMode, selectedQuestions.length])
+
   async function loadSpecialties(){
     try{ const r = await api.get('/specialties'); setSpecialties(r.data); } catch(e){ /* ignore */ }
   }
@@ -48,11 +56,27 @@ export default function ExamBuilder(){
   }
 
   function toggleSelect(qid){
-    setSelectedQuestions(prev => prev.includes(qid) ? prev.filter(x=>x!==qid) : [...prev, qid])
+    setSelectedQuestions(prev => {
+      if (prev.includes(qid)) return prev.filter(x=>x!==qid)
+      if (prev.length >= num) {
+        setMsg(`You can select up to ${num} questions.`)
+        return prev
+      }
+      return [...prev, qid]
+    })
+  }
+
+  function decrementNum(){
+    setNum(prev => Math.max(1, Number(prev || 1) - 1))
+  }
+
+  function incrementNum(){
+    setNum(prev => Math.min(50, Number(prev || 1) + 1))
   }
 
   async function generate(e){
     e.preventDefault()
+    setMsg('')
     
     // Validation
     if (!title.trim()) {
@@ -65,6 +89,14 @@ export default function ExamBuilder(){
     }
     if (!subspecialtyId) {
       setMsg('Please select subspecialty')
+      return
+    }
+    if (num < 1) {
+      setMsg('Please set number of questions to at least 1')
+      return
+    }
+    if (selectionMode === 'manual' && selectedQuestions.length !== num) {
+      setMsg(`Please select exactly ${num} questions (currently selected: ${selectedQuestions.length})`)
       return
     }
 
@@ -85,8 +117,7 @@ export default function ExamBuilder(){
       if (selectionMode === 'random') payload.numQuestions = num
       else payload.selectedQuestionIds = selectedQuestions
 
-      const r = await api.post('/exams', payload)
-      setMsg('Exam created successfully!')
+      await api.post('/exams', payload)
       setTitle('')
       setSpecialtyId('')
       setSubspecialtyId('')
@@ -94,7 +125,11 @@ export default function ExamBuilder(){
       setPreview([])
       setAvailableQuestions([])
       setSelectedQuestions([])
-    }catch(err){ setMsg('Failed to create exam — ' + (err.response?.data?.error || 'ensure you are authenticated')) }
+      navigate('/manage', { state: { msg: 'Exam submitted successfully.', tab: 'exams' } })
+    }catch(err){
+      const detailMessage = err?.response?.data?.error || err?.response?.data?.message || err.message || 'Unknown error'
+      setMsg(`Create exam failed: ${detailMessage}`)
+    }
   }
 
   return (
@@ -149,7 +184,11 @@ export default function ExamBuilder(){
 
           <div>
             <label>Number of questions:</label>
-            <input type="number" min={1} max={50} value={num} onChange={e=>setNum(Number(e.target.value))} disabled={selectionMode==='manual'} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button type="button" className="btn" onClick={decrementNum}>-</button>
+              <input type="number" min={1} max={50} value={num} onChange={e=>setNum(Number(e.target.value))} style={{ width: 90 }} />
+              <button type="button" className="btn" onClick={incrementNum}>+</button>
+            </div>
           </div>
         </div>
 
@@ -180,18 +219,46 @@ export default function ExamBuilder(){
               <span className="small">Select questions to include in exam. Shows approved questions matching specialty + difficulty filters.</span>
             </div>
             <div style={{ maxHeight: 320, overflow: 'auto', border: '1px solid var(--border)', borderRadius: 8, padding: 8 }}>
+              {availableQuestions.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '84px 1fr 90px', gap: 8, padding: '6px 8px', borderBottom: '1px solid var(--border)', fontWeight: 700 }}>
+                  <div>Select</div>
+                  <div>Question</div>
+                  <div>Difficulty</div>
+                </div>
+              )}
               {availableQuestions.length === 0 && <div className="small">No questions loaded. Click "Load questions".</div>}
-              {availableQuestions.map(q => (
-                <div key={q.id} style={{ padding: 8, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input type="checkbox" checked={selectedQuestions.includes(q.id)} onChange={()=>toggleSelect(q.id)} />
+              {availableQuestions.map((q, index) => (
+                <div
+                  key={q.id}
+                  onClick={() => toggleSelect(q.id)}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '84px 1fr 90px',
+                    gap: 8,
+                    padding: 8,
+                    borderBottom: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    alignItems: 'center'
+                  }}
+                >
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedQuestions.includes(q.id)}
+                      onChange={() => toggleSelect(q.id)}
+                      onClick={e => e.stopPropagation()}
+                    />
+                    <span className="small">#{index + 1}</span>
+                  </label>
                   <div>
-                    <div style={{ fontWeight: 700 }}>{q.title} <span className="small">(diff {q.difficulty})</span></div>
+                    <div style={{ fontWeight: 700 }}>{q.title}</div>
                     <div className="small">{q.stem}</div>
                   </div>
+                  <div className="small" style={{ fontWeight: 700 }}>{q.difficulty}</div>
                 </div>
               ))}
             </div>
-            <div className="small" style={{ marginTop: 8 }}>Selected: {selectedQuestions.length}</div>
+            <div className="small" style={{ marginTop: 8 }}>Selected: {selectedQuestions.length} / {num}</div>
           </div>
         )}
 

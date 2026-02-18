@@ -4,6 +4,7 @@ import api from '../api'
 export default function ModeratorQueue(){
   const [list, setList] = useState([])
   const [msg, setMsg] = useState('')
+  const [specialties, setSpecialties] = useState([])
 
   async function load(){
     try{
@@ -14,7 +15,32 @@ export default function ModeratorQueue(){
     }
   }
 
-  useEffect(()=>{ load() }, [])
+  async function loadSpecialties(){
+    try{
+      const r = await api.get('/specialties')
+      setSpecialties(r.data || [])
+    }catch(err){
+      setSpecialties([])
+    }
+  }
+
+  function resolveSpecialtyMeta(question){
+    if (question.specialty?.name || question.subspecialty?.name) {
+      return {
+        specialtyName: question.specialty?.name || 'N/A',
+        subspecialtyName: question.subspecialty?.name || ''
+      }
+    }
+
+    const specialty = specialties.find(s => String(s.id) === String(question.specialtyId))
+    const subspecialty = specialty?.subspecialties?.find(ss => String(ss.id) === String(question.subspecialtyId))
+    return {
+      specialtyName: specialty?.name || 'N/A',
+      subspecialtyName: subspecialty?.name || ''
+    }
+  }
+
+  useEffect(()=>{ load(); loadSpecialties() }, [])
 
   async function approve(id){
     try{
@@ -39,7 +65,9 @@ export default function ModeratorQueue(){
       <h3>Moderator queue</h3>
       {msg && <div>{msg}</div>}
       {list.length===0 ? <div>No pending items</div> : (
-        list.map(q => (
+        list.map(q => {
+          const { specialtyName, subspecialtyName } = resolveSpecialtyMeta(q)
+          return (
           <div key={q.id} className="card" style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
               <div style={{ flex: 1 }}>
@@ -79,7 +107,7 @@ export default function ModeratorQueue(){
 
                 {q.specialtyId && (
                   <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
-                    📌 Specialty: {q.specialty?.name || 'N/A'} {q.subspecialty?.name ? ` → ${q.subspecialty.name}` : ''}
+                    📌 Specialty: {specialtyName} {subspecialtyName ? ` → ${subspecialtyName}` : ''}
                   </div>
                 )}
               </div>
@@ -90,7 +118,7 @@ export default function ModeratorQueue(){
               </div>
             </div>
           </div>
-        ))
+        )})
       )}
     </div>
   )

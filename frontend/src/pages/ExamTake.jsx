@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../api'
 
@@ -8,16 +8,36 @@ export default function ExamTake(){
   const [answers, setAnswers] = useState({})
   const [result, setResult] = useState(null)
   const [msg, setMsg] = useState('')
+  const questionRefs = useRef({})
 
   useEffect(()=>{ load() }, [id])
+
+  function shuffleQuestions(items){
+    const arr = Array.isArray(items) ? [...items] : []
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      const temp = arr[i]
+      arr[i] = arr[j]
+      arr[j] = temp
+    }
+    return arr
+  }
+
+  function prepareExamSession(examData){
+    if (!examData) return examData
+    return {
+      ...examData,
+      questions: shuffleQuestions(examData.questions)
+    }
+  }
 
   async function load(){
     try{
       const r = await api.get('/exams/' + id)
-      setExam(r.data)
+      setExam(prepareExamSession(r.data))
     }catch(err){
       // fallback to listing exams and find locally
-      try{ const r2 = await api.get('/exams'); const ex = r2.data.find(x=>x.id===id); setExam(ex) }catch(e){ setMsg('Failed to load exam') }
+      try{ const r2 = await api.get('/exams'); const ex = r2.data.find(x=>x.id===id); setExam(prepareExamSession(ex)) }catch(e){ setMsg('โหลดข้อสอบไม่สำเร็จ') }
     }
   }
 
@@ -25,31 +45,61 @@ export default function ExamTake(){
     setAnswers(prev=>({ ...prev, [qid]: val }))
   }
 
+  function scrollToQuestion(questionId){
+    const el = questionRefs.current[questionId]
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }
+
   async function submit(e){
     e.preventDefault()
     if (!exam) return
+
+    const unansweredNumbers = exam.questions
+      .map((q, index) => {
+        const value = (answers[q.id] || '').toString().trim()
+        return value ? null : index + 1
+      })
+      .filter(Boolean)
+
+    if (unansweredNumbers.length > 0) {
+      const preview = unansweredNumbers.slice(0, 12).join(', ')
+      const moreCount = unansweredNumbers.length > 12 ? ` and ${unansweredNumbers.length - 12} more` : ''
+      const proceed = window.confirm(
+        `คุณยังตอบไม่ครบ ${unansweredNumbers.length} ข้อ: ${preview}${moreCount ? ` และอีก ${unansweredNumbers.length - 12} ข้อ` : ''}\n\nกด ตกลง เพื่อส่งคำตอบตอนนี้ หรือกด ยกเลิก เพื่อกลับไปตอบให้ครบ`
+      )
+      if (!proceed) {
+        setMsg('ยกเลิกการส่งคำตอบ กรุณากลับไปตอบข้อที่ยังไม่ครบ')
+        const firstUnansweredIndex = unansweredNumbers[0] - 1
+        const firstUnansweredQuestion = exam.questions[firstUnansweredIndex]
+        if (firstUnansweredQuestion?.id) scrollToQuestion(firstUnansweredQuestion.id)
+        return
+      }
+    }
+
     const payload = { answers: exam.questions.map(q => ({ questionId: q.id, answer: (answers[q.id]||'').toString() })) }
     try{
       const r = await api.post(`/student-exams/${exam.id}/submit`, payload)
       setResult(r.data)
-    }catch(err){ setMsg('Submit failed') }
+    }catch(err){ setMsg('ส่งข้อสอบไม่สำเร็จ') }
   }
 
   async function downloadPDF(){
     if (!result || !result.resultId) {
-      setMsg('PDF download not available. Please contact support.')
+      setMsg('ไม่สามารถดาวน์โหลด PDF ได้ กรุณาติดต่อผู้ดูแลระบบ')
       return
     }
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        setMsg('Not authenticated. Please login again.')
+        setMsg('ยังไม่ได้เข้าสู่ระบบ กรุณาเข้าสู่ระบบอีกครั้ง')
         return
       }
       const response = await api.get(`/student-exams/${result.resultId}/pdf`, { responseType: 'blob' })
       
       if (!response.data || response.data.size === 0) {
-        setMsg('PDF generation failed: Empty response')
+        setMsg('สร้างไฟล์ PDF ไม่สำเร็จ: ไม่พบข้อมูล')
         return
       }
       
@@ -66,26 +116,27 @@ export default function ExamTake(){
       }, 100)
     } catch(err) {
       console.error('PDF download error:', err)
-      const errMsg = err.response?.data?.error || err.message || 'Unknown error'
-      setMsg('PDF download failed: ' + errMsg)
+      const errMsg = err.response?.data?.error || err.message || 'ไม่ทราบสาเหตุ'
+      setMsg('ดาวน์โหลด PDF ไม่สำเร็จ: ' + errMsg)
     }
   }
 
-  if (!exam) return <div className="card container">Loading...</div>
+  if (!exam) return <div className="card container">กำลังโหลด...</div>
 
   return (
     <div className="card container">
       <h3>{exam.title}</h3>
-      {exam.specialty && <div style={{ color: '#666', marginBottom: 8 }}>{exam.specialty.name}{exam.subspecialty ? ' — ' + exam.subspecialty.name : ''}</div>}
-      {exam.difficultyLevel && <div className="small" style={{ marginBottom: 6 }}>Difficulty: <strong>{exam.difficultyLevel}</strong></div>}
-      {exam.selectionMode && <div className="small" style={{ marginBottom: 6 }}>Selection: <strong>{exam.selectionMode}</strong></div>}
+      {exam.specialty && <div style={{ color: '#666', marginBottom: 8 }}>{exam.specialty.name}</div>}
+      {exam.difficultyLevel && <div className="small" style={{ marginBottom: 6 }}>ระดับความยาก: <strong>{exam.difficultyLevel}</strong></div>}
+      {exam.selectionMode && <div className="small" style={{ marginBottom: 6 }}>รูปแบบการเลือกข้อสอบ: <strong>{exam.selectionMode}</strong></div>}
       <div className="small" style={{ marginBottom: 12, padding: 8, background: 'rgba(21,128,61,0.08)', borderRadius: 6, border: '1px solid rgba(21,128,61,0.2)' }}>
-        <strong>✓ Passing Score:</strong> {exam.passingScore || 50}%
+        <strong>✓ คะแนนผ่านขั้นต่ำ:</strong> {exam.passingScore || 50}%
       </div>
       <form onSubmit={submit}>
-        {exam.questions.map(q => (
-          <div key={q.id} style={{ marginBottom: 12 }}>
-            <div><strong>{q.title}</strong></div>
+        {exam.questions.map((q, index) => (
+          <div key={q.id} ref={el => { questionRefs.current[q.id] = el }} style={{ marginBottom: 12 }}>
+            <div><strong>ข้อที่ {index + 1}</strong></div>
+            <div style={{ marginTop: 2 }}><strong>{q.title}</strong></div>
             <div>{q.stem}</div>
             {q.images && q.images.length > 0 && (
               <div style={{ marginTop: 8 }}>
@@ -108,12 +159,12 @@ export default function ExamTake(){
                   ))}
                 </div>
               ) : (
-                <input placeholder="Your answer" value={answers[q.id]||''} onChange={e=>setAnswer(q.id, e.target.value)} />
+                <input placeholder="คำตอบของคุณ" value={answers[q.id]||''} onChange={e=>setAnswer(q.id, e.target.value)} />
               )}
             </div>
           </div>
         ))}
-        <div><button className="btn btn-primary">Submit exam</button></div>
+        <div><button className="btn btn-primary">ส่งข้อสอบ</button></div>
       </form>
       {msg && <div>{msg}</div>}
       {result && (
@@ -121,13 +172,13 @@ export default function ExamTake(){
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <span style={{ fontSize: '24px' }}>{result.passed ? '✓' : '✗'}</span>
             <strong style={{ color: result.passed ? '#10b981' : '#dc2626', fontSize: '18px' }}>
-              {result.passed ? 'PASSED' : 'FAILED'}
+              {result.passed ? 'ผ่าน' : 'ไม่ผ่าน'}
             </strong>
           </div>
-          <div><strong>Score:</strong> {result.score}% ({result.correct}/{result.total} correct)</div>
-          <div style={{ marginTop: 6 }}>Passing score: <strong>{result.passingScore}%</strong></div>
+          <div><strong>คะแนน:</strong> {result.score}% (ตอบถูก {result.correct}/{result.total} ข้อ)</div>
+          <div style={{ marginTop: 6 }}>คะแนนผ่านขั้นต่ำ: <strong>{result.passingScore}%</strong></div>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary" onClick={downloadPDF} style={{ flex: 1 }}>📥 Download PDF Report</button>
+            <button className="btn btn-primary" onClick={downloadPDF} style={{ flex: 1 }}>📥 ดาวน์โหลดรายงาน PDF</button>
           </div>
         </div>
       )}

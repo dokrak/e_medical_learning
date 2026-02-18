@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import api from '../api'
+import { useNavigate } from 'react-router-dom'
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D', 'E']
 
 export default function UploadQuestion(){
+  const navigate = useNavigate()
   const [question, setQuestion] = useState('')
   const [detail, setDetail] = useState('')
   const [difficulty, setDifficulty] = useState(3)
@@ -36,6 +38,7 @@ export default function UploadQuestion(){
 
   async function submit(e){
     e.preventDefault()
+    setMsg('')
     // ensure exactly 5 choices
     const normalizedChoices = choices.slice(0,5).map(c => c || '(no text)')
     const selectedAnswer = normalizedChoices[correctIndex]
@@ -49,11 +52,12 @@ export default function UploadQuestion(){
       const stem = lines.length > 1 ? lines.slice(1).join('\n') : lines[0]
       
       const payload = { title, stem, body: detail, difficulty, answer: selectedAnswer, choices: normalizedChoices, references: [], images, specialtyId: specialtyId || null, subspecialtyId: subspecialtyId || null }
-      const r = await api.post('/questions', payload)
-      setMsg('Submitted (pending moderator approval)')
+      await api.post('/questions', payload)
       setQuestion(''); setDetail(''); setAnswer(''); setImage(null); setChoices(['','','','','']); setCorrectIndex(0); setSpecialtyId(''); setSubspecialtyId('')
+      navigate('/manage', { state: { msg: 'Question submitted successfully.', tab: 'questions' } })
     }catch(err){
-      setMsg('Upload failed — ensure you are logged in as clinician')
+      const detailMessage = err?.response?.data?.error || err?.response?.data?.message || err.message || 'Unknown error'
+      setMsg(`Submit failed: ${detailMessage}`)
     }
   }
 

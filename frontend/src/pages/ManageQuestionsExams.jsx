@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import api from '../api'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 export default function ManageQuestionsExams(){
+  const location = useLocation()
+  const navigate = useNavigate()
   const [tab, setTab] = useState('questions')
   const [items, setItems] = useState([])
   const [editId, setEditId] = useState(null)
@@ -14,6 +17,13 @@ export default function ManageQuestionsExams(){
 
   useEffect(()=>{ loadSpecialties() }, [])
   useEffect(()=>{ loadItems() }, [tab])
+
+  useEffect(() => {
+    if (!location.state) return
+    if (location.state.msg) setMsg(location.state.msg)
+    if (location.state.tab === 'questions' || location.state.tab === 'exams') setTab(location.state.tab)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location, navigate])
 
   async function loadSpecialties(){
     try{ const r = await api.get('/specialties'); setSpecialties(r.data); } catch(e){ }
