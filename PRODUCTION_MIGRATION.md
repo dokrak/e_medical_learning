@@ -2,6 +2,21 @@
 
 This guide prepares current components for production deployment.
 
+## 0) Prepare production env files (Linux)
+
+1. Backend env template:
+   - `backend/laravel-real/.env.production.example`
+2. Frontend env template:
+   - `frontend/.env.production.example`
+3. Copy templates on server:
+   - `cp backend/laravel-real/.env.production.example backend/laravel-real/.env`
+   - `cp frontend/.env.production.example frontend/.env`
+4. Update all placeholder values before go-live:
+   - domains (`APP_URL`, `SANCTUM_STATEFUL_DOMAINS`, `VITE_API_BASE_URL`)
+   - database credentials
+   - SMTP credentials
+   - `APP_KEY` (generate with `php artisan key:generate --force`)
+
 ## 1) Frontend preparation
 
 1. Create environment file from template:
@@ -32,6 +47,10 @@ This guide prepares current components for production deployment.
    - `php artisan view:cache`
 5. Storage link:
    - `php artisan storage:link`
+
+6. Recommended production runtime services:
+   - Run queue worker (systemd/supervisor) for `QUEUE_CONNECTION=redis`
+   - Run scheduler via cron: `* * * * * php /path/to/artisan schedule:run >> /dev/null 2>&1`
 
 ## 3) Data/schema checklist
 
