@@ -219,8 +219,8 @@ export default function ClinicianDashboard(){
               onChange={(e) => {
                 const sid = e.target.value
                 if (sid) {
-                  const student = students.find(s => s.id === sid)
-                  setSelectedStudent(student)
+                  const student = students.find(s => String(s.id) === String(sid))
+                  setSelectedStudent(student || null)
                   loadStudentDetails(sid)
                 } else {
                   setSelectedStudent(null)
