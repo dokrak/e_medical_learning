@@ -18,7 +18,7 @@ export default function ExamResultsDashboard(){
       const r = await api.get('/all-student-exams')
       setAllResults(r.data)
     } catch(err){
-      setMsg('Failed to load results')
+      setMsg('โหลดผลลัพธ์ไม่สำเร็จ (Failed to load results)')
     } finally {
       setLoading(false)
     }
@@ -31,7 +31,7 @@ export default function ExamResultsDashboard(){
       setExamResults(r.data)
       setSelectedResult(null)
     } catch(err){
-      setMsg('Failed to load exam results')
+      setMsg('โหลดผลสอบของชุดข้อสอบนี้ไม่สำเร็จ (Failed to load exam results)')
     } finally {
       setLoading(false)
     }
@@ -59,21 +59,21 @@ export default function ExamResultsDashboard(){
 
   return (
     <div className="card container">
-      <h3>Exam Results Dashboard</h3>
+      <h3>แดชบอร์ดผลการสอบ (Exam Results Dashboard)</h3>
       {msg && <div className="msg error" style={{ marginBottom: 12 }}>{msg}</div>}
-      {loading && <div style={{ marginBottom: 12 }}>Loading...</div>}
+      {loading && <div style={{ marginBottom: 12 }}>กำลังโหลด... (Loading...)</div>}
 
       <div className="panel" style={{ marginBottom: 20 }}>
-        <h4>Overall Statistics</h4>
+        <h4>สถิติโดยรวม (Overall Statistics)</h4>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          <div><strong>Total Exams Taken:</strong> {stats.total}</div>
-          <div><strong>Average Score:</strong> {Math.round(stats.avgScore)}%</div>
-          <div><strong>Pass Rate (≥70%):</strong> {stats.total > 0 ? Math.round((stats.passed / stats.total) * 100) : 0}%</div>
+          <div><strong>จำนวนครั้งที่สอบทั้งหมด (Total Exams Taken):</strong> {stats.total}</div>
+          <div><strong>คะแนนเฉลี่ย (Average Score):</strong> {Math.round(stats.avgScore)}%</div>
+          <div><strong>อัตราผ่าน (≥70%) (Pass Rate):</strong> {stats.total > 0 ? Math.round((stats.passed / stats.total) * 100) : 0}%</div>
         </div>
       </div>
 
       <div style={{ marginBottom: 20 }}>
-        <h4>Select Exam to View Details</h4>
+        <h4>เลือกชุดข้อสอบเพื่อดูรายละเอียด (Select Exam to View Details)</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
           {exams.map(([examId, examTitle]) => (
             <button 
@@ -90,27 +90,27 @@ export default function ExamResultsDashboard(){
 
       {selectedExam && examStats && (
         <div style={{ marginBottom: 20, padding: 12, background: '#f0f9ff', borderRadius: 6 }}>
-          <h4>Exam Statistics</h4>
+          <h4>สถิติของชุดข้อสอบ (Exam Statistics)</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-            <div><strong>Students:</strong> {examStats.count}</div>
-            <div><strong>Average Score:</strong> {examStats.avg}%</div>
-            <div><strong>Passed (≥70%):</strong> {examStats.passed}/{examStats.count}</div>
+            <div><strong>จำนวนนักเรียน (Students):</strong> {examStats.count}</div>
+            <div><strong>คะแนนเฉลี่ย (Average Score):</strong> {examStats.avg}%</div>
+            <div><strong>ผ่าน (≥70%) (Passed):</strong> {examStats.passed}/{examStats.count}</div>
           </div>
         </div>
       )}
 
       {selectedExam && (
         <div style={{ marginBottom: 20 }}>
-          <h4>Student Results</h4>
+          <h4>ผลการสอบรายคน (Student Results)</h4>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={{ padding: 8, textAlign: 'left' }}>Student</th>
-                  <th style={{ padding: 8, textAlign: 'center' }}>Score</th>
-                  <th style={{ padding: 8, textAlign: 'center' }}>Correct</th>
-                  <th style={{ padding: 8, textAlign: 'left' }}>Date</th>
-                  <th style={{ padding: 8, textAlign: 'center' }}>Action</th>
+                  <th style={{ padding: 8, textAlign: 'left' }}>นักเรียน (Student)</th>
+                  <th style={{ padding: 8, textAlign: 'center' }}>คะแนน (Score)</th>
+                  <th style={{ padding: 8, textAlign: 'center' }}>ตอบถูก (Correct)</th>
+                  <th style={{ padding: 8, textAlign: 'left' }}>วันที่ (Date)</th>
+                  <th style={{ padding: 8, textAlign: 'center' }}>การทำงาน (Action)</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,7 +128,7 @@ export default function ExamResultsDashboard(){
                     <td style={{ padding: 8, textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                         <button className="btn btn-primary" onClick={()=>setSelectedResult(result)}>View</button>
-                        <Link to={`/student-stats/${result.studentId}`} className="btn btn-ghost">History</Link>
+                        <Link to={`/student-stats/${result.studentId}`} className="btn btn-ghost">ประวัติ (History)</Link>
                       </div>
                     </td>
                   </tr>
@@ -142,11 +142,11 @@ export default function ExamResultsDashboard(){
       {selectedResult && (
         <div className="panel panel-warning" style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h4>{selectedResult.studentName}'s Detailed Answers</h4>
+            <h4>รายละเอียดคำตอบของ {selectedResult.studentName} (Detailed Answers)</h4>
             <button className="btn btn-ghost" onClick={()=>setSelectedResult(null)}>×</button>
           </div>
           <div className="panel" style={{ marginBottom: 12 }}>
-            <strong>Score: {selectedResult.score}% ({selectedResult.correct}/{selectedResult.total} correct)</strong>
+            <strong>คะแนน (Score): {selectedResult.score}% ({selectedResult.correct}/{selectedResult.total} ข้อที่ตอบถูก)</strong>
           </div>
           {selectedResult.questions.map((q, i) => {
             const studentAnswer = selectedResult.answers.find(a => a.questionId === q.id)?.answer
@@ -157,8 +157,8 @@ export default function ExamResultsDashboard(){
                 <div style={{ fontSize: '0.9em', color: '#666', marginTop: 4 }}>{q.stem}</div>
                 {q.choices && q.choices.length > 0 && (
                   <div style={{ marginTop: 8 }}>
-                    <div><strong>Student answered:</strong> {studentAnswer || '(blank)'}</div>
-                    <div><strong>Correct answer:</strong> {q.answer}</div>
+                    <div><strong>คำตอบของนักเรียน (Student answered):</strong> {studentAnswer || '(blank)'}</div>
+                    <div><strong>คำตอบที่ถูกต้อง (Correct answer):</strong> {q.answer}</div>
                   </div>
                 )}
               </div>

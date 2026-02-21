@@ -48,4 +48,8 @@ Route::middleware('auth:sanctum')->group(function(){
 
     Route::post('student-exams/{examId}/submit', [StudentExamController::class, 'submit']);
     Route::get('student-exams', [StudentExamController::class, 'index']);
+    Route::get('all-student-exams', [StudentExamController::class, 'allStudentExams']);
+    Route::get('exam-results/{examId}', [StudentExamController::class, 'examResults']);
+    Route::get('my-stats', [StudentExamController::class, 'myStats']);
+    Route::get('student-stats/{studentId}', [StudentExamController::class, 'studentStats']);
 });

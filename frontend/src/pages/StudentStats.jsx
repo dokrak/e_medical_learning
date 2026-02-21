@@ -162,7 +162,7 @@ export default function StudentStats(){
                   <th style={{ textAlign: 'left' }}>Exam</th>
                   <th style={{ textAlign: 'center', width: 80 }}>Score</th>
                   <th style={{ textAlign: 'center', width: 100 }}>Status</th>
-                  <th style={{ textAlign: 'center', width: 120 }}>Action</th>
+                  <th style={{ textAlign: 'center', width: 220 }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -183,14 +183,25 @@ export default function StudentStats(){
                       )}
                     </td>
                     <td style={{ padding: '10px 0', textAlign: 'center' }}>
-                      <button
-                        className="btn btn-small"
-                        onClick={() => downloadPDF(a.id, a.examTitle)}
-                        disabled={downloadingPdf === a.id}
-                        style={{ padding: '6px 12px', fontSize: 12 }}
-                      >
-                        {downloadingPdf === a.id ? '⏳' : '📥'} PDF
-                      </button>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                        {a.examId && (
+                          <Link
+                            to={`/exams/${a.examId}/take`}
+                            className="btn btn-small"
+                            style={{ padding: '6px 12px', fontSize: 12 }}
+                          >
+                            🔄 Re-exam
+                          </Link>
+                        )}
+                        <button
+                          className="btn btn-small"
+                          onClick={() => downloadPDF(a.id, a.examTitle)}
+                          disabled={downloadingPdf === a.id}
+                          style={{ padding: '6px 12px', fontSize: 12 }}
+                        >
+                          {downloadingPdf === a.id ? '⏳' : '📥'} PDF
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

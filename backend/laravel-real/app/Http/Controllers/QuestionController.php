@@ -51,6 +51,14 @@ class QuestionController extends Controller
             $query->where('subspecialty_id', $request->query('subspecialtyId'));
         }
         if ($request->has('tag')) { $query->whereHas('tags', fn($q)=>$q->where('name', $request->query('tag'))); }
+
+        if ($request->filled('limit')) {
+            $limit = (int) $request->query('limit', 0);
+            if ($limit > 0) {
+                $query->limit(min($limit, 500));
+            }
+        }
+
         return response()->json($query->get());
     }
 
