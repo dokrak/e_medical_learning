@@ -31,13 +31,14 @@ input, textarea, button, select { font-family: inherit; }
 .card:hover{ transform: translateY(-4px) }
 
 /* Nav */
-.navbar{ display:flex; align-items:center; gap:14px; padding:12px 18px; border-radius: 0 0 12px 12px; background: linear-gradient(135deg, #0f5132 0%, #0f766e 55%, #164e63 100%); box-shadow: 0 8px 24px rgba(15,81,50,0.24); border-bottom: 1px solid rgba(255,255,255,0.2); position:sticky; top:0; z-index:40 }
+.navbar{ display:flex; align-items:center; gap:14px; padding:12px 18px; border-radius: 0 0 12px 12px; background: linear-gradient(135deg, #0f5132 0%, #0f766e 55%, #164e63 100%); box-shadow: 0 8px 24px rgba(15,81,50,0.24); border-bottom: 1px solid rgba(255,255,255,0.2); position:sticky; top:0; z-index:40; width: min(1200px, calc(100% - 40px)); margin: 0 auto; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin }
 .navbar-logo{ height: 45px; width: auto; margin-right: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-.navbar a{ color: #ffffff; text-decoration:none; margin-right:10px; padding:8px 10px; border-radius:8px; font-weight:600; font-size:0.95rem; transition: background 0.2s, transform 0.2s }
+.navbar a{ color: #ffffff; text-decoration:none; margin-right:10px; padding:8px 10px; border-radius:8px; font-weight:600; font-size:0.95rem; transition: background 0.2s, transform 0.2s; white-space: nowrap }
 .navbar a:hover{ background: rgba(255,255,255,0.16); color: #ffffff; }
 .navbar a.active{ background: rgba(255,255,255,0.30); color: #ffffff; font-weight: 800; box-shadow: inset 0 2px 8px rgba(0,0,0,0.16); }
 .navbar .brand{ font-weight:800; color: #ffffff; font-size:1.15rem }
-.navbar .right{ margin-left:auto; display:flex; gap:10px; align-items:center; color: #ffffff; font-weight:600; font-size:0.95rem }
+.navbar .right{ margin-left:auto; display:flex; gap:10px; align-items:center; color: #ffffff; font-weight:600; font-size:0.95rem; white-space: nowrap; flex-shrink: 0 }
+.navbar .right .navbar-username{ color: var(--brand-gold); background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28); padding: 6px 10px; border-radius: 999px; font-weight: 800 }
 
 /* Responsive nav helpers */
 .nav-links{ display:flex; gap:8px; align-items:center }

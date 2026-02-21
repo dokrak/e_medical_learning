@@ -19,7 +19,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY . /var/www/html
 
-RUN composer install --no-interaction --prefer-dist || true
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 # permissions for storage
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true

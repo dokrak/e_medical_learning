@@ -9,30 +9,106 @@ class SpecialtySeeder extends Seeder
 {
     public function run(): void
     {
-        // major specialties and some common subspecialties
-        $ims = Specialty::firstOrCreate(['name'=>'Internal Medicine']);
-        Specialty::firstOrCreate(['name'=>'Cardiology','parent_id'=>$ims->id]);
-        Specialty::firstOrCreate(['name'=>'Endocrinology','parent_id'=>$ims->id]);
-        Specialty::firstOrCreate(['name'=>'Gastroenterology','parent_id'=>$ims->id]);
-        Specialty::firstOrCreate(['name'=>'Pulmonology','parent_id'=>$ims->id]);
-        Specialty::firstOrCreate(['name'=>'Nephrology','parent_id'=>$ims->id]);
-        Specialty::firstOrCreate(['name'=>'Infectious Diseases','parent_id'=>$ims->id]);
+        $specialties = [
 
-        $surg = Specialty::firstOrCreate(['name'=>'Surgery']);
-        Specialty::firstOrCreate(['name'=>'General Surgery','parent_id'=>$surg->id]);
-        Specialty::firstOrCreate(['name'=>'Orthopedics','parent_id'=>$surg->id]);
-        Specialty::firstOrCreate(['name'=>'Neurosurgery','parent_id'=>$surg->id]);
+            'Internal Medicine' => [
+                'Cardiology',
+                'Interventional Cardiology',
+                'Electrophysiology',
+                'Endocrinology',
+                'Gastroenterology',
+                'Hepatology',
+                'Pulmonology',
+                'Sleep Medicine',
+                'Nephrology',
+                'Rheumatology',
+                'Infectious Diseases',
+                'Hematology',
+                'Oncology',
+                'Geriatrics',
+                'Critical Care Medicine',
+                'Palliative Medicine',
+                'Allergy & Immunology'
+            ],
 
-        $peds = Specialty::firstOrCreate(['name'=>'Pediatrics']);
-        Specialty::firstOrCreate(['name'=>'Neonatology','parent_id'=>$peds->id]);
+            'Surgery' => [
+                'General Surgery',
+                'Colorectal Surgery',
+                'Hepatobiliary Surgery',
+                'Breast Surgery',
+                'Trauma Surgery',
+                'Cardiothoracic Surgery',
+                'Vascular Surgery',
+                'Neurosurgery',
+                'Orthopedic Surgery',
+                'Spine Surgery',
+                'Plastic Surgery',
+                'Urology',
+                'Pediatric Surgery',
+                'Transplant Surgery'
+            ],
 
-        Specialty::firstOrCreate(['name'=>'Emergency Medicine']);
-        Specialty::firstOrCreate(['name'=>'Family Medicine']);
-        Specialty::firstOrCreate(['name'=>'Psychiatry']);
-        Specialty::firstOrCreate(['name'=>'Radiology']);
-        Specialty::firstOrCreate(['name'=>'Anesthesiology']);
-        Specialty::firstOrCreate(['name'=>'Obstetrics & Gynecology']);
-        Specialty::firstOrCreate(['name'=>'Dermatology']);
-        Specialty::firstOrCreate(['name'=>'Neurology']);
+            'Pediatrics' => [
+                'Neonatology',
+                'Pediatric Cardiology',
+                'Pediatric Neurology',
+                'Pediatric Endocrinology',
+                'Pediatric Gastroenterology',
+                'Pediatric Hematology-Oncology',
+                'Pediatric Critical Care'
+            ],
+
+            'Obstetrics & Gynecology' => [
+                'Maternal-Fetal Medicine',
+                'Reproductive Endocrinology',
+                'Gynecologic Oncology',
+                'Urogynecology'
+            ],
+
+            'Radiology' => [
+                'Diagnostic Radiology',
+                'Interventional Radiology',
+                'Neuroradiology',
+                'Musculoskeletal Radiology',
+                'Pediatric Radiology',
+                'Nuclear Medicine'
+            ],
+
+            'Psychiatry' => [
+                'Child & Adolescent Psychiatry',
+                'Geriatric Psychiatry',
+                'Forensic Psychiatry',
+                'Addiction Psychiatry'
+            ],
+
+            'Anesthesiology' => [
+                'Cardiac Anesthesia',
+                'Neuroanesthesia',
+                'Pediatric Anesthesia',
+                'Pain Medicine'
+            ],
+
+            'Emergency Medicine' => [],
+            'Family Medicine' => [],
+            'Neurology' => [],
+            'Dermatology' => [],
+            'Pathology' => [],
+            'Ophthalmology' => [],
+            'Otolaryngology (ENT)' => [],
+            'Physical Medicine & Rehabilitation' => [],
+            'Public Health' => [],
+            'Medical Genetics' => [],
+        ];
+
+        foreach ($specialties as $main => $subs) {
+            $parent = Specialty::firstOrCreate(['name' => $main]);
+
+            foreach ($subs as $sub) {
+                Specialty::firstOrCreate([
+                    'name' => $sub,
+                    'parent_id' => $parent->id
+                ]);
+            }
+        }
     }
 }

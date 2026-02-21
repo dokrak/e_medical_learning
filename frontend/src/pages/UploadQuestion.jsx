@@ -20,7 +20,14 @@ export default function UploadQuestion(){
 
   useEffect(()=>{ loadSpecialties() }, [])
   async function loadSpecialties(){
-    try{ const r = await api.get('/specialties'); setSpecialties(r.data); } catch(e){ /* ignore */ }
+    try{
+      const r = await api.get('/specialties')
+      const normalized = (r.data || []).map(s => ({
+        ...s,
+        subspecialties: s.subspecialties || s.children || []
+      }))
+      setSpecialties(normalized)
+    } catch(e){ /* ignore */ }
   }
 
   function toDataUrl(file){
@@ -117,7 +124,7 @@ export default function UploadQuestion(){
           <label>Subspecialty:</label>
           <select value={subspecialtyId} onChange={e=>setSubspecialtyId(e.target.value)}>
             <option value="">-- select subspecialty --</option>
-            {(specialties.find(s=>s.id===specialtyId)?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
+            {(specialties.find(s=>String(s.id)===String(specialtyId))?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
           </select>
         </div>
         <div style={{ marginTop: 8 }}>

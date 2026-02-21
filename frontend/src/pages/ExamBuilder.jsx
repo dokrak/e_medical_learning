@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import api from '../api'
 import { useNavigate } from 'react-router-dom'
 
@@ -13,14 +13,36 @@ export default function ExamBuilder(){
   const [specialtyId, setSpecialtyId] = useState('')
   const [subspecialtyId, setSubspecialtyId] = useState('')
   const [selectionMode, setSelectionMode] = useState('random')
-  const [difficultyLevel, setDifficultyLevel] = useState('medium')
+  const [difficultyLevel, setDifficultyLevel] = useState('all')
   const [useDistribution, setUseDistribution] = useState(false)
   const [dist13, setDist13] = useState(50)
   const [dist4, setDist4] = useState(25)
   const [dist5, setDist5] = useState(25)
   const [availableQuestions, setAvailableQuestions] = useState([])
   const [selectedQuestions, setSelectedQuestions] = useState([])
+  const [loadingQuestions, setLoadingQuestions] = useState(false)
+  const loadSequence = useRef(0)
   const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
+  const selectedSpecialty = specialties.find(s => String(s.id) === String(specialtyId))
+  const selectedSubspecialties = selectedSpecialty?.subspecialties || []
+  const hasSubspecialties = selectedSubspecialties.length > 0
+  const normalizedSpecialtyName = (selectedSpecialty?.name || '').trim().toLowerCase()
+  const isComprehensiveSpecialty = normalizedSpecialtyName === 'comphrehensive' || normalizedSpecialtyName === 'comprehensive'
+
+  const selectedQuestionDetails = selectedQuestions
+    .map(id => availableQuestions.find(q => String(q.id) === String(id)))
+    .filter(Boolean)
+  const selectedDifficultyTotal = selectedQuestionDetails.reduce((sum, q) => sum + Number(q.difficulty || 3), 0)
+  const selectedDifficultyAverage = selectedQuestionDetails.length > 0
+    ? (selectedDifficultyTotal / selectedQuestionDetails.length)
+    : 0
+  let selectedDifficultyLevel = '-'
+  if (selectedQuestionDetails.length > 0) {
+    if (selectedDifficultyAverage <= 2) selectedDifficultyLevel = 'easy'
+    else if (selectedDifficultyAverage <= 3) selectedDifficultyLevel = 'medium'
+    else if (selectedDifficultyAverage <= 4) selectedDifficultyLevel = 'difficult'
+    else selectedDifficultyLevel = 'extreme'
+  }
 
   useEffect(()=>{ loadSpecialties() }, [])
   
@@ -35,7 +57,14 @@ export default function ExamBuilder(){
   }, [num, selectionMode, selectedQuestions.length])
 
   async function loadSpecialties(){
-    try{ const r = await api.get('/specialties'); setSpecialties(r.data); } catch(e){ /* ignore */ }
+    try{
+      const r = await api.get('/specialties')
+      const normalized = (r.data || []).map(s => ({
+        ...s,
+        subspecialties: s.subspecialties || s.children || []
+      }))
+      setSpecialties(normalized)
+    } catch(e){ /* ignore */ }
   }
 
   function difficultyMatch(q){
@@ -48,11 +77,30 @@ export default function ExamBuilder(){
   }
 
   async function loadAvailableQuestions(){
+    const currentLoad = ++loadSequence.current
     try{
-      const qs = (await api.get(`/questions?limit=200${specialtyId ? '&specialtyId='+specialtyId : ''}${subspecialtyId ? '&subspecialtyId='+subspecialtyId : ''}`)).data
-      setAvailableQuestions(qs.filter(q => difficultyMatch(q)))
-      setSelectedQuestions([])
-    }catch(err){ setMsg('Failed to load questions') }
+      setLoadingQuestions(true)
+      const applySpecialtyFilter = specialtyId && !isComprehensiveSpecialty
+      const applySubspecialtyFilter = applySpecialtyFilter && subspecialtyId
+      const qs = (await api.get(`/questions?limit=200${applySpecialtyFilter ? '&specialtyId='+specialtyId : ''}${applySubspecialtyFilter ? '&subspecialtyId='+subspecialtyId : ''}`)).data
+      if (currentLoad !== loadSequence.current) return
+
+      const normalized = Array.isArray(qs) ? qs.map(q => ({ ...q, difficulty: Number(q.difficulty || 3) })) : []
+      const filtered = normalized.filter(q => difficultyMatch(q)).sort((a, b) => Number(a.id) - Number(b.id))
+
+      setAvailableQuestions(filtered)
+      setSelectedQuestions(prev => {
+        const allowedIds = new Set(filtered.map(q => String(q.id)))
+        return prev.filter(id => allowedIds.has(String(id)))
+      })
+      if (filtered.length === 0) {
+        setMsg('No approved questions match the selected specialty/subspecialty and difficulty level.')
+      }
+    }catch(err){
+      setMsg('Failed to load questions')
+    } finally {
+      if (currentLoad === loadSequence.current) setLoadingQuestions(false)
+    }
   }
 
   function toggleSelect(qid){
@@ -89,7 +137,11 @@ export default function ExamBuilder(){
       setMsg('Please select specialty')
       return
     }
-    if (!subspecialtyId) {
+    const currentSpecialty = specialties.find(s => String(s.id) === String(specialtyId))
+    const currentSubspecialties = currentSpecialty?.subspecialties || []
+    const currentHasSubspecialties = currentSubspecialties.length > 0
+
+    if (currentHasSubspecialties && !subspecialtyId) {
       setMsg('Please select subspecialty')
       return
     }
@@ -103,7 +155,8 @@ export default function ExamBuilder(){
     }
 
     try{
-      let payload = { title, specialtyId, subspecialtyId, selectionMode, passingScore: Number(passingScore) }
+      const normalizedSubspecialtyId = currentHasSubspecialties ? subspecialtyId : null
+      let payload = { title, specialtyId, subspecialtyId: normalizedSubspecialtyId, selectionMode, passingScore: Number(passingScore) }
       if (!useDistribution) payload.difficultyLevel = difficultyLevel
       else {
         // normalize distribution so it sums to 100
@@ -149,10 +202,17 @@ export default function ExamBuilder(){
         </div>
 
         <div style={{ marginTop: 8 }}>
-          <label>Subspecialty *</label>
-          <select value={subspecialtyId} onChange={e=>setSubspecialtyId(e.target.value)} required>
-            <option value="">-- select subspecialty --</option>
-            {(specialties.find(s=>s.id===specialtyId)?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
+          <label>Subspecialty {hasSubspecialties ? '*' : '(optional)'}</label>
+          <select
+            value={subspecialtyId}
+            onChange={e=>setSubspecialtyId(e.target.value)}
+            required={hasSubspecialties}
+            disabled={!specialtyId || !hasSubspecialties}
+          >
+            {hasSubspecialties
+              ? <option value="">-- select subspecialty --</option>
+              : <option value="">No subspecialty required</option>}
+            {selectedSubspecialties.map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
           </select>
         </div>
 
@@ -175,6 +235,7 @@ export default function ExamBuilder(){
             <label>Difficulty:</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <select value={difficultyLevel} onChange={e=>setDifficultyLevel(e.target.value)} disabled={useDistribution}>
+                <option value="all">All levels (1-5)</option>
                 <option value="easy">Easy (1-2)</option>
                 <option value="medium">Medium (3)</option>
                 <option value="difficult">Difficult (4)</option>
@@ -228,49 +289,51 @@ export default function ExamBuilder(){
                   <div>Difficulty</div>
                 </div>
               )}
-              {availableQuestions.length === 0 && <div className="small">No questions loaded. Click "Load questions".</div>}
-              {[...availableQuestions]
-                .sort((a, b) => Number(selectedQuestions.some(x => String(x) === String(b.id))) - Number(selectedQuestions.some(x => String(x) === String(a.id))))
-                .map((q, index) => (
-                (() => {
-                  const isSelected = selectedQuestions.some(x => String(x) === String(q.id))
-                  return (
-                <div
-                  key={q.id}
-                  onClick={() => toggleSelect(q.id)}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '84px 1fr 90px',
-                    gap: 8,
-                    padding: 8,
-                    borderBottom: '1px solid var(--border)',
-                    borderLeft: isSelected ? '6px solid var(--brand-green)' : '4px solid transparent',
-                    background: isSelected ? 'linear-gradient(90deg, var(--brand-light-green), var(--surface-2))' : 'transparent',
-                    boxShadow: isSelected ? '0 8px 20px rgba(21,128,61,0.10)' : 'none',
-                    cursor: 'pointer',
-                    alignItems: 'center',
-                    borderRadius: isSelected ? 8 : 0
-                  }}
-                >
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleSelect(q.id)}
-                      onClick={e => e.stopPropagation()}
-                    />
-                    <span className="small">#{index + 1}</span>
-                  </label>
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{q.title} {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>Selected</span>}</div>
-                    <div className="small">{q.stem}</div>
+              {loadingQuestions && <div className="small">Loading questions...</div>}
+              {!loadingQuestions && availableQuestions.length === 0 && <div className="small">No matching approved questions for current filters.</div>}
+              {availableQuestions.map((q, index) => {
+                const isSelected = selectedQuestions.some(x => String(x) === String(q.id))
+                return (
+                  <div
+                    key={q.id}
+                    onClick={() => toggleSelect(q.id)}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '84px 1fr 90px',
+                      gap: 8,
+                      padding: 8,
+                      borderBottom: '1px solid var(--border)',
+                      borderLeft: isSelected ? '6px solid var(--brand-green)' : '4px solid transparent',
+                      background: isSelected ? 'linear-gradient(90deg, var(--brand-light-green), var(--surface-2))' : 'transparent',
+                      boxShadow: isSelected ? '0 8px 20px rgba(21,128,61,0.10)' : 'none',
+                      cursor: 'pointer',
+                      alignItems: 'center',
+                      borderRadius: isSelected ? 8 : 0
+                    }}
+                  >
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0, cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelect(q.id)}
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <span className="small">#{index + 1}</span>
+                    </label>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{q.title} {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>Selected</span>}</div>
+                      <div className="small">{q.stem}</div>
+                    </div>
+                    <div className="small" style={{ fontWeight: 700 }}>{q.difficulty}</div>
                   </div>
-                  <div className="small" style={{ fontWeight: 700 }}>{q.difficulty}</div>
-                </div>
-                )})()
-              ))}
+                )
+              })}
             </div>
             <div className="small" style={{ marginTop: 8 }}>Selected: {selectedQuestions.length} / {num}</div>
+            <div className="small" style={{ marginTop: 6 }}>
+              Difficulty summary: total {selectedDifficultyTotal}, average {selectedDifficultyAverage.toFixed(2)} ({selectedDifficultyLevel})
+              {difficultyLevel === 'all' ? ' — based on all selected levels (1-5).' : ''}
+            </div>
           </div>
         )}
 

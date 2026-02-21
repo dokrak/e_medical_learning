@@ -1,0 +1,11 @@
+FROM node:20-alpine
+WORKDIR /app
+
+COPY backend/mock-api/package*.json ./backend/mock-api/
+RUN cd backend/mock-api && npm ci --omit=dev
+
+COPY backend/mock-api ./backend/mock-api
+
+WORKDIR /app/backend/mock-api
+EXPOSE 3001
+CMD ["npm", "start"]

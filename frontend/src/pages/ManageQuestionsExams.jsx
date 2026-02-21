@@ -15,6 +15,7 @@ export default function ManageQuestionsExams(){
   const [search, setSearch] = useState('')
   const [specialties, setSpecialties] = useState([])
   const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
+  const CHOICE_LABELS = ['A', 'B', 'C', 'D', 'E']
 
   useEffect(()=>{ loadSpecialties() }, [])
   useEffect(()=>{ loadItems() }, [tab])
@@ -28,7 +29,14 @@ export default function ManageQuestionsExams(){
   }, [location, navigate])
 
   async function loadSpecialties(){
-    try{ const r = await api.get('/specialties'); setSpecialties(r.data); } catch(e){ }
+    try{
+      const r = await api.get('/specialties')
+      const normalized = (r.data || []).map(s => ({
+        ...s,
+        subspecialties: s.subspecialties || s.children || []
+      }))
+      setSpecialties(normalized)
+    } catch(e){ }
   }
 
   async function loadItems(){
@@ -60,6 +68,10 @@ export default function ManageQuestionsExams(){
   async function startEdit(item){
     setEditId(item.id);
     if (tab === 'questions'){
+      const normalizedChoices = Array.isArray(item.choices)
+        ? [...item.choices.slice(0, 5), ...Array(Math.max(0, 5 - item.choices.length)).fill('')]
+        : ['', '', '', '', '']
+
       setEditImages(item.images || []);
       setNewImageFile(null);
       setEditForm({
@@ -70,9 +82,9 @@ export default function ManageQuestionsExams(){
         difficulty: item.difficulty,
         answer: item.answer,
         references: item.references,
-        choices: item.choices || [],
-        specialtyId: item.specialtyId,
-        subspecialtyId: item.subspecialtyId
+        choices: normalizedChoices,
+        specialtyId: (item.specialtyId ?? item.specialty_id ?? item.specialty?.id) != null ? String(item.specialtyId ?? item.specialty_id ?? item.specialty?.id) : '',
+        subspecialtyId: (item.subspecialtyId ?? item.subspecialty_id ?? item.subspecialty?.id) != null ? String(item.subspecialtyId ?? item.subspecialty_id ?? item.subspecialty?.id) : ''
       });
     } else {
       setEditForm({
@@ -115,6 +127,15 @@ export default function ManageQuestionsExams(){
       const key = String(qid)
       const hasItem = prev.some(x => String(x) === key)
       return hasItem ? prev.filter(x => String(x) !== key) : [...prev, qid]
+    })
+  }
+
+  function setEditChoice(index, value){
+    setEditForm(prev => {
+      const current = Array.isArray(prev.choices) ? [...prev.choices] : ['', '', '', '', '']
+      while (current.length < 5) current.push('')
+      current[index] = value
+      return { ...prev, choices: current }
     })
   }
 
@@ -255,8 +276,34 @@ export default function ManageQuestionsExams(){
                     <textarea placeholder="Answer explanation" value={editForm.answerExplanation||''} onChange={e=>setEditForm({...editForm, answerExplanation: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={3} />
                     <label><strong>Difficulty (1-5)</strong></label>
                     <input type="number" min={1} max={5} placeholder="Difficulty" value={editForm.difficulty||3} onChange={e=>setEditForm({...editForm, difficulty: Number(e.target.value)})} style={{ width: '100%', marginBottom: 6 }} />
+
+                    <label><strong>Choices (A–E)</strong></label>
+                    {(Array.isArray(editForm.choices) ? editForm.choices : ['', '', '', '', ''])
+                      .slice(0, 5)
+                      .map((choice, index) => (
+                        <div key={index} style={{ display: 'grid', gridTemplateColumns: '30px 1fr', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                          <strong>{CHOICE_LABELS[index]}.</strong>
+                          <input
+                            placeholder={`Choice ${CHOICE_LABELS[index]}`}
+                            value={choice || ''}
+                            onChange={e => setEditChoice(index, e.target.value)}
+                            style={{ width: '100%' }}
+                          />
+                        </div>
+                      ))}
+
                     <label><strong>Correct Answer</strong></label>
-                    <input placeholder="Answer" value={editForm.answer||''} onChange={e=>setEditForm({...editForm, answer: e.target.value})} style={{ width: '100%', marginBottom: 6 }} />
+                    <select value={editForm.answer||''} onChange={e=>setEditForm({...editForm, answer: e.target.value})} style={{ width: '100%', marginBottom: 6 }}>
+                      <option value="">-- select correct answer --</option>
+                      {(Array.isArray(editForm.choices) ? editForm.choices : [])
+                        .slice(0, 5)
+                        .map((choice, index) => (
+                          <option key={index} value={choice || ''} disabled={!choice}>
+                            {CHOICE_LABELS[index]}. {choice || '(empty)'}
+                          </option>
+                        ))}
+                    </select>
+
                     <label><strong>Specialty</strong></label>
                     <select value={editForm.specialtyId||''} onChange={e=>{ setEditForm({...editForm, specialtyId: e.target.value}); }} style={{ width: '100%', marginBottom: 6 }}>
                       <option value="">-- select specialty --</option>
@@ -265,7 +312,7 @@ export default function ManageQuestionsExams(){
                     <label><strong>Subspecialty</strong></label>
                     <select value={editForm.subspecialtyId||''} onChange={e=>setEditForm({...editForm, subspecialtyId: e.target.value})} style={{ width: '100%', marginBottom: 6 }}>
                       <option value="">-- select subspecialty --</option>
-                      {(specialties.find(s=>s.id===editForm.specialtyId)?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
+                      {(specialties.find(s=>String(s.id)===String(editForm.specialtyId))?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
                     </select>
                     <div style={{ marginBottom: 6, padding: 8 }} className="panel">
                       <label><strong>Images</strong></label>
@@ -300,7 +347,8 @@ export default function ManageQuestionsExams(){
                     <div style={{ marginBottom: 8 }}>
                       <label>Difficulty:</label>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <select value={editForm.difficultyLevel||'medium'} onChange={e=>setEditForm({...editForm, difficultyLevel: e.target.value})} style={{ width: '70%' }} disabled={!!editForm.difficultyDistribution}>
+                        <select value={editForm.difficultyLevel||'all'} onChange={e=>setEditForm({...editForm, difficultyLevel: e.target.value})} style={{ width: '70%' }} disabled={!!editForm.difficultyDistribution}>
+                          <option value="all">All levels (1-5)</option>
                           <option value="easy">Easy (1-2)</option>
                           <option value="medium">Medium (3)</option>
                           <option value="difficult">Difficult (4)</option>
@@ -320,7 +368,7 @@ export default function ManageQuestionsExams(){
                     </select>
                     <select value={editForm.subspecialtyId||''} onChange={e=>setEditForm({...editForm, subspecialtyId: e.target.value})} style={{ width: '100%', marginBottom: 6 }}>
                       <option value="">-- select subspecialty --</option>
-                      {(specialties.find(s=>s.id===editForm.specialtyId)?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
+                      {(specialties.find(s=>String(s.id)===String(editForm.specialtyId))?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
                     </select>
 
                     { editForm.difficultyDistribution && (
@@ -351,9 +399,7 @@ export default function ManageQuestionsExams(){
                           <span className="small" style={{ marginLeft: 8 }}>Choose questions to include in this exam</span>
                         </div>
                         <div style={{ maxHeight: 220, overflow: 'auto' }}>
-                          {[...availableQuestionsForEdit]
-                            .sort((a, b) => Number(editSelectedQuestions.some(x => String(x) === String(b.id))) - Number(editSelectedQuestions.some(x => String(x) === String(a.id))))
-                            .map(q => {
+                          {availableQuestionsForEdit.map(q => {
                               const isSelected = editSelectedQuestions.some(x => String(x) === String(q.id))
                               return (
                             <div key={q.id} style={{ display: 'flex', gap: 8, padding: 6, borderBottom: '1px solid var(--border)', borderLeft: isSelected ? '6px solid var(--brand-green)' : '4px solid transparent', background: isSelected ? 'linear-gradient(90deg, var(--brand-light-green), var(--surface-2))' : 'transparent', boxShadow: isSelected ? '0 8px 20px rgba(21,128,61,0.10)' : 'none', borderRadius: isSelected ? 8 : 0 }}>

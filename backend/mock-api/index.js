@@ -18,6 +18,24 @@ files.forEach(f => {
   if (!fs.existsSync(p)) fs.writeFileSync(p, f === 'users.json' || f === 'questions.json' || f === 'exams.json' ? '[]' : '[]');
 });
 
+const usersPath = path.join(dataDir, 'users.json');
+try {
+  const existingUsers = JSON.parse(fs.readFileSync(usersPath));
+  if (!Array.isArray(existingUsers) || existingUsers.length === 0) {
+    fs.writeFileSync(usersPath, JSON.stringify([
+      { id: uuidv4(), name: 'Admin User', email: 'admin@example.com', password: 'password', role: 'admin', token: uuidv4() },
+      { id: uuidv4(), name: 'Clinician User', email: 'clinician@example.com', password: 'password', role: 'clinician', token: uuidv4() },
+      { id: uuidv4(), name: 'Student User', email: 'student@example.com', password: 'password', role: 'student', token: uuidv4() }
+    ], null, 2));
+  }
+} catch (_err) {
+  fs.writeFileSync(usersPath, JSON.stringify([
+    { id: uuidv4(), name: 'Admin User', email: 'admin@example.com', password: 'password', role: 'admin', token: uuidv4() },
+    { id: uuidv4(), name: 'Clinician User', email: 'clinician@example.com', password: 'password', role: 'clinician', token: uuidv4() },
+    { id: uuidv4(), name: 'Student User', email: 'student@example.com', password: 'password', role: 'student', token: uuidv4() }
+  ], null, 2));
+}
+
 function readJson(fname){
   const p = path.join(dataDir, fname);
   return JSON.parse(fs.readFileSync(p));

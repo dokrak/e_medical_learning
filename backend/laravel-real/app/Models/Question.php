@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Question extends Model
 {
-    protected $fillable = ['title','stem','body','answer_explanation','difficulty','answer','references','choices','status','author_id'];
+    protected $fillable = ['title','stem','body','answer_explanation','difficulty','answer','references','choices','status','moderation_feedback','author_id','specialty_id','subspecialty_id'];
     protected $casts = ['references' => 'array', 'choices' => 'array'];
 
     public function images(){

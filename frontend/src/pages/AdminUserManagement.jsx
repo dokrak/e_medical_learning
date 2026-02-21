@@ -17,6 +17,16 @@ export default function AdminUserManagement(){
 
   useEffect(() => { loadUsers() }, [])
 
+  function extractApiError(err, fallback = 'Request failed'){
+    const data = err?.response?.data
+    if (data?.errors && typeof data.errors === 'object') {
+      const firstField = Object.keys(data.errors)[0]
+      const firstMessage = firstField && Array.isArray(data.errors[firstField]) ? data.errors[firstField][0] : null
+      if (firstMessage) return firstMessage
+    }
+    return data?.message || data?.error || err?.message || fallback
+  }
+
   async function loadUsers(){
     try {
       setLoading(true)
@@ -44,13 +54,28 @@ export default function AdminUserManagement(){
 
   async function handleSubmit(e){
     e.preventDefault()
+
+    const normalizedName = formData.name.trim()
+    const normalizedEmail = formData.email.trim().toLowerCase()
+    const normalizedPassword = formData.password
+    const normalizedRole = formData.role
     
-    if (!formData.name || !formData.email || !formData.role) {
+    if (!normalizedName || !normalizedEmail || !normalizedRole) {
       setMsg('Name, email, and role are required')
       return
     }
 
-    if (!editingId && !formData.password) {
+    if (!editingId && normalizedPassword.length < 6) {
+      setMsg('Password must be at least 6 characters')
+      return
+    }
+
+    if (editingId && normalizedPassword && normalizedPassword.length < 6) {
+      setMsg('New password must be at least 6 characters')
+      return
+    }
+
+    if (!editingId && !normalizedPassword) {
       setMsg('Password is required for new users')
       return
     }
@@ -59,20 +84,26 @@ export default function AdminUserManagement(){
       setLoading(true)
       if (editingId) {
         // Edit existing user
-        const payload = { name: formData.name, email: formData.email, role: formData.role }
-        if (formData.password) payload.password = formData.password
+        const payload = { name: normalizedName, email: normalizedEmail, role: normalizedRole }
+        if (normalizedPassword) payload.password = normalizedPassword
         const r = await api.put(`/admin/users/${editingId}`, payload)
         setMsg('User updated successfully')
         setUsers(users.map(u => u.id === editingId ? r.data : u))
       } else {
         // Create new user
-        const r = await api.post('/admin/users', formData)
+        const payload = {
+          name: normalizedName,
+          email: normalizedEmail,
+          password: normalizedPassword,
+          role: normalizedRole,
+        }
+        const r = await api.post('/admin/users', payload)
         setMsg('User created successfully')
         setUsers([...users, r.data])
       }
       resetForm()
     } catch(err) {
-      setMsg('Error: ' + (err.response?.data?.error || err.message))
+      setMsg('Error: ' + extractApiError(err, 'Failed to save user'))
     } finally {
       setLoading(false)
     }
@@ -86,7 +117,7 @@ export default function AdminUserManagement(){
       setMsg('User deleted successfully')
       setUsers(users.filter(u => u.id !== id))
     } catch(err) {
-      setMsg('Delete failed: ' + (err.response?.data?.error || err.message))
+      setMsg('Delete failed: ' + extractApiError(err, 'Failed to delete user'))
     } finally {
       setLoading(false)
     }
