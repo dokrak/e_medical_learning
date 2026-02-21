@@ -36,6 +36,33 @@ export default function ExamsList(){
     return [titleText, specialtyText, subspecialtyText, difficultyText].some(text => text.includes(keyword))
   })
 
+  function formatSelectionMode(mode){
+    if (!mode) return 'random'
+    return mode === 'manual' ? 'manual' : 'random'
+  }
+
+  function formatDifficulty(level){
+    if (!level) return 'N/A'
+    return level.charAt(0).toUpperCase() + level.slice(1)
+  }
+
+  function difficultyBadgeStyle(level){
+    const key = (level || '').toLowerCase()
+    if (key === 'easy') {
+      return { background: 'rgba(34,197,94,0.14)', color: '#166534', border: '1px solid rgba(34,197,94,0.35)' }
+    }
+    if (key === 'medium') {
+      return { background: 'rgba(245,158,11,0.16)', color: '#92400e', border: '1px solid rgba(245,158,11,0.35)' }
+    }
+    if (key === 'difficult') {
+      return { background: 'rgba(249,115,22,0.16)', color: '#9a3412', border: '1px solid rgba(249,115,22,0.35)' }
+    }
+    if (key === 'extreme') {
+      return { background: 'rgba(220,38,38,0.14)', color: '#991b1b', border: '1px solid rgba(220,38,38,0.35)' }
+    }
+    return { background: 'rgba(107,114,128,0.12)', color: '#374151', border: '1px solid rgba(107,114,128,0.35)' }
+  }
+
   return (
     <div className="card container">
       <h3>Exams</h3>
@@ -64,21 +91,24 @@ export default function ExamsList(){
       {msg && <div>{msg}</div>}
       {filteredExams.map(ex => (
         <div key={ex.id} className="card">
+          {(() => {
+            const questionCount = ex.questions_count ?? ex.questions?.length ?? ex.numQuestions ?? ex.num_questions ?? 0
+            const passingScore = ex.passingScore ?? 50
+            const selectionMode = formatSelectionMode(ex.selectionMode)
+            const displayDifficulty = ex.computedDifficultyLevel || ex.difficultyLevel
+            return (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
               <strong style={{ fontSize: 18, color: 'var(--brand-green)' }}>{ex.title}</strong>
               
-              {/* Exam Details */}
               <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
-                {/* Number of Questions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 20 }}>📝</span>
                   <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--brand-green)' }}>
-                    {ex.questions?.length || 0} Questions
+                    {questionCount} Questions
                   </span>
                 </div>
-                
-                {/* Specialty */}
+
                 {ex.specialty && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 20 }}>🏥</span>
@@ -87,19 +117,23 @@ export default function ExamsList(){
                     </span>
                   </div>
                 )}
-                
-                {/* Difficulty Level */}
-                {ex.difficultyLevel && (
+
+                {displayDifficulty && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 20 }}>⚡</span>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted)' }}>
-                      {ex.difficultyLevel.charAt(0).toUpperCase() + ex.difficultyLevel.slice(1)}
+                    <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 999, letterSpacing: '0.02em', ...difficultyBadgeStyle(displayDifficulty) }}>
+                      {formatDifficulty(displayDifficulty)}
                     </span>
                   </div>
                 )}
               </div>
-              
-              {/* Additional Details */}
+
+              <div style={{ display: 'flex', gap: 14, marginTop: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--muted)' }}>
+                <span>Passing score: <strong>{passingScore}%</strong></span>
+                <span>Selection: <strong>{selectionMode}</strong></span>
+                {(ex.selectedQuestionIds?.length || 0) > 0 && <span>Manual selected: <strong>{ex.selectedQuestionIds.length}</strong></span>}
+              </div>
+
               <div style={{ marginTop: 8, fontSize: 12, color: '#999' }}>
                 {ex.created_at ? `Created: ${new Date(ex.created_at).toLocaleDateString()}` : ''}
               </div>
@@ -121,6 +155,8 @@ export default function ExamsList(){
               <button className="btn btn-primary" onClick={()=>nav(`/exams/${ex.id}/take`)}>Take Exam</button>
             </div>
           </div>
+            )
+          })()}
         </div>
       ))}
       {filteredExams.length === 0 && <div className="small">No exams found</div>}

@@ -9,7 +9,9 @@ use App\Models\Question;
 class ExamController extends Controller
 {
     public function index(){
-        $exams = Exam::with(['specialty','subspecialty'])->get();
+        $exams = Exam::with(['specialty','subspecialty'])
+            ->withCount('questions')
+            ->get();
         $exams->each(function ($exam) {
             $exam->backfillDifficultyMetrics();
         });

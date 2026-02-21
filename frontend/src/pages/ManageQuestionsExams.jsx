@@ -14,12 +14,46 @@ export default function ManageQuestionsExams(){
   const [msg, setMsg] = useState('')
   const [search, setSearch] = useState('')
   const [specialties, setSpecialties] = useState([])
+  const [questionCount, setQuestionCount] = useState(0)
+  const [examCount, setExamCount] = useState(0)
+  const [pendingEditTarget, setPendingEditTarget] = useState(null)
+  const [examQuestionsPreview, setExamQuestionsPreview] = useState([])
+  const [examDifficultyMean, setExamDifficultyMean] = useState(null)
   const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
   const CHOICE_LABELS = ['A', 'B', 'C', 'D', 'E']
+
+  function canEditItem(item){
+    if (!currentUser) return false
+    if (currentUser.role === 'admin') return true
+    const ownerId = item.createdBy ?? item.created_by ?? item.author_id ?? item.user_id ?? null
+    return ownerId != null && String(ownerId) === String(currentUser.id)
+  }
 
   useEffect(()=>{ loadSpecialties() }, [])
   useEffect(()=>{ loadItems() }, [tab])
   useEffect(()=>{ setSearch('') }, [tab])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const editIdParam = params.get('editId')
+    const tabParam = params.get('tab')
+    if (!editIdParam || (tabParam !== 'questions' && tabParam !== 'exams')) return
+
+    setPendingEditTarget({ id: editIdParam, tab: tabParam })
+    if (tabParam !== tab) setTab(tabParam)
+  }, [location.search, tab])
+
+  useEffect(() => {
+    if (!pendingEditTarget) return
+    if (pendingEditTarget.tab !== tab) return
+
+    const targetItem = items.find(item => String(item.id) === String(pendingEditTarget.id))
+    if (!targetItem) return
+
+    startEdit(targetItem, { skipRefresh: true })
+    setPendingEditTarget(null)
+    navigate(location.pathname, { replace: true })
+  }, [items, pendingEditTarget, tab])
 
   useEffect(() => {
     if (!location.state) return
@@ -41,18 +75,21 @@ export default function ManageQuestionsExams(){
 
   async function loadItems(){
     try{
-      if (tab === 'questions'){
-        const r = await api.get('/my-questions');
-        const sorted = r.data.sort((a, b) => {
-          if (a.status === 'rejected' && b.status !== 'rejected') return -1;
-          if (a.status !== 'rejected' && b.status === 'rejected') return 1;
-          return 0;
-        });
-        setItems(sorted);
-      } else {
-        const r = await api.get('/exams');
-        setItems(r.data);
-      }
+      const [questionsRes, examsRes] = await Promise.all([
+        api.get('/my-questions'),
+        api.get('/exams')
+      ])
+
+      const sortedQuestions = (questionsRes.data || []).sort((a, b) => {
+        if (a.status === 'rejected' && b.status !== 'rejected') return -1
+        if (a.status !== 'rejected' && b.status === 'rejected') return 1
+        return 0
+      })
+      const exams = examsRes.data || []
+
+      setQuestionCount(sortedQuestions.length)
+      setExamCount(exams.length)
+      setItems(tab === 'questions' ? sortedQuestions : exams)
     } catch(err){ setMsg('Failed to load: ' + err.message) }
   }
 
@@ -65,7 +102,12 @@ export default function ManageQuestionsExams(){
     })
   }
 
-  async function startEdit(item){
+  async function startEdit(item, options = {}){
+    if (!options.skipRefresh) {
+      window.location.href = `${location.pathname}?tab=${tab}&editId=${item.id}`
+      return
+    }
+
     setEditId(item.id);
     if (tab === 'questions'){
       const normalizedChoices = Array.isArray(item.choices)
@@ -87,16 +129,49 @@ export default function ManageQuestionsExams(){
         subspecialtyId: (item.subspecialtyId ?? item.subspecialty_id ?? item.subspecialty?.id) != null ? String(item.subspecialtyId ?? item.subspecialty_id ?? item.subspecialty?.id) : ''
       });
     } else {
+      let examSource = item
+      try {
+        const detail = await api.get(`/exams/${item.id}`)
+        examSource = { ...item, ...(detail.data || {}) }
+      } catch (e) {
+      }
+
+      const sourceQuestions = Array.isArray(examSource.questions) ? examSource.questions : []
+      const difficultyValues = sourceQuestions
+        .map(q => Number(q?.difficulty || 0))
+        .filter(v => Number.isFinite(v) && v > 0)
+      const computedMean = difficultyValues.length > 0
+        ? Number((difficultyValues.reduce((sum, v) => sum + v, 0) / difficultyValues.length).toFixed(2))
+        : null
+      const fallbackMean = examSource.averageDifficultyScore ?? examSource.config?.averageDifficultyScore ?? null
+      setExamQuestionsPreview(sourceQuestions)
+      setExamDifficultyMean(computedMean ?? fallbackMean)
+
+      const config = examSource.config || {}
+      const prefillSelectionMode = examSource.selectionMode ?? config.selectionMode ?? 'random'
+      const prefillDifficultyLevel = examSource.difficultyLevel ?? config.difficultyLevel ?? examSource.computedDifficultyLevel ?? 'medium'
+      const prefillDifficultyDistribution = examSource.difficultyDistribution ?? config.difficultyDistribution ?? config.difficulty_dist ?? null
+      const existingExamQuestionIds = Array.isArray(examSource.questions) ? examSource.questions.map(q => q.id) : []
+      const prefillSelectedQuestionIds = existingExamQuestionIds.length > 0
+        ? existingExamQuestionIds
+        : (examSource.selectedQuestionIds ?? config.selectedQuestionIds ?? [])
+      const fallbackNumQuestions =
+        examSource.numQuestions ??
+        examSource.num_questions ??
+        examSource.questions_count ??
+        (Array.isArray(examSource.questions) ? examSource.questions.length : 10)
+
       setEditForm({
-        title: item.title,
-        numQuestions: item.questions.length,
-        specialtyId: item.specialty?.id,
-        subspecialtyId: item.subspecialty?.id,
-        selectionMode: item.selectionMode || 'random',
-        difficultyLevel: item.difficultyLevel || 'medium',
-        difficultyDistribution: item.difficultyDistribution || null,
-        selectedQuestionIds: item.selectedQuestionIds || []
+        title: examSource.title,
+        numQuestions: Number(fallbackNumQuestions) || 10,
+        specialtyId: examSource.specialty?.id ?? examSource.specialty_id ?? '',
+        subspecialtyId: examSource.subspecialty?.id ?? examSource.subspecialty_id ?? '',
+        selectionMode: prefillSelectionMode,
+        difficultyLevel: prefillDifficultyLevel,
+        difficultyDistribution: prefillDifficultyDistribution,
+        selectedQuestionIds: prefillSelectedQuestionIds
       });
+      setEditSelectedQuestions(prefillSelectedQuestionIds)
     }
   }
 
@@ -118,15 +193,26 @@ export default function ManageQuestionsExams(){
       const qs = (await api.get(`/questions?limit=200${editForm.specialtyId ? '&specialtyId='+editForm.specialtyId : ''}${editForm.subspecialtyId ? '&subspecialtyId='+editForm.subspecialtyId : ''}`)).data
       const filtered = qs.filter(q => difficultyMatchForEdit(q))
       setAvailableQuestionsForEdit(filtered)
-      setEditSelectedQuestions(editForm.selectedQuestionIds || [])
     }catch(err){ setMsg('Failed to load questions') }
   }
+
+  useEffect(() => {
+    if (tab !== 'exams' || !editId) return
+    if ((editForm.selectionMode || 'random') !== 'manual') return
+    loadQuestionsForEdit()
+  }, [tab, editId, editForm.selectionMode, editForm.specialtyId, editForm.subspecialtyId, editForm.difficultyLevel])
 
   function toggleEditSelect(qid){
     setEditSelectedQuestions(prev => {
       const key = String(qid)
       const hasItem = prev.some(x => String(x) === key)
-      return hasItem ? prev.filter(x => String(x) !== key) : [...prev, qid]
+      const next = hasItem ? prev.filter(x => String(x) !== key) : [...prev, qid]
+      setEditForm(current => ({
+        ...current,
+        selectionMode: 'manual',
+        selectedQuestionIds: next
+      }))
+      return next
     })
   }
 
@@ -158,6 +244,8 @@ export default function ManageQuestionsExams(){
       setNewImageFile(null);
       setAvailableQuestionsForEdit([])
       setEditSelectedQuestions([])
+      setExamQuestionsPreview([])
+      setExamDifficultyMean(null)
       loadItems();
     } catch(err){ setMsg('Save failed: ' + (err.response?.data?.error || err.message)) }
   }
@@ -184,6 +272,8 @@ export default function ManageQuestionsExams(){
     setNewImageFile(null)
     setAvailableQuestionsForEdit([])
     setEditSelectedQuestions([])
+    setExamQuestionsPreview([])
+    setExamDifficultyMean(null)
   }
 
   const visibleItems = editId
@@ -208,8 +298,8 @@ export default function ManageQuestionsExams(){
     <div className="card container">
       <h3>Manage questions & exams</h3>
       <div style={{ marginBottom: 12 }}>
-        <button onClick={()=>setTab('questions')} style={{ fontWeight: tab==='questions'?'bold':'normal' }}>Questions ({items.length})</button>
-        <button onClick={()=>setTab('exams')} style={{ marginLeft: 8, fontWeight: tab==='exams'?'bold':'normal' }}>Exams ({items.length})</button>
+        <button onClick={()=>setTab('questions')} style={{ fontWeight: tab==='questions'?'bold':'normal' }}>Questions ({questionCount})</button>
+        <button onClick={()=>setTab('exams')} style={{ marginLeft: 8, fontWeight: tab==='exams'?'bold':'normal' }}>Exams ({examCount})</button>
       </div>
       {!editId && (
         <div style={{ marginBottom: 12 }}>
@@ -233,6 +323,12 @@ export default function ManageQuestionsExams(){
                 {tab==='questions' && item.status === 'pending' && <span className="badge" style={{ background: '#ffc107', color: '#333', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>PENDING</span>}
                 {tab==='questions' && item.status === 'approved' && <span className="badge" style={{ background: '#28a745', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>APPROVED</span>}
               </div>
+              {tab==='questions' && item.status !== 'rejected' && !editId && (
+                <div className="small" style={{ marginTop: 6, color: '#555', lineHeight: 1.5 }}>
+                  <strong>Stem:</strong> {item.stem || '(no stem)'}
+                  {item.body ? <><br /><strong>Details:</strong> {item.body}</> : null}
+                </div>
+              )}
             </div>
             {tab==='questions' && item.status === 'rejected' && item.moderationFeedback && (
               <div style={{ marginTop: 8, padding: 10, background: '#ffe6e6', border: '2px solid #dc3545', borderRadius: 6 }}>
@@ -336,6 +432,18 @@ export default function ManageQuestionsExams(){
                   </>
                 ) : (
                   <>
+                    <div style={{ marginBottom: 8, padding: 10, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface-2)' }}>
+                      <div style={{ fontWeight: 700, marginBottom: 4 }}>Mean Difficulty of This Exam</div>
+                      <div className="small">
+                        {examDifficultyMean != null ? (
+                          <>
+                            <strong>{examDifficultyMean}</strong> / 5
+                            {Array.isArray(examQuestionsPreview) && examQuestionsPreview.length > 0 ? ` (from ${examQuestionsPreview.length} questions)` : ''}
+                          </>
+                        ) : 'No difficulty data available yet'}
+                      </div>
+                    </div>
+
                     <div style={{ marginBottom: 8 }}>
                       <label>Selection mode:</label>
                       <div style={{ display: 'flex', gap: 12 }}>
@@ -361,11 +469,14 @@ export default function ManageQuestionsExams(){
                       </div>
                     </div>
 
+                    <label><strong>Number of Questions</strong></label>
                     <input type="number" placeholder="Num questions" value={editForm.numQuestions||10} onChange={e=>setEditForm({...editForm, numQuestions: Number(e.target.value)})} style={{ width: '100%', marginBottom: 6 }} />
+                    <label><strong>Specialty</strong></label>
                     <select value={editForm.specialtyId||''} onChange={e=>setEditForm({...editForm, specialtyId: e.target.value})} style={{ width: '100%', marginBottom: 6 }}>
                       <option value="">-- select specialty --</option>
                       {specialties.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
+                    <label><strong>Subspecialty</strong></label>
                     <select value={editForm.subspecialtyId||''} onChange={e=>setEditForm({...editForm, subspecialtyId: e.target.value})} style={{ width: '100%', marginBottom: 6 }}>
                       <option value="">-- select subspecialty --</option>
                       {(specialties.find(s=>String(s.id)===String(editForm.specialtyId))?.subspecialties||[]).map(ss => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
@@ -414,6 +525,38 @@ export default function ManageQuestionsExams(){
                         <div className="small" style={{ marginTop: 6 }}>Selected: {editSelectedQuestions.length}</div>
                       </div>
                     )}
+
+                    <div style={{ marginTop: 10, padding: 10, border: '1px solid var(--border)', borderRadius: 8 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>Questions in This Exam (Topic/Detail)</div>
+                      <div className="small" style={{ marginBottom: 8 }}>
+                        Use checkbox to keep/remove each question in this exam. To add new questions, choose from the manual list above.
+                      </div>
+                      {examQuestionsPreview.length === 0 ? (
+                        <div className="small">No question details available for this exam.</div>
+                      ) : (
+                        <div style={{ maxHeight: 240, overflow: 'auto' }}>
+                          {examQuestionsPreview.map((q, index) => (
+                            <div key={q.id || index} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                              <input
+                                type="checkbox"
+                                checked={editSelectedQuestions.some(x => String(x) === String(q.id))}
+                                onChange={()=>toggleEditSelect(q.id)}
+                                style={{ marginTop: 4 }}
+                              />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600 }}>
+                                {index + 1}. {q.title || q.topic || '(untitled question)'}
+                                {q.difficulty ? <span className="small" style={{ marginLeft: 8 }}>(difficulty {q.difficulty})</span> : null}
+                              </div>
+                                <div className="small" style={{ marginTop: 2 }}>
+                                  <strong>Detail:</strong> {q.body || q.stem || q.detail || '(no detail)'}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
                 <button className="btn btn-primary" onClick={saveEdit} style={{ marginRight: 6 }}>Save</button>
@@ -421,7 +564,7 @@ export default function ManageQuestionsExams(){
               </div>
             ) : (
               <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                {currentUser && (item.createdBy === currentUser.id || currentUser.role === 'admin') ? (
+                {canEditItem(item) ? (
                   <>
                     {!(tab==='questions' && item.status === 'rejected') && (
                       <>

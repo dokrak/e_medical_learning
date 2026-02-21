@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import api from '../api'
 
 export default function ExamTake(){
   const { id } = useParams()
+  const navigate = useNavigate()
   const [exam, setExam] = useState(null)
   const [answers, setAnswers] = useState({})
   const [result, setResult] = useState(null)
@@ -52,6 +53,21 @@ export default function ExamTake(){
     }
   }
 
+  function focusQuestion(questionId){
+    const el = questionRefs.current[questionId]
+    if (!el) return
+
+    scrollToQuestion(questionId)
+    if (typeof el.focus === 'function') {
+      el.focus({ preventScroll: true })
+    }
+
+    const firstInput = el.querySelector('input[type="radio"], input[type="text"], textarea')
+    if (firstInput && typeof firstInput.focus === 'function') {
+      firstInput.focus({ preventScroll: true })
+    }
+  }
+
   async function submit(e){
     e.preventDefault()
     if (!exam) return
@@ -65,17 +81,14 @@ export default function ExamTake(){
 
     if (unansweredNumbers.length > 0) {
       const preview = unansweredNumbers.slice(0, 12).join(', ')
-      const moreCount = unansweredNumbers.length > 12 ? ` and ${unansweredNumbers.length - 12} more` : ''
-      const proceed = window.confirm(
-        `คุณยังตอบไม่ครบ ${unansweredNumbers.length} ข้อ: ${preview}${moreCount ? ` และอีก ${unansweredNumbers.length - 12} ข้อ` : ''}\n\nกด ตกลง เพื่อส่งคำตอบตอนนี้ หรือกด ยกเลิก เพื่อกลับไปตอบให้ครบ`
-      )
-      if (!proceed) {
-        setMsg('ยกเลิกการส่งคำตอบ กรุณากลับไปตอบข้อที่ยังไม่ครบ')
-        const firstUnansweredIndex = unansweredNumbers[0] - 1
-        const firstUnansweredQuestion = exam.questions[firstUnansweredIndex]
-        if (firstUnansweredQuestion?.id) scrollToQuestion(firstUnansweredQuestion.id)
-        return
-      }
+      const remaining = unansweredNumbers.length > 12 ? ` และอีก ${unansweredNumbers.length - 12} ข้อ` : ''
+      const warning = `กรุณาตอบคำถามให้ครบก่อนส่งข้อสอบ\n\nข้อที่ยังไม่ตอบ: ${preview}${remaining}`
+      setMsg(warning)
+      window.alert(warning)
+      const firstUnansweredIndex = unansweredNumbers[0] - 1
+      const firstUnansweredQuestion = exam.questions[firstUnansweredIndex]
+      if (firstUnansweredQuestion?.id) focusQuestion(firstUnansweredQuestion.id)
+      return
     }
 
     const payload = { answers: exam.questions.map(q => ({ questionId: q.id, answer: (answers[q.id]||'').toString() })) }
@@ -121,6 +134,14 @@ export default function ExamTake(){
     }
   }
 
+  function reExam(){
+    setResult(null)
+    setMsg('')
+    setAnswers({})
+    setExam(prev => prepareExamSession(prev))
+    questionRefs.current = {}
+  }
+
   if (!exam) return <div className="card container">กำลังโหลด...</div>
 
   return (
@@ -134,7 +155,7 @@ export default function ExamTake(){
       </div>
       <form onSubmit={submit}>
         {exam.questions.map((q, index) => (
-          <div key={q.id} ref={el => { questionRefs.current[q.id] = el }} style={{ marginBottom: 12 }}>
+          <div key={q.id} ref={el => { questionRefs.current[q.id] = el }} tabIndex={-1} style={{ marginBottom: 12 }}>
             <div><span className="question-order-badge">ข้อที่ {index + 1}</span></div>
             <div style={{ marginTop: 2 }}><strong>{q.title}</strong></div>
             <div>{q.stem}</div>
@@ -164,11 +185,12 @@ export default function ExamTake(){
             </div>
           </div>
         ))}
-        <div><button className="btn btn-primary">ส่งข้อสอบ</button></div>
+        <div><button className="btn btn-primary" disabled={!!result}>ส่งข้อสอบ</button></div>
       </form>
       {msg && <div>{msg}</div>}
       {result && (
         <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: result.passed ? 'rgba(16,185,129,0.08)' : 'rgba(220,38,38,0.08)', border: `2px solid ${result.passed ? '#10b981' : '#dc2626'}` }}>
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>ผลการสอบ / Exam Result</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <span style={{ fontSize: '24px' }}>{result.passed ? '✓' : '✗'}</span>
             <strong style={{ color: result.passed ? '#10b981' : '#dc2626', fontSize: '18px' }}>
@@ -178,7 +200,9 @@ export default function ExamTake(){
           <div><strong>คะแนน:</strong> {result.score}% (ตอบถูก {result.correct}/{result.total} ข้อ)</div>
           <div style={{ marginTop: 6 }}>คะแนนผ่านขั้นต่ำ: <strong>{result.passingScore}%</strong></div>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary" onClick={downloadPDF} style={{ flex: 1 }}>📥 ดาวน์โหลดรายงาน PDF</button>
+            <button className="btn btn-primary" onClick={downloadPDF} style={{ flex: 1 }}>📥 Download PDF</button>
+            <button className="btn" onClick={reExam} style={{ flex: 1 }}>🔄 Re-exam</button>
+            <button className="btn btn-ghost" onClick={()=>navigate('/')} style={{ flex: 1 }}>🏠 Back to Home</button>
           </div>
         </div>
       )}
