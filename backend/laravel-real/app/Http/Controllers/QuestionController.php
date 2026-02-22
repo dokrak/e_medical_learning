@@ -21,9 +21,12 @@ class QuestionController extends Controller
     }
 
     public function myQuestions(Request $request){
-        $questions = Question::with('images')
-            ->where('author_id', $request->user()->id)
-            ->orderByDesc('id')
+        $user = $request->user();
+        $query = Question::with('images');
+        if (!$user->hasRole('admin')) {
+            $query = $query->where('author_id', $user->id);
+        }
+        $questions = $query->orderByDesc('id')
             ->get()
             ->map(function (Question $question) {
                 $payload = $question->toArray();
@@ -34,11 +37,9 @@ class QuestionController extends Controller
                 $payload['images'] = $question->images
                     ->map(fn($image) => Storage::disk('public')->url($image->path))
                     ->values();
-
                 return $payload;
             })
             ->values();
-
         return response()->json($questions);
     }
 

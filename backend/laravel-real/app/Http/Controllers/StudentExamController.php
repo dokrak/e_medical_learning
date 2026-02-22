@@ -113,10 +113,10 @@ class StudentExamController extends Controller
 
     public function allStudentExams(Request $request)
     {
-        if (!$this->isStaff($request)) {
+        $user = $request->user();
+        if (!$this->isStaff($request) && !$user->hasRole('admin')) {
             return response()->json(['error' => 'forbidden'], 403);
         }
-
         $results = StudentExam::with(['exam', 'student'])
             ->orderByDesc('created_at')
             ->get()
@@ -133,19 +133,17 @@ class StudentExamController extends Controller
                 ];
             })
             ->values();
-
         return response()->json($results);
     }
 
     public function examResults(Request $request, int $examId)
     {
-        if (!$this->isStaff($request)) {
+        $user = $request->user();
+        if (!$this->isStaff($request) && !$user->hasRole('admin')) {
             return response()->json(['error' => 'forbidden'], 403);
         }
-
         $exam = Exam::with('questions')->findOrFail($examId);
         $examQuestions = $exam->questions->values();
-
         $results = StudentExam::with('student')
             ->where('exam_id', $examId)
             ->orderByDesc('created_at')
@@ -158,10 +156,8 @@ class StudentExamController extends Controller
                         'answer',
                         ''
                     );
-
                     return trim(strtolower((string) $studentAnswer)) === trim(strtolower((string) $question->answer));
                 })->count();
-
                 return [
                     'id' => $attempt->id,
                     'studentId' => $attempt->student_id,
@@ -184,7 +180,6 @@ class StudentExamController extends Controller
                 ];
             })
             ->values();
-
         return response()->json($results);
     }
 
