@@ -1,4 +1,4 @@
-# 🏥 Chomthong Hospital Medical Learning Platform (med-km)
+﻿# ๐ฅ Chomthong Hospital Medical Learning Platform (med-km)
 ## Comprehensive Project Manual & User Guide
 
 **Version:** 1.0  
@@ -24,11 +24,11 @@
 
 ## Project Overview
 
-### 🎯 Purpose
+### ๐ฏ Purpose
 
 The **Chomthong Hospital Medical Learning Platform (med-km)** is a modern, comprehensive digital learning system designed to facilitate continuous medical education and professional development for healthcare professionals and medical students. The platform bridges traditional medical knowledge with cutting-edge digital innovation to create an engaging, interactive learning environment.
 
-### 📋 Key Objectives
+### ๐“ Key Objectives
 
 - **Medical Excellence**: Provide comprehensive, high-quality medical exams curated by healthcare professionals
 - **Smart Learning**: Deliver AI-powered analytics to track progress and identify learning gaps
@@ -37,7 +37,7 @@ The **Chomthong Hospital Medical Learning Platform (med-km)** is a modern, compr
 - **Data-Driven Insights**: Visualize learning trends and performance metrics
 - **Secure & Trustworthy**: Protect medical data with enterprise-grade security
 
-### ✨ Core Features
+### โจ Core Features
 
 | Feature | Description |
 |---------|-------------|
@@ -55,7 +55,7 @@ The **Chomthong Hospital Medical Learning Platform (med-km)** is a modern, compr
 
 ## System Architecture
 
-### 🏗️ Technology Stack
+### ๐—๏ธ Technology Stack
 
 **Frontend:**
 - Framework: React 18 with Vite
@@ -78,59 +78,59 @@ The **Chomthong Hospital Medical Learning Platform (med-km)** is a modern, compr
 - Docker Support: Dockerfile and docker-compose.yml available
 - Version Control: Git
 
-### 📁 Project Structure
+### ๐“ Project Structure
 
 ```
 med-km/
-├── frontend/                          # React frontend application
-│   ├── src/
-│   │   ├── App.jsx                   # Main app router and navigation
-│   │   ├── api.js                    # Axios API client
-│   │   ├── main.jsx                  # React entry point
-│   │   ├── pages/                    # Page components
-│   │   │   ├── HomePage.jsx          # Welcome dashboard
-│   │   │   ├── Login.jsx             # Authentication
-│   │   │   ├── ExamsList.jsx         # Browse exams
-│   │   │   ├── ExamTake.jsx          # Take exam
-│   │   │   ├── ExamBuilder.jsx       # Create exam (staff only)
-│   │   │   ├── UploadQuestion.jsx    # Upload question (clinician)
-│   │   │   ├── ManageQuestionsExams.jsx  # Manage content
-│   │   │   ├── ModeratorQueue.jsx    # Review queue (moderator)
-│   │   │   ├── StudentStats.jsx      # Student analytics
-│   │   │   ├── ClinicianDashboard.jsx# Clinician analytics
-│   │   │   └── AdminUserManagement.jsx # User management
-│   │   └── styles.css                # Global styling
-│   ├── public/                       # Static assets
-│   │   └── logo.png                  # Chomthong Hospital logo
-│   ├── package.json
-│   └── vite.config.js
-│
-├── backend/
-│   ├── mock-api/                     # Express backend
-│   │   ├── index.js                  # Main server file
-│   │   ├── package.json
-│   │   └── data/                     # JSON data files
-│   │       ├── users.json
-│   │       ├── questions.json
-│   │       ├── exams.json
-│   │       ├── student_exams.json
-│   │       ├── specialties.json
-│   │       ├── audit_logs.json
-│   │       └── question_images/
-│   │
-│   └── laravel-real/                 # (Optional) Production backend
-│       ├── app/Models/               # Database models
-│       ├── app/Http/Controllers/     # API controllers
-│       ├── database/migrations/      # Database schema
-│       ├── routes/api.php            # API routes
-│       └── composer.json
-│
-├── README.md                         # Project overview
-└── PROJECT_MANUAL.md                 # This file
+โ”โ”€โ”€ frontend/                          # React frontend application
+โ”   โ”โ”€โ”€ src/
+โ”   โ”   โ”โ”€โ”€ App.jsx                   # Main app router and navigation
+โ”   โ”   โ”โ”€โ”€ api.js                    # Axios API client
+โ”   โ”   โ”โ”€โ”€ main.jsx                  # React entry point
+โ”   โ”   โ”โ”€โ”€ pages/                    # Page components
+โ”   โ”   โ”   โ”โ”€โ”€ HomePage.jsx          # Welcome dashboard
+โ”   โ”   โ”   โ”โ”€โ”€ Login.jsx             # Authentication
+โ”   โ”   โ”   โ”โ”€โ”€ ExamsList.jsx         # Browse exams
+โ”   โ”   โ”   โ”โ”€โ”€ ExamTake.jsx          # Take exam
+โ”   โ”   โ”   โ”โ”€โ”€ ExamBuilder.jsx       # Create exam (staff only)
+โ”   โ”   โ”   โ”โ”€โ”€ UploadQuestion.jsx    # Upload question (clinician)
+โ”   โ”   โ”   โ”โ”€โ”€ ManageQuestionsExams.jsx  # Manage content
+โ”   โ”   โ”   โ”โ”€โ”€ ModeratorQueue.jsx    # Review queue (moderator)
+โ”   โ”   โ”   โ”โ”€โ”€ StudentStats.jsx      # Student analytics
+โ”   โ”   โ”   โ”โ”€โ”€ ClinicianDashboard.jsx# Clinician analytics
+โ”   โ”   โ”   โ””โ”€โ”€ AdminUserManagement.jsx # User management
+โ”   โ”   โ””โ”€โ”€ styles.css                # Global styling
+โ”   โ”โ”€โ”€ public/                       # Static assets
+โ”   โ”   โ””โ”€โ”€ logo.png                  # Chomthong Hospital logo
+โ”   โ”โ”€โ”€ package.json
+โ”   โ””โ”€โ”€ vite.config.js
+โ”
+โ”โ”€โ”€ backend/
+โ”   โ”โ”€โ”€ mock-api/                     # Express backend
+โ”   โ”   โ”โ”€โ”€ index.js                  # Main server file
+โ”   โ”   โ”โ”€โ”€ package.json
+โ”   โ”   โ””โ”€โ”€ data/                     # JSON data files
+โ”   โ”       โ”โ”€โ”€ users.json
+โ”   โ”       โ”โ”€โ”€ questions.json
+โ”   โ”       โ”โ”€โ”€ exams.json
+โ”   โ”       โ”โ”€โ”€ student_exams.json
+โ”   โ”       โ”โ”€โ”€ specialties.json
+โ”   โ”       โ”โ”€โ”€ audit_logs.json
+โ”   โ”       โ””โ”€โ”€ question_images/
+โ”   โ”
+โ”   โ””โ”€โ”€ laravel-real/                 # (Optional) Production backend
+โ”       โ”โ”€โ”€ app/Models/               # Database models
+โ”       โ”โ”€โ”€ app/Http/Controllers/     # API controllers
+โ”       โ”โ”€โ”€ database/migrations/      # Database schema
+โ”       โ”โ”€โ”€ routes/api.php            # API routes
+โ”       โ””โ”€โ”€ composer.json
+โ”
+โ”โ”€โ”€ README.md                         # Project overview
+โ””โ”€โ”€ PROJECT_MANUAL.md                 # This file
 
 ```
 
-### 🔐 Authentication Flow
+### ๐” Authentication Flow
 
 ```
 1. User enters Thai ID / Email + Password
@@ -145,7 +145,7 @@ med-km/
 
 ## Installation & Setup
 
-### ✅ Prerequisites
+### โ… Prerequisites
 
 - **Node.js**: v14.0 or higher ([Download](https://nodejs.org/))
 - **npm**: v6.0 or higher (included with Node.js)
@@ -153,7 +153,7 @@ med-km/
 - **Terminal/CMD**: PowerShell, CMD, or Bash
 - **Disk Space**: 500MB minimum (excluding node_modules)
 
-### 📥 Installation Steps
+### ๐“ฅ Installation Steps
 
 #### Step 1: Clone Repository
 ```bash
@@ -186,7 +186,7 @@ cd ../../frontend
 npm run build
 ```
 
-### 🚀 Running Development Environment
+### ๐€ Running Development Environment
 
 #### Option 1: Run Both Frontend & Backend
 
@@ -211,7 +211,7 @@ npm run dev
 ```
 Update `frontend/src/api.js` to point to production backend URL.
 
-### 🔧 Configuration
+### ๐”ง Configuration
 
 #### Backend Configuration (`backend/mock-api/index.js`)
 ```javascript
@@ -253,1064 +253,77 @@ export default api
 
 ## Production Deployment
 
-### 🐳 Docker Deployment (Recommended)
+> **๐“– For the complete step-by-step deployment guide, see [PRODUCTION_MIGRATION.md](PRODUCTION_MIGRATION.md)**
 
-#### Prerequisites
-- Docker installed ([Download](https://www.docker.com/products/docker-desktop))
-- Docker Compose installed (included with Docker Desktop)
+### Quick Summary
 
-#### Step 1: Build Docker Images
+#### Requirements
+- Ubuntu 22.04+ / Debian 12+
+- PHP 8.2+ with extensions (mysql, xml, curl, gd, mbstring, zip, bcmath)
+- MySQL 8.0+ or PostgreSQL 15+
+- Nginx
+- Composer 2.x
+- Node.js 18+ (for frontend build only)
+
+#### Deploy in 5 Steps
+
 ```bash
+# 1. Clone
+git clone https://github.com/dokrak/e_medical_learning.git /var/www/medkm
+cd /var/www/medkm
+
+# 2. Backend
 cd backend/laravel-real
-docker-compose build
-```
-
-#### Step 2: Start Services
-```bash
-docker-compose up -d
-```
-
-#### Step 3: Run Migrations (First Time)
-```bash
-docker-compose exec app php artisan migrate
-docker-compose exec app php artisan seed
-```
-
-#### Step 4: Access Application
-- Frontend: `http://localhost`
-- Backend API: `http://localhost/api`
-
-### 📦 Traditional Server Deployment
-
-#### Frontend Deployment (Nginx/Apache)
-
-**Step 1: Build for Production**
-```bash
-cd frontend
-npm run build
-```
-This creates optimized files in `dist/` folder.
-
-**Step 2: Deploy to Web Server**
-
-**Nginx Configuration:**
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        root /var/www/med-km/frontend/dist;
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api {
-        proxy_pass http://backend-server:3001;
-        proxy_set_header Authorization $http_authorization;
-    }
-}
-```
-
-**Apache Configuration:**
-```apache
-<VirtualHost *:80>
-    ServerName your-domain.com
-    DocumentRoot /var/www/med-km/frontend/dist
-    
-    <Directory /var/www/med-km/frontend/dist>
-        RewriteEngine On
-        RewriteBase /
-        RewriteRule ^index\.html$ - [L]
-        RewriteCond %{REQUEST_FILENAME} !-f
-        RewriteCond %{REQUEST_FILENAME} !-d
-        RewriteRule . /index.html [L]
-    </Directory>
-
-    ProxyPreserveHost On
-    ProxyPass /api http://backend-server:3001/api
-    ProxyPassReverse /api http://backend-server:3001/api
-</VirtualHost>
-```
-
-#### Backend Deployment (Node.js)
-
-**Option A: Using PM2 (Recommended)**
-```bash
-npm install -g pm2
-
-cd backend/mock-api
-npm install --production
-pm2 start index.js --name "med-km-api"
-pm2 save
-pm2 startup
-```
-
-**Option B: Using systemd (Linux)**
-Create `/etc/systemd/system/med-km-api.service`:
-```ini
-[Unit]
-Description=Chomthong Medical Learning Platform API
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/var/www/med-km/backend/mock-api
-ExecStart=/usr/bin/node index.js
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Then:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable med-km-api
-sudo systemctl start med-km-api
-```
-
-#### Environment Variables (.env)
-```bash
-# Frontend (.env)
-VITE_API_URL=https://your-domain.com/api
-VITE_APP_NAME=med-km
-
-# Backend (.env)
-NODE_ENV=production
-PORT=3001
-CORS_ORIGIN=https://your-domain.com
-JWT_SECRET=your-secure-secret-key-here
-```
-
-### 🔒 SSL/HTTPS Setup
-
-**Using Let's Encrypt (Free):**
-```bash
-sudo apt-get install certbot python3-certbot-nginx
-sudo certbot certonly --nginx -d your-domain.com
-```
-
-**Nginx SSL Configuration:**
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com;
-
-    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
-    
-    # ... rest of configuration
-}
-
-# Redirect HTTP to HTTPS
-server {
-    listen 80;
-    server_name your-domain.com;
-    return 301 https://$server_name$request_uri;
-}
-```
-
-### 📊 Database Setup (Production)
-
-For production, migrate from JSON to a proper database:
-
-**PostgreSQL Migration:**
-```bash
-cd backend/laravel-real
-php artisan config:cache
-php artisan migrate --force
-php artisan db:seed
-```
-
-**MySQL Migration:**
-```bash
-# Update .env with MySQL credentials
-DB_CONNECTION=mysql
-DB_HOST=mysql-server
-DB_DATABASE=med_km
-DB_USERNAME=med_km_user
-DB_PASSWORD=secure-password
-
-# Run migrations
-php artisan migrate --force
-```
-
----
-
-## 🏗️ Backend Architecture Options & Linux Production Deployment
-
-### Understanding the Dual Backend Architecture
-
-This project provides **TWO backend implementations** that serve identical REST API endpoints:
-
-#### 1. **Mock API (Node.js + Express)** 
-- **Purpose:** Development, prototyping, and testing
-- **Technology:** Node.js, Express.js
-- **Storage:** JSON files (no database required)
-- **Port:** 3001 (default)
-- **Use Case:** Rapid development, frontend testing, demos
-
-#### 2. **Laravel Backend (PHP)**
-- **Purpose:** Production deployment
-- **Technology:** PHP 8.1+, Laravel 10, MySQL/PostgreSQL
-- **Storage:** Relational database with ORM
-- **Port:** 8000 (default)
-- **Use Case:** Enterprise production environment
-
-### Backend Comparison Table
-
-| Feature | Mock API (Node.js) | Laravel (PHP) |
-|---------|-------------------|---------------|
-| **Setup Time** | ⚡ 2-5 minutes | 🕐 15-30 minutes |
-| **Database Required** | ❌ No (JSON files) | ✅ Yes (MySQL/PostgreSQL) |
-| **Production Ready** | ❌ Not recommended | ✅ Recommended |
-| **Development Speed** | ✅ Very fast | ⚠️ Moderate |
-| **Scalability** | ❌ Limited (single instance) | ✅ High (horizontal scaling) |
-| **Performance** | ⚠️ Good for < 100 users | ✅ Excellent for 1000+ users |
-| **Features** | 📦 Basic CRUD | 🎁 Full framework (queues, cache, jobs) |
-| **Data Persistence** | ⚠️ File-based | ✅ ACID-compliant database |
-| **Concurrent Users** | ⚠️ < 50 | ✅ 500+ |
-| **Security** | ⚠️ Basic token auth | ✅ Laravel Sanctum, CSRF protection |
-| **Backup & Recovery** | ⚠️ Manual file copy | ✅ Database dump & replication |
-| **API Endpoints** | ✅ Same as Laravel | ✅ Same as Mock API |
-| **Monitoring** | ⚠️ Basic logging | ✅ Laravel Telescope, logs |
-| **Maintenance** | ✅ Minimal | ⚠️ Regular updates needed |
-
-### When to Use Each Backend
-
-**Use Mock API (Node.js) when:**
-- 🚀 Rapid prototyping and development
-- 🧪 Frontend testing without database setup
-- 📊 Demo presentations and proof-of-concept
-- 👨‍💻 Local development environment
-- 📝 Small team collaboration (< 10 users)
-
-**Use Laravel (PHP) when:**
-- 🏥 Production deployment for hospital/clinic
-- 👥 Multi-user environment (50+ users)
-- 🔒 Security and compliance requirements (HIPAA, PHI protection)
-- 📈 Scalability and performance critical
-- 💾 Data integrity and backup essential
-- 🔄 Integration with existing PHP infrastructure
-
----
-
-## 🐧 Complete Linux Production Deployment Guide
-
-This guide covers deploying the Medical Learning Platform on an Ubuntu/Debian Linux server.
-
-### Prerequisites
-
-- Ubuntu 20.04+ or Debian 11+ server
-- Root or sudo access
-- Domain name configured (optional but recommended)
-- Minimum 2GB RAM, 2 CPU cores, 20GB disk space
-
----
-
-### PART 1: Initial Server Setup
-
-#### Step 1: Update System
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl wget git vim ufw
-```
-
-#### Step 2: Create Application User
-```bash
-sudo adduser medkm
-sudo usermod -aG sudo medkm
-sudo su - medkm
-```
-
-#### Step 3: Configure Firewall
-```bash
-sudo ufw allow OpenSSH
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw enable
-sudo ufw status
-```
-
-#### Step 4: Install Node.js (Required for both backends)
-```bash
-# Install Node.js 18.x LTS
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Verify installation
-node --version  # Should show v18.x.x
-npm --version   # Should show 9.x.x
-```
-
-#### Step 5: Install Nginx Web Server
-```bash
-sudo apt install -y nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
-sudo systemctl status nginx
-```
-
-#### Step 6: Clone Repository
-```bash
-cd /var/www
-sudo mkdir -p medkm
-sudo chown medkm:medkm medkm
-cd medkm
-git clone https://github.com/your-org/med-km.git .
-```
-
----
-
-### PART 2A: Deploy with Mock API (Node.js Backend)
-
-**Use this option for development/testing or small deployments**
-
-#### Step 1: Install Backend Dependencies
-```bash
-cd /var/www/medkm/backend/mock-api
-npm install --production
-```
-
-#### Step 2: Create Backend Environment File
-```bash
-nano .env
-```
-Add:
-```bash
-NODE_ENV=production
-PORT=3001
-CORS_ORIGIN=https://your-domain.com
-```
-
-#### Step 3: Test Backend
-```bash
-node index.js
-# Should see: Server listening on port 3001
-# Press Ctrl+C to stop
-```
-
-#### Step 4: Install PM2 Process Manager
-```bash
-sudo npm install -g pm2
-```
-
-#### Step 5: Start Backend with PM2
-```bash
-cd /var/www/medkm/backend/mock-api
-pm2 start index.js --name medkm-api
-pm2 save
-pm2 startup
-# Copy and run the command PM2 outputs
-```
-
-#### Step 6: Verify Backend Status
-```bash
-pm2 status
-pm2 logs medkm-api
-```
-
-#### Step 7: Build Frontend
-```bash
-cd /var/www/medkm/frontend
-
-# Create production environment file
-nano .env
-```
-Add:
-```bash
-VITE_API_BASE_URL=https://your-domain.com/api
-```
-
-Build:
-```bash
-npm install
-npm run build
-# Creates dist/ folder with optimized files
-```
-
-#### Step 8: Configure Nginx for Node.js Backend
-```bash
-sudo nano /etc/nginx/sites-available/medkm
-```
-Add:
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-    
-    # Frontend (React build)
-    location / {
-        root /var/www/medkm/frontend/dist;
-        try_files $uri $uri/ /index.html;
-        add_header Cache-Control "public, max-age=3600";
-    }
-    
-    # Backend API (Node.js)
-    location /api {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 300s;
-        proxy_connect_timeout 75s;
-    }
-    
-    # Health check endpoint
-    location /health {
-        access_log off;
-        return 200 "healthy\n";
-        add_header Content-Type text/plain;
-    }
-}
-```
-
-Enable site:
-```bash
-sudo ln -s /etc/nginx/sites-available/medkm /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-#### Step 9: Install SSL Certificate (Let's Encrypt)
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d your-domain.com
-# Follow prompts, choose redirect HTTP to HTTPS
-```
-
-#### Step 10: Verify Deployment
-```bash
-# Check backend
-curl http://localhost:3001/api/health
-
-# Check full stack
-curl https://your-domain.com
-curl https://your-domain.com/api/health
-```
-
----
-
-### PART 2B: Deploy with Laravel Backend (Recommended for Production)
-
-**Use this option for production deployment with database**
-
-#### Step 1: Install PHP and Dependencies
-```bash
-sudo apt install -y php8.1 php8.1-fpm php8.1-cli php8.1-common \
-    php8.1-mysql php8.1-xml php8.1-curl php8.1-gd php8.1-mbstring \
-    php8.1-zip php8.1-bcmath php8.1-intl php8.1-sqlite3
-
-# Verify PHP version
-php -v  # Should show PHP 8.1.x
-```
-
-#### Step 2: Install Composer
-```bash
-curl -sS https://getcomposer.org/installer | php
-sudo mv composer.phar /usr/local/bin/composer
-composer --version
-```
-
-#### Step 3: Install Database (MySQL)
-```bash
-sudo apt install -y mysql-server
-sudo mysql_secure_installation
-# Follow prompts: set root password, remove anonymous users, etc.
-```
-
-Create database:
-```bash
-sudo mysql
-```
-In MySQL:
-```sql
-CREATE DATABASE medkm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'medkm_user'@'localhost' IDENTIFIED BY 'your_secure_password';
-GRANT ALL PRIVILEGES ON medkm.* TO 'medkm_user'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
-```
-
-#### Step 4: Install Laravel Dependencies
-```bash
-cd /var/www/medkm/backend/laravel-real
 composer install --optimize-autoloader --no-dev
-```
-
-#### Step 5: Configure Laravel Environment
-```bash
 cp .env.example .env
-nano .env
-```
-Configure:
-```bash
-APP_NAME="Medical Learning Platform"
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://your-domain.com
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=medkm
-DB_USERNAME=medkm_user
-DB_PASSWORD=your_secure_password
-
-CACHE_DRIVER=file
-QUEUE_CONNECTION=database
-SESSION_DRIVER=file
-SESSION_LIFETIME=120
-
-# Generate this in next step
-APP_KEY=
-```
-
-#### Step 6: Generate Application Key
-```bash
+# Edit .env: set APP_URL, DB credentials, APP_ENV=production, APP_DEBUG=false
 php artisan key:generate
-php artisan config:cache
-```
-
-#### Step 7: Run Database Migrations
-```bash
 php artisan migrate --force
 php artisan db:seed --force
-```
-
-#### Step 8: Set Permissions
-```bash
-sudo chown -R www-data:www-data /var/www/medkm/backend/laravel-real/storage
-sudo chown -R www-data:www-data /var/www/medkm/backend/laravel-real/bootstrap/cache
-sudo chmod -R 775 /var/www/medkm/backend/laravel-real/storage
-sudo chmod -R 775 /var/www/medkm/backend/laravel-real/bootstrap/cache
-```
-
-#### Step 9: Configure Nginx for Laravel
-```bash
-sudo nano /etc/nginx/sites-available/medkm
-```
-Add:
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-    root /var/www/medkm/frontend/dist;
-    index index.html;
-    
-    # Frontend
-    location / {
-        try_files $uri $uri/ /index.html;
-        add_header Cache-Control "public, max-age=3600";
-    }
-    
-    # Backend API (Laravel)
-    location /api {
-        alias /var/www/medkm/backend/laravel-real/public;
-        try_files $uri $uri/ @laravel;
-        
-        location ~ \.php$ {
-            include snippets/fastcgi-php.conf;
-            fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
-            fastcgi_param SCRIPT_FILENAME /var/www/medkm/backend/laravel-real/public/index.php;
-            include fastcgi_params;
-        }
-    }
-    
-    location @laravel {
-        rewrite /api/(.*)$ /api/index.php?/$1 last;
-    }
-    
-    # Deny access to sensitive files
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-}
-```
-
-Enable and reload:
-```bash
-sudo ln -s /etc/nginx/sites-available/medkm /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-#### Step 10: Build Frontend for Laravel
-```bash
-cd /var/www/medkm/frontend
-nano .env
-```
-Update API URL:
-```bash
-VITE_API_BASE_URL=https://your-domain.com/api
-```
-
-Build:
-```bash
-npm install
-npm run build
-```
-
-#### Step 11: Install SSL
-```bash
-sudo certbot --nginx -d your-domain.com
-```
-
-#### Step 12: Setup Queue Worker (Optional but Recommended)
-```bash
-sudo nano /etc/systemd/system/medkm-queue.service
-```
-Add:
-```ini
-[Unit]
-Description=Medical Learning Platform Queue Worker
-After=network.target mysql.service
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/var/www/medkm/backend/laravel-real
-ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --max-time=3600
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable medkm-queue
-sudo systemctl start medkm-queue
-sudo systemctl status medkm-queue
-```
-
-#### Step 13: Setup Scheduler (Cron Job)
-```bash
-sudo crontab -e -u www-data
-```
-Add:
-```cron
-* * * * * cd /var/www/medkm/backend/laravel-real && php artisan schedule:run >> /dev/null 2>&1
-```
-
----
-
-### PART 3: Switching Between Backends
-
-#### From Mock API to Laravel
-
-1. **Prepare data migration** (if needed):
-```bash
-# Export data from Mock API JSON files
-cd /var/www/medkm/backend/mock-api/data
-cp users.json users_backup.json
-cp questions.json questions_backup.json
-cp exams.json exams_backup.json
-```
-
-2. **Update frontend configuration**:
-```bash
-cd /var/www/medkm/frontend
-nano .env
-```
-Change:
-```bash
-# From:
-VITE_API_BASE_URL=https://your-domain.com/api
-
-# To (if Laravel on different port):
-VITE_API_BASE_URL=https://your-domain.com/api
-```
-
-3. **Rebuild frontend**:
-```bash
-npm run build
-```
-
-4. **Stop Mock API**:
-```bash
-pm2 stop medkm-api
-pm2 delete medkm-api
-```
-
-5. **Update Nginx configuration** (change proxy_pass from 3001 to Laravel)
-
-6. **Reload Nginx**:
-```bash
-sudo systemctl reload nginx
-```
-
-7. **Migrate data to Laravel database** (manual or script):
-```bash
-# Write custom migration script or manually insert data
-php artisan tinker
-# Use Eloquent to insert data from JSON
-```
-
-#### From Laravel to Mock API
-
-1. **Export database data**:
-```bash
-cd /var/www/medkm/backend/laravel-real
-php artisan db:seed --class=DataExportSeeder  # If you create this
-```
-
-2. **Update frontend .env** to point to port 3001
-
-3. **Start Mock API**:
-```bash
-cd /var/www/medkm/backend/mock-api
-pm2 start index.js --name medkm-api
-```
-
-4. **Update and reload Nginx**
-
----
-
-### PART 4: Monitoring & Maintenance
-
-#### System Monitoring
-
-**Check service status**:
-```bash
-# Backend (Node.js)
-pm2 status
-pm2 logs medkm-api
-
-# Backend (Laravel)
-sudo systemctl status php8.1-fpm
-sudo systemctl status medkm-queue
-tail -f /var/www/medkm/backend/laravel-real/storage/logs/laravel.log
-
-# Web server
-sudo systemctl status nginx
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
-
-# Database
-sudo systemctl status mysql
-```
-
-#### Performance Monitoring
-
-**Install monitoring tools**:
-```bash
-# htop for system resources
-sudo apt install -y htop
-htop
-
-# netstat for network connections
-sudo apt install -y net-tools
-netstat -tulpn | grep LISTEN
-```
-
-#### Backup Strategy
-
-**Database backup (Laravel)**:
-```bash
-# Create backup script
-sudo nano /usr/local/bin/backup-medkm-db.sh
-```
-Add:
-```bash
-#!/bin/bash
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_DIR="/var/backups/medkm"
-mkdir -p $BACKUP_DIR
-
-mysqldump -u medkm_user -p'your_password' medkm > $BACKUP_DIR/medkm_$TIMESTAMP.sql
-gzip $BACKUP_DIR/medkm_$TIMESTAMP.sql
-
-# Keep only last 7 days
-find $BACKUP_DIR -name "*.sql.gz" -mtime +7 -delete
-```
-
-Make executable:
-```bash
-sudo chmod +x /usr/local/bin/backup-medkm-db.sh
-```
-
-Schedule daily backup:
-```bash
-sudo crontab -e
-```
-Add:
-```cron
-0 2 * * * /usr/local/bin/backup-medkm-db.sh
-```
-
-**JSON files backup (Mock API)**:
-```bash
-# Backup script
-sudo nano /usr/local/bin/backup-medkm-json.sh
-```
-Add:
-```bash
-#!/bin/bash
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_DIR="/var/backups/medkm"
-mkdir -p $BACKUP_DIR
-
-tar -czf $BACKUP_DIR/medkm_data_$TIMESTAMP.tar.gz /var/www/medkm/backend/mock-api/data
-
-# Keep only last 7 days
-find $BACKUP_DIR -name "*.tar.gz" -mtime +7 -delete
-```
-
-#### Log Rotation
-
-```bash
-sudo nano /etc/logrotate.d/medkm
-```
-Add:
-```
-/var/www/medkm/backend/*/logs/*.log {
-    daily
-    rotate 14
-    compress
-    delaycompress
-    notifempty
-    create 0640 www-data www-data
-    sharedscripts
-    postrotate
-        systemctl reload nginx > /dev/null 2>&1 || true
-    endscript
-}
-```
-
-#### Security Updates
-
-```bash
-# Weekly security updates
-sudo apt update
-sudo apt list --upgradable
-sudo apt upgrade -y
-
-# Update Node.js packages
-cd /var/www/medkm/backend/mock-api
-npm audit
-npm audit fix
-
-# Update Laravel packages
-cd /var/www/medkm/backend/laravel-real
-composer update --with-dependencies
-php artisan migrate --force
-```
-
----
-
-### PART 5: Troubleshooting
-
-#### Backend Not Responding
-
-**Node.js**:
-```bash
-pm2 logs medkm-api --lines 100
-pm2 restart medkm-api
-```
-
-**Laravel**:
-```bash
-tail -f /var/www/medkm/backend/laravel-real/storage/logs/laravel.log
-sudo systemctl restart php8.1-fpm
-```
-
-#### Database Connection Failed
-
-```bash
-# Test MySQL connection
-mysql -u medkm_user -p medkm
-
-# Check MySQL status
-sudo systemctl status mysql
-sudo systemctl restart mysql
-
-# Laravel specific
-cd /var/www/medkm/backend/laravel-real
-php artisan config:clear
-php artisan cache:clear
-```
-
-#### Nginx Errors
-
-```bash
-# Check syntax
-sudo nginx -t
-
-# View error logs
-sudo tail -f /var/log/nginx/error.log
-
-# Restart Nginx
-sudo systemctl restart nginx
-```
-
-#### Permission Issues
-
-```bash
-# Fix Laravel permissions
-cd /var/www/medkm/backend/laravel-real
+php artisan storage:link
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+
+# 3. Frontend
+cd ../../frontend
+echo "VITE_API_BASE_URL=https://yourdomain.com/api" > .env
+npm ci && npm run build
+
+# 4. Permissions
+cd ../backend/laravel-real
 sudo chown -R www-data:www-data storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
 
-# Fix Node.js permissions
-sudo chown -R medkm:medkm /var/www/medkm/backend/mock-api
+# 5. Configure Nginx (see PRODUCTION_MIGRATION.md for full config) + SSL
+sudo certbot --nginx -d yourdomain.com
 ```
 
-#### SSL Certificate Renewal
+#### Default Accounts (all password: `password`)
 
-```bash
-# Test renewal
-sudo certbot renew --dry-run
+| Email | Role |
+|-------|------|
+| admin@example.com | Admin |
+| clinician@example.com | Clinician |
+| student@example.com | Student |
+| moderator@example.com | Moderator |
 
-# Force renewal
-sudo certbot renew --force-renewal
-```
-
----
-
-### PART 6: Performance Optimization
-
-#### Nginx Optimization
-
-```bash
-sudo nano /etc/nginx/nginx.conf
-```
-Add/modify:
-```nginx
-worker_processes auto;
-worker_rlimit_nofile 65535;
-
-events {
-    worker_connections 4096;
-    use epoll;
-    multi_accept on;
-}
-
-http {
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
-    
-    # Client body size
-    client_max_body_size 10M;
-    
-    # Timeouts
-    client_body_timeout 12;
-    client_header_timeout 12;
-    keepalive_timeout 15;
-    send_timeout 10;
-    
-    # Caching
-    open_file_cache max=2000 inactive=20s;
-    open_file_cache_valid 60s;
-    open_file_cache_min_uses 2;
-    open_file_cache_errors on;
-}
-```
-
-#### Laravel Optimization
-
-```bash
-cd /var/www/medkm/backend/laravel-real
-
-# Cache configuration, routes, views
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Optimize autoloader
-composer install --optimize-autoloader --no-dev
-
-# Enable OPcache
-sudo nano /etc/php/8.1/fpm/php.ini
-```
-Enable:
-```ini
-opcache.enable=1
-opcache.memory_consumption=128
-opcache.max_accelerated_files=4000
-opcache.revalidate_freq=60
-```
-
-Restart PHP-FPM:
-```bash
-sudo systemctl restart php8.1-fpm
-```
-
-#### MySQL Optimization
-
-```bash
-sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
-```
-Add:
-```ini
-[mysqld]
-innodb_buffer_pool_size = 256M
-innodb_log_file_size = 64M
-max_connections = 200
-query_cache_size = 32M
-query_cache_limit = 2M
-```
-
-Restart MySQL:
-```bash
-sudo systemctl restart mysql
-```
-
----
-
-### PART 7: Production Checklist
-
-Before going live, verify:
-
-- [ ] SSL certificate installed and auto-renewal configured
-- [ ] Firewall configured (UFW enabled, only necessary ports open)
-- [ ] Database backups scheduled (daily cron job)
-- [ ] Application logs rotating (logrotate configured)
-- [ ] Monitoring tools installed (htop, netstat, etc.)
-- [ ] PM2/systemd services set to auto-start on boot
-- [ ] Nginx configured with proper security headers
-- [ ] File permissions correctly set (www-data for Laravel)
-- [ ] Environment variables secured (.env files not publicly accessible)
-- [ ] Database credentials strong and unique
-- [ ] Test user accounts created with correct roles
-- [ ] API endpoints responding correctly
-- [ ] Frontend loads and connects to backend
-- [ ] Login/logout functionality working
-- [ ] Exam creation and taking working
-- [ ] PDF generation tested
-- [ ] Image upload working
-- [ ] Performance tested under load
-- [ ] Error handling working properly
-- [ ] Backup restoration tested
+> โ ๏ธ Change all default passwords immediately after first login!
 
 ---
 
 ## User Roles & Responsibilities
 
-### 👨‍⚕️ **1. STUDENT**
+### ๐‘จโ€โ•๏ธ **1. STUDENT**
 
 **Purpose:** Medical professionals and healthcare students learning through exams
 
 **Permissions:**
-- ✅ Take exams (unlimited attempts)
-- ✅ View personal statistics and progress trends
-- ✅ Download exam result PDFs
-- ✅ View correct/incorrect answers with explanations
-- ❌ Cannot create questions
-- ❌ Cannot manage users
-- ❌ Cannot approve content
+- โ… Take exams (unlimited attempts)
+- โ… View personal statistics and progress trends
+- โ… Download exam result PDFs
+- โ… View correct/incorrect answers with explanations
+- โ Cannot create questions
+- โ Cannot manage users
+- โ Cannot approve content
 
 **Key Metrics:**
 - Exams completed count
@@ -1327,20 +340,20 @@ Before going live, verify:
 
 ---
 
-### 💉 **2. CLINICIAN (Question Creator)**
+### ๐’ **2. CLINICIAN (Question Creator)**
 
 **Purpose:** Healthcare professionals creating and validating medical questions
 
 **Permissions:**
-- ✅ Create medical questions with images
-- ✅ Upload question images
-- ✅ Submit questions for review
-- ✅ Manage own questions
-- ✅ View approval status
-- ✅ Take exams
-- ✅ View analytics dashboard
-- ❌ Cannot approve questions
-- ❌ Cannot manage users
+- โ… Create medical questions with images
+- โ… Upload question images
+- โ… Submit questions for review
+- โ… Manage own questions
+- โ… View approval status
+- โ… Take exams
+- โ… View analytics dashboard
+- โ Cannot approve questions
+- โ Cannot manage users
 
 **Key Responsibilities:**
 - Write high-quality, medically accurate questions
@@ -1371,20 +384,20 @@ Images: High-resolution, labeled images if applicable
 
 ---
 
-### ✅ **3. MODERATOR (QA/Content Reviewer)**
+### โ… **3. MODERATOR (QA/Content Reviewer)**
 
 **Purpose:** Ensure quality and accuracy of medical content
 
 **Permissions:**
-- ✅ Review pending questions
-- ✅ Approve/Reject questions
-- ✅ Send feedback to clinicians
-- ✅ View analytics and statistics
-- ✅ Take exams
-- ✅ Manage questions
-- ✅ View clinician dashboard
-- ❌ Cannot manage users
-- ❌ Cannot modify approved questions
+- โ… Review pending questions
+- โ… Approve/Reject questions
+- โ… Send feedback to clinicians
+- โ… View analytics and statistics
+- โ… Take exams
+- โ… Manage questions
+- โ… View clinician dashboard
+- โ Cannot manage users
+- โ Cannot modify approved questions
 
 **Key Responsibilities:**
 - Review submitted questions for medical accuracy
@@ -1411,19 +424,19 @@ Images: High-resolution, labeled images if applicable
 
 ---
 
-### 👨‍💼 **4. ADMIN (System Administrator)**
+### ๐‘จโ€๐’ผ **4. ADMIN (System Administrator)**
 
 **Purpose:** Overall system management and user administration
 
 **Permissions:**
-- ✅ Create/Edit/Delete user accounts
-- ✅ Assign user roles
-- ✅ View comprehensive analytics
-- ✅ Monitor system activity
-- ✅ Access all features
-- ✅ Configure system settings
-- ✅ Review audit logs
-- ✅ Manage database
+- โ… Create/Edit/Delete user accounts
+- โ… Assign user roles
+- โ… View comprehensive analytics
+- โ… Monitor system activity
+- โ… Access all features
+- โ… Configure system settings
+- โ… Review audit logs
+- โ… Manage database
 
 **Key Responsibilities:**
 - Create new user accounts
@@ -1449,7 +462,7 @@ Images: High-resolution, labeled images if applicable
 
 ---
 
-### 💻 **5. IT ADMINISTRATOR (System & Infrastructure)**
+### ๐’ป **5. IT ADMINISTRATOR (System & Infrastructure)**
 
 **Purpose:** Technical infrastructure and system maintenance
 
@@ -1504,7 +517,7 @@ Images: High-resolution, labeled images if applicable
 
 ## User Guides by Role
 
-### 🎓 STUDENT GUIDE
+### ๐“ STUDENT GUIDE
 
 #### Login
 1. Navigate to login page
@@ -1533,8 +546,8 @@ Images: High-resolution, labeled images if applicable
 5. Download specific exam PDFs
 
 #### Understanding Scores
-- **Passing Score**: 70% or above = PASS ✅
-- **Failing Score**: Below 70% = FAIL ❌
+- **Passing Score**: 70% or above = PASS โ…
+- **Failing Score**: Below 70% = FAIL โ
 - **Score Color Coding**:
   - Green: 70-100% (Excellent)
   - Orange: 60-69% (Borderline)
@@ -1542,7 +555,7 @@ Images: High-resolution, labeled images if applicable
 
 ---
 
-### 🏥 CLINICIAN GUIDE
+### ๐ฅ CLINICIAN GUIDE
 
 #### Create a New Question
 1. Click "Create Question" in navbar
@@ -1586,7 +599,7 @@ Images: High-resolution, labeled images if applicable
 
 ---
 
-### ✅ MODERATOR GUIDE
+### โ… MODERATOR GUIDE
 
 #### Review Questions
 1. Click "Moderator" in navbar
@@ -1617,17 +630,17 @@ Images: High-resolution, labeled images if applicable
    - **Exam Analysis**: Detailed breakdowns
 
 #### Quality Standards to Check
-- ✅ Medical accuracy
-- ✅ Evidence-based content
-- ✅ Clear language
-- ✅ Professional formatting
-- ✅ Appropriate images
-- ✅ No bias/discrimination
-- ✅ Complete explanation
+- โ… Medical accuracy
+- โ… Evidence-based content
+- โ… Clear language
+- โ… Professional formatting
+- โ… Appropriate images
+- โ… No bias/discrimination
+- โ… Complete explanation
 
 ---
 
-### 👨‍💼 ADMIN GUIDE
+### ๐‘จโ€๐’ผ ADMIN GUIDE
 
 #### Create New User
 1. Click "Users" in navbar
@@ -1689,7 +702,7 @@ Admins can use test accounts to verify system:
 
 ---
 
-### 💻 IT ADMINISTRATOR GUIDE
+### ๐’ป IT ADMINISTRATOR GUIDE
 
 #### Server Installation
 
@@ -1821,7 +834,7 @@ sudo certbot renew --quiet
 
 ## API Documentation
 
-### 🔑 Authentication
+### ๐”‘ Authentication
 
 **Login Endpoint:**
 ```
@@ -1850,7 +863,7 @@ Response (200 OK):
 Authorization: Bearer {token}
 ```
 
-### 📚 Exams API
+### ๐“ Exams API
 
 **Get All Exams:**
 ```
@@ -1915,7 +928,7 @@ Response:
 }
 ```
 
-### 📊 Student Stats API
+### ๐“ Student Stats API
 
 **Get Personal Stats:**
 ```
@@ -1950,7 +963,7 @@ Authorization: Bearer {token}
 Response: Same as above
 ```
 
-### ❓ Questions API
+### โ“ Questions API
 
 **Upload Question:**
 ```
@@ -2009,7 +1022,7 @@ Content-Type: application/json
 Response: { success: true }
 ```
 
-### 👥 User Management API (Admin Only)
+### ๐‘ฅ User Management API (Admin Only)
 
 **Create User:**
 ```
@@ -2055,7 +1068,7 @@ Authorization: Bearer {token}
 Response: { success: true }
 ```
 
-### 📄 PDF Reports API
+### ๐“ PDF Reports API
 
 **Generate Exam Report:**
 ```
@@ -2189,7 +1202,7 @@ sudo certbot renew --force-renewal
 
 ## Security Guidelines
 
-### 🔒 Best Practices
+### ๐”’ Best Practices
 
 #### Authentication Security
 1. **Strong Passwords**
@@ -2237,7 +1250,7 @@ sudo certbot renew --force-renewal
    - Regular security audits
    - Penetration testing (quarterly)
 
-### 🚨 Security Checklist
+### ๐จ Security Checklist
 
 - [ ] HTTPS/SSL enabled on all pages
 - [ ] Database password strong and unique
@@ -2259,7 +1272,7 @@ sudo certbot renew --force-renewal
 
 ## Maintenance & Support
 
-### 📅 Maintenance Schedule
+### ๐“… Maintenance Schedule
 
 #### Daily
 - [ ] Monitor system logs
@@ -2286,7 +1299,7 @@ sudo certbot renew --force-renewal
 - [ ] Update dependencies
 - [ ] Compliance review
 
-### 📞 Support Resources
+### ๐“ Support Resources
 
 **Documentation:**
 - Project Manual (this file)
@@ -2305,7 +1318,7 @@ sudo certbot renew --force-renewal
 2. Level 2: Senior IT Administrator
 3. Level 3: CIO / IT Director
 
-### 📝 Reporting Issues
+### ๐“ Reporting Issues
 
 **When reporting issues, include:**
 1. User role and account name
@@ -2321,7 +1334,7 @@ sudo certbot renew --force-renewal
 - Email with [med-km] tag
 - In-person at IT office
 
-### 🔄 Update Process
+### ๐” Update Process
 
 **Regular Updates:**
 ```bash
@@ -2356,7 +1369,7 @@ curl http://localhost:3001/api
 7. Restore from backup if issues
 8. Monitor closely for 24 hours
 
-### 💾 Backup & Disaster Recovery
+### ๐’พ Backup & Disaster Recovery
 
 **Automated Backup:**
 ```bash
