@@ -3,87 +3,36 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Exam extends Model
 {
-    protected $fillable = ['title','created_by','config','specialty_id','subspecialty_id'];
-    protected $casts = ['config' => 'array'];
-    protected $appends = ['totalDifficultyScore', 'averageDifficultyScore', 'computedDifficultyLevel'];
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-    public function getTotalDifficultyScoreAttribute(){
-        return (int) data_get($this->config, 'totalDifficultyScore', 0);
-    }
+    protected $fillable = [
+        'id', 'title', 'created_by', 'questions', 'specialty', 'subspecialty',
+        'difficulty_level', 'difficulty_distribution', 'selection_mode',
+        'passing_score', 'total_difficulty_score', 'average_difficulty_score',
+        'computed_difficulty_level',
+    ];
 
-    public function getAverageDifficultyScoreAttribute(){
-        return (float) data_get($this->config, 'averageDifficultyScore', 0);
-    }
+    protected $casts = [
+        'questions' => 'array',
+        'specialty' => 'array',
+        'subspecialty' => 'array',
+        'difficulty_distribution' => 'array',
+    ];
 
-    public function getComputedDifficultyLevelAttribute(){
-        return data_get($this->config, 'computedDifficultyLevel');
-    }
-
-    public function needsDifficultyBackfill(){
-        return data_get($this->config, 'totalDifficultyScore') === null
-            || data_get($this->config, 'averageDifficultyScore') === null
-            || data_get($this->config, 'computedDifficultyLevel') === null;
-    }
-
-    public function calculateDifficultyMetrics(){
-        $difficulties = $this->questions()->pluck('difficulty')->map(function ($value) {
-            $score = (int) $value;
-            return $score > 0 ? $score : 3;
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (!$model->id) $model->id = (string) Str::uuid();
         });
-
-        $totalDifficultyScore = (int) $difficulties->sum();
-        $questionCount = $difficulties->count();
-        $averageDifficultyScore = $questionCount > 0
-            ? round($totalDifficultyScore / $questionCount, 2)
-            : 0;
-
-        $computedDifficultyLevel = 'medium';
-        if ($averageDifficultyScore <= 2) {
-            $computedDifficultyLevel = 'easy';
-        } elseif ($averageDifficultyScore <= 3) {
-            $computedDifficultyLevel = 'medium';
-        } elseif ($averageDifficultyScore <= 4) {
-            $computedDifficultyLevel = 'difficult';
-        } else {
-            $computedDifficultyLevel = 'extreme';
-        }
-
-        return [
-            'totalDifficultyScore' => $totalDifficultyScore,
-            'averageDifficultyScore' => $averageDifficultyScore,
-            'computedDifficultyLevel' => $computedDifficultyLevel,
-        ];
     }
 
-    public function backfillDifficultyMetrics(){
-        if (!$this->needsDifficultyBackfill()) {
-            return [
-                'totalDifficultyScore' => (int) data_get($this->config, 'totalDifficultyScore', 0),
-                'averageDifficultyScore' => (float) data_get($this->config, 'averageDifficultyScore', 0),
-                'computedDifficultyLevel' => data_get($this->config, 'computedDifficultyLevel'),
-            ];
-        }
-
-        $metrics = $this->calculateDifficultyMetrics();
-        $config = is_array($this->config) ? $this->config : [];
-        $this->config = array_merge($config, $metrics);
-        $this->save();
-
-        return $metrics;
-    }
-
-    public function questions(){
-        return $this->belongsToMany(Question::class, 'exam_questions');
-    }
-
-    public function specialty(){
-        return $this->belongsTo(\App\Models\Specialty::class, 'specialty_id');
-    }
-
-    public function subspecialty(){
-        return $this->belongsTo(\App\Models\Specialty::class, 'subspecialty_id');
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

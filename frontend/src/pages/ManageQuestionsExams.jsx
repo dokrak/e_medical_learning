@@ -48,13 +48,11 @@ export default function ManageQuestionsExams(){
     } catch(err){ setMsg('Failed to load: ' + err.message) }
   }
 
-  function toDataUrl(file){
-    return new Promise((res,rej)=>{
-      const reader = new FileReader()
-      reader.onload = e => res(e.target.result)
-      reader.onerror = rej
-      reader.readAsDataURL(file)
-    })
+  async function uploadFile(file){
+    const fd = new FormData()
+    fd.append('file', file)
+    const r = await api.post('/upload', fd)
+    return r.data.url
   }
 
   async function startEdit(item){
@@ -122,8 +120,13 @@ export default function ManageQuestionsExams(){
     try{
       let images = editImages;
       if (newImageFile){
-        const dataUrl = await toDataUrl(newImageFile);
-        images = [...editImages, dataUrl];
+        try {
+          const url = await uploadFile(newImageFile);
+          images = [...editImages, url];
+        } catch(err) {
+          setMsg('Image upload failed: ' + (err?.response?.data?.message || err.message));
+          return;
+        }
       }
       if (tab === 'questions'){
         await api.put(`/questions/${editId}`, { ...editForm, images });
@@ -255,6 +258,41 @@ export default function ManageQuestionsExams(){
                     <textarea placeholder="Answer explanation" value={editForm.answerExplanation||''} onChange={e=>setEditForm({...editForm, answerExplanation: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={3} />
                     <label><strong>Difficulty (1-5)</strong></label>
                     <input type="number" min={1} max={5} placeholder="Difficulty" value={editForm.difficulty||3} onChange={e=>setEditForm({...editForm, difficulty: Number(e.target.value)})} style={{ width: '100%', marginBottom: 6 }} />
+                    <label><strong>Choices (A–E)</strong></label>
+                    {['A','B','C','D','E'].map((label, i) => {
+                      const choicesList = editForm.choices || []
+                      const isCorrect = choicesList[i] && choicesList[i] === editForm.answer
+                      return (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontWeight: 600, minWidth: 20 }}>{label}.</span>
+                          <input
+                            value={choicesList[i] || ''}
+                            onChange={e => {
+                              const updated = [...choicesList]
+                              const oldVal = updated[i]
+                              updated[i] = e.target.value
+                              while (updated.length < 5) updated.push('')
+                              const newForm = { ...editForm, choices: updated }
+                              if (oldVal === editForm.answer) newForm.answer = e.target.value
+                              setEditForm(newForm)
+                            }}
+                            placeholder={`Choice ${label}`}
+                            style={{ flex: 1 }}
+                          />
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            <input
+                              type="radio"
+                              name="edit-correct-answer"
+                              checked={isCorrect}
+                              onChange={() => setEditForm({ ...editForm, answer: choicesList[i] || '' })}
+                            />
+                            <span style={{ fontSize: 12, color: isCorrect ? '#28a745' : '#888' }}>
+                              {isCorrect ? '✓ Correct' : 'Correct'}
+                            </span>
+                          </label>
+                        </div>
+                      )
+                    })}
                     <label><strong>Correct Answer</strong></label>
                     <input placeholder="Answer" value={editForm.answer||''} onChange={e=>setEditForm({...editForm, answer: e.target.value})} style={{ width: '100%', marginBottom: 6 }} />
                     <label><strong>Specialty</strong></label>

@@ -11,10 +11,10 @@ export default function Login(){
     try{
       const r = await api.post('/login', { email, password })
       localStorage.setItem('token', r.data.token)
-      // request full user info to include role (consistent with Laravel)
+      // request user info from /user endpoint (matches backend route)
       try{
-        const me = await api.get('/me')
-        localStorage.setItem('user', JSON.stringify(me.data.user))
+        const me = await api.get('/user')
+        localStorage.setItem('user', JSON.stringify(me.data))
       }catch(e){
         if (r.data.user) localStorage.setItem('user', JSON.stringify(r.data.user))
       }

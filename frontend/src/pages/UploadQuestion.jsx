@@ -14,6 +14,7 @@ export default function UploadQuestion(){
   const [correctIndex, setCorrectIndex] = useState(0)
   const [msg, setMsg] = useState('')
   const [image, setImage] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const [specialties, setSpecialties] = useState([])
   const [specialtyId, setSpecialtyId] = useState('')
   const [subspecialtyId, setSubspecialtyId] = useState('')
@@ -23,13 +24,11 @@ export default function UploadQuestion(){
     try{ const r = await api.get('/specialties'); setSpecialties(r.data); } catch(e){ /* ignore */ }
   }
 
-  function toDataUrl(file){
-    return new Promise((res,rej)=>{
-      const reader = new FileReader()
-      reader.onload = e => res(e.target.result)
-      reader.onerror = rej
-      reader.readAsDataURL(file)
-    })
+  async function uploadFile(file){
+    const fd = new FormData()
+    fd.append('file', file)
+    const r = await api.post('/upload', fd)
+    return r.data.url
   }
 
   function setChoice(i, val){
@@ -48,7 +47,15 @@ export default function UploadQuestion(){
     const selectedAnswer = normalizedChoices[correctIndex]
 
     let images = []
-    if (image) images = [await toDataUrl(image)]
+    if (image) {
+      setUploading(true)
+      try { images = [await uploadFile(image)] } catch(err) {
+        setMsg('Image upload failed: ' + (err?.response?.data?.message || err.message))
+        setUploading(false)
+        return
+      }
+      setUploading(false)
+    }
     try{
       // Split question on first newline: first line = title, rest = stem
       const lines = question.split('\n')
@@ -123,7 +130,7 @@ export default function UploadQuestion(){
         <div style={{ marginTop: 8 }}>
           <input type="file" accept="image/*" onChange={e=>setImage(e.target.files[0])} />
         </div>
-        <div style={{ marginTop: 8 }}><button className="btn btn-primary">Submit question</button></div>
+        <div style={{ marginTop: 8 }}><button className="btn btn-primary" disabled={uploading}>{uploading ? 'Uploading...' : 'Submit question'}</button></div>
       </form>
       <div style={{ marginTop: 8 }}>{msg}</div>
     </div>

@@ -2,31 +2,63 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\QuestionController;
-use App\Http\Controllers\ModeratorController;
-use App\Http\Controllers\ExamController;
-use App\Http\Controllers\StudentExamController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Api\SpecialtyController;
+use App\Http\Controllers\Api\QuestionController;
+use App\Http\Controllers\Api\ExamController;
+use App\Http\Controllers\Api\StudentExamController;
+use App\Http\Controllers\Api\AdminUserController;
+use App\Http\Controllers\Api\UploadController;
 
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
+// --- Public routes ---
+Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+Route::post('/register', [RegisteredUserController::class, 'store']);
+Route::get('/specialties', [SpecialtyController::class, 'index']);
 
-Route::middleware('auth:sanctum')->group(function(){
-    Route::get('me', [AuthController::class, 'me']);
+// --- Approved questions (public, read-only) ---
+Route::get('/questions', [QuestionController::class, 'index']);
 
-    Route::get('questions', [QuestionController::class, 'index']);
-    Route::post('questions', [QuestionController::class, 'store']);
-    Route::get('questions/{id}', [QuestionController::class, 'show']);
+// --- Authenticated routes ---
+Route::middleware('auth:sanctum')->group(function () {
 
-    Route::middleware('role:admin|moderator')->get('pending-questions', [ModeratorController::class, 'pending']);
-    Route::middleware('role:admin|moderator')->post('questions/{id}/approve', [ModeratorController::class, 'approve']);
+    // Current user
+    Route::get('/user', fn(Request $request) => $request->user());
+    Route::get('/me', fn(Request $request) => response()->json(['user' => $request->user()]));
 
-    Route::post('exams', [ExamController::class, 'store']);
-    Route::get('exams', [ExamController::class, 'index']);
-    Route::get('exams/{id}', [ExamController::class, 'show']);
+    // --- Questions ---
+    Route::post('/questions', [QuestionController::class, 'store']);
+    Route::get('/my-questions', [QuestionController::class, 'mine']);
+    Route::put('/questions/{id}', [QuestionController::class, 'update']);
+    Route::delete('/questions/{id}', [QuestionController::class, 'destroy']);
 
-    Route::get('specialties', function(){ return \App\Models\Specialty::with('children')->whereNull('parent_id')->get(); });
+    // Moderation (admin / moderator)
+    Route::get('/pending-questions', [QuestionController::class, 'pending']);
+    Route::post('/questions/{id}/approve', [QuestionController::class, 'approve']);
+    Route::post('/questions/{id}/reject', [QuestionController::class, 'reject']);
 
-    Route::post('student-exams/{examId}/submit', [StudentExamController::class, 'submit']);
-    Route::get('student-exams', [StudentExamController::class, 'index']);
+    // --- Exams ---
+    Route::get('/exams', [ExamController::class, 'index']);
+    Route::get('/exams/{id}', [ExamController::class, 'show']);
+    Route::post('/exams', [ExamController::class, 'store']);
+    Route::put('/exams/{id}', [ExamController::class, 'update']);
+    Route::delete('/exams/{id}', [ExamController::class, 'destroy']);
+
+    // --- Student Exams ---
+    Route::post('/student-exams/{examId}/submit', [StudentExamController::class, 'submit']);
+    Route::get('/student-exams', [StudentExamController::class, 'index']);
+    Route::get('/all-student-exams', [StudentExamController::class, 'all']);
+    Route::get('/exam-results/{examId}', [StudentExamController::class, 'examResults']);
+    Route::get('/my-stats', [StudentExamController::class, 'myStats']);
+    Route::get('/student-stats/{studentId}', [StudentExamController::class, 'studentStats']);
+    Route::get('/student-exams/{resultId}/pdf', [StudentExamController::class, 'pdf']);
+
+    // --- File Upload ---
+    Route::post('/upload', [UploadController::class, 'store']);
+
+    // --- Admin User Management ---
+    Route::get('/admin/users', [AdminUserController::class, 'index']);
+    Route::post('/admin/users', [AdminUserController::class, 'store']);
+    Route::put('/admin/users/{id}', [AdminUserController::class, 'update']);
+    Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroy']);
 });

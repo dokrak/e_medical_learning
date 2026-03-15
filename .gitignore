@@ -4,4 +4,27 @@ backend/mock-api/node_modules/
 backend/mock-api/uploads/
 backend/mock-api/data/*.json
 .env
+
+# Laravel
+vendor/
+backend/vendor/
+backend/laravel-real/vendor/
+backend/laravel-real/.env
+backend/laravel-real/database/database.sqlite
+backend/laravel-real/storage/app/public/uploads/*
+!backend/laravel-real/storage/app/public/uploads/.gitkeep
+backend/laravel-real/storage/framework/cache/*
+backend/laravel-real/storage/framework/sessions/*
+backend/laravel-real/storage/framework/views/*
+backend/laravel-real/storage/logs/*
+backend/laravel-real/bootstrap/cache/*.php
+backend/laravel-real/public/storage
+backend/laravel-real/package-lock.json
+backend/laravel-real/composer.lock
+backend/package-lock.json
+composer.lock
+
+# Misc
+*.log
+temp_*
 .DS_Store

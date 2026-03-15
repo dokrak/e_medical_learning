@@ -3,21 +3,34 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Question extends Model
 {
-    protected $fillable = ['title','stem','body','answer_explanation','difficulty','answer','references','choices','status','author_id'];
-    protected $casts = ['references' => 'array', 'choices' => 'array'];
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-    public function images(){
-        return $this->hasMany(QuestionImage::class);
+    protected $fillable = [
+        'id', 'title', 'stem', 'body', 'answer_explanation', 'difficulty',
+        'answer', 'choices', 'references', 'images',
+        'specialty_id', 'subspecialty_id', 'status', 'moderation_feedback', 'author_id',
+    ];
+
+    protected $casts = [
+        'choices' => 'array',
+        'references' => 'array',
+        'images' => 'array',
+    ];
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (!$model->id) $model->id = (string) Str::uuid();
+        });
     }
 
-    public function author(){
+    public function author()
+    {
         return $this->belongsTo(User::class, 'author_id');
-    }
-
-    public function patientMetadata(){
-        return $this->hasOne(\App\Models\PatientMetadata::class);
     }
 }

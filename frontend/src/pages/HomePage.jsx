@@ -105,7 +105,9 @@ export default function HomePage(){
     <div>
       <div
         style={{
-          background: 'linear-gradient(140deg, #0f5132 0%, #0f766e 45%, #164e63 100%)',
+          backgroundImage: 'linear-gradient(140deg, rgba(15,81,50,0.72) 0%, rgba(15,118,110,0.68) 45%, rgba(22,78,99,0.72) 100%), url(/hero-bg.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           padding: '56px 24px',
           borderRadius: 18,
           marginBottom: 28,
@@ -115,8 +117,6 @@ export default function HomePage(){
           border: '1px solid rgba(255,255,255,0.14)'
         }}
       >
-        <div style={{ position: 'absolute', top: -26, right: -24, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-        <div style={{ position: 'absolute', bottom: -44, left: -22, width: 190, height: 190, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 900 }}>
           <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.9, letterSpacing: '0.04em', marginBottom: 10 }}>
             CHOMTHONG HOSPITAL · MEDICAL LEARNING PLATFORM
