@@ -1,5 +1,6 @@
 import React from 'react'
 import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
+import { useLang } from './LangContext'
 import Login from './pages/Login'
 import HomePage from './pages/HomePage'
 import UploadQuestion from './pages/UploadQuestion'
@@ -13,11 +14,13 @@ import ExamResultsDashboard from './pages/ExamResultsDashboard'
 import StudentStats from './pages/StudentStats'
 import ClinicianDashboard from './pages/ClinicianDashboard'
 import AdminUserManagement from './pages/AdminUserManagement'
+import ExamResult from './pages/ExamResult'
 
 function Nav(){
   const token = localStorage.getItem('token')
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
   const location = useLocation()
+  const { lang, toggleLang, t } = useLang()
   
   function logout(){
     localStorage.removeItem('token')
@@ -33,23 +36,36 @@ function Nav(){
   const isAdmin = user?.role === 'admin'
   const isModerator = user?.role === 'moderator'
   const isStaff = user?.role === 'clinician' || user?.role === 'moderator' || user?.role === 'admin'
-  const isStudent = user?.role === 'student'
+  const isStudent = user?.role === 'student' || user?.role === 'resident' || user?.role === 'fellow'
+  const canCreateQuestion = isStaff || user?.role === 'resident' || user?.role === 'fellow'
+  const canCreateExam = isStaff || user?.role === 'fellow'
 
   return (
     <nav className="navbar">
       <img src="/logo.png" alt="Chomthong Hospital" className="navbar-logo" />
       <Link to="/" className="brand">med‑km</Link>
-      <Link to="/" className={isActive('/') ? 'active' : ''}>Home</Link>
-      {isStaff && <Link to="/upload" className={isActive('/upload') ? 'active' : ''}>Create Question</Link>}
-      <Link to="/exams" className={isActive('/exams') ? 'active' : ''}>Take Exam</Link>
-      {isStaff && <Link to="/exambuilder" className={isActive('/exambuilder') ? 'active' : ''}>Create Exam</Link>}
-      {isStudent && <Link to="/student" className={isActive('/student') ? 'active' : ''}>Student</Link>}
-      {isStaff && <Link to="/manage" className={isActive('/manage') ? 'active' : ''}>Manage</Link>}
-      {isStaff && <Link to="/results" className={isActive('/results') ? 'active' : ''}>Results</Link>}
-      {isStaff && <Link to="/clinician-dashboard" className={isActive('/clinician-dashboard') ? 'active' : ''}>Analytics</Link>}
-      {(isModerator || isAdmin) && <Link to="/moderator" className={isActive('/moderator') ? 'active' : ''}>Moderator</Link>}
-      {isAdmin && <Link to="/admin-users" className={isActive('/admin-users') ? 'active' : ''}>Users</Link>}
-      <div className="right">{token ? <><span>{user ? user.name : 'Signed in'}</span><button className="btn" onClick={logout} style={{ marginLeft: 12 }}>Logout</button></> : <Link to="/login">Login</Link>}</div>
+      <Link to="/" className={isActive('/') ? 'active' : ''}>{t('home')}</Link>
+      {canCreateQuestion && <Link to="/upload" className={isActive('/upload') ? 'active' : ''}>{t('createQuestion')}</Link>}
+      <Link to="/exams" className={isActive('/exams') ? 'active' : ''}>{t('takeExam')}</Link>
+      {canCreateExam && <Link to="/exambuilder" className={isActive('/exambuilder') ? 'active' : ''}>{t('createExam')}</Link>}
+      {isStudent && <Link to="/student" className={isActive('/student') ? 'active' : ''}>{t('student')}</Link>}
+      {(isStaff || user?.role === 'resident' || user?.role === 'fellow') && <Link to="/manage" className={isActive('/manage') ? 'active' : ''}>{t('manage')}</Link>}
+      {isStaff && <Link to="/results" className={isActive('/results') ? 'active' : ''}>{t('results')}</Link>}
+      {isStaff && <Link to="/clinician-dashboard" className={isActive('/clinician-dashboard') ? 'active' : ''}>{t('analytics')}</Link>}
+      {(isModerator || isAdmin) && <Link to="/moderator" className={isActive('/moderator') ? 'active' : ''}>{t('moderator')}</Link>}
+      {isAdmin && <Link to="/admin-users" className={isActive('/admin-users') ? 'active' : ''}>{t('users')}</Link>}
+      <div className="right">
+        {token && <span style={{ color: '#fef08a', fontWeight: 600, border: '1px solid rgba(255,255,255,0.4)', borderRadius: 4, padding: '2px 8px' }}>{user ? user.name : t('signedIn')}</span>}
+        <button className="btn btn-ghost" onClick={toggleLang} style={{
+          padding: '4px 12px', fontSize: 13, minWidth: 0, fontWeight: 700,
+          border: '2px solid #fff', borderRadius: 6,
+          background: 'rgba(255,255,255,0.2)', color: '#fff', letterSpacing: 1,
+          marginLeft: 8
+        }}>
+          {lang === 'en' ? 'TH ไทย' : 'EN Eng'}
+        </button>
+        {token ? <button className="btn" onClick={logout} style={{ marginLeft: 8 }}>{t('logout')}</button> : <Link to="/login">{t('login')}</Link>}
+      </div>
     </nav>
   )
 }
@@ -72,6 +88,7 @@ export default function App(){
           <Route path="/student-stats/:id" element={<StudentStats />} />
           <Route path="/exams" element={<ExamsList />} />
           <Route path="/exams/:id/take" element={<ExamTake />} />
+          <Route path="/exam-result/:resultId" element={<ExamResult />} />
           <Route path="/exambuilder" element={<ExamBuilder />} />
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="*" element={<Navigate to="/" />} />

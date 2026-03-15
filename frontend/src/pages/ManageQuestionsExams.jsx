@@ -7,6 +7,8 @@ export default function ManageQuestionsExams(){
   const navigate = useNavigate()
   const [tab, setTab] = useState('questions')
   const [items, setItems] = useState([])
+  const [questionCount, setQuestionCount] = useState(0)
+  const [examCount, setExamCount] = useState(0)
   const [editId, setEditId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [editImages, setEditImages] = useState([])
@@ -41,9 +43,11 @@ export default function ManageQuestionsExams(){
           return 0;
         });
         setItems(sorted);
+        setQuestionCount(sorted.length);
       } else {
         const r = await api.get('/exams');
         setItems(r.data);
+        setExamCount(r.data.length);
       }
     } catch(err){ setMsg('Failed to load: ' + err.message) }
   }
@@ -124,7 +128,7 @@ export default function ManageQuestionsExams(){
           const url = await uploadFile(newImageFile);
           images = [...editImages, url];
         } catch(err) {
-          setMsg('Image upload failed: ' + (err?.response?.data?.message || err.message));
+          setMsg('Image upload failed: ' + (err?.response?.data?.message || err.message) + ' — Please try selecting a new image.');
           return;
         }
       }
@@ -190,8 +194,8 @@ export default function ManageQuestionsExams(){
     <div className="card container">
       <h3>Manage questions & exams</h3>
       <div style={{ marginBottom: 12 }}>
-        <button onClick={()=>setTab('questions')} style={{ fontWeight: tab==='questions'?'bold':'normal' }}>Questions ({items.length})</button>
-        <button onClick={()=>setTab('exams')} style={{ marginLeft: 8, fontWeight: tab==='exams'?'bold':'normal' }}>Exams ({items.length})</button>
+        <button onClick={()=>setTab('questions')} style={{ fontWeight: tab==='questions'?'bold':'normal' }}>Questions ({tab === 'questions' ? items.length : questionCount})</button>
+        <button onClick={()=>setTab('exams')} style={{ marginLeft: 8, fontWeight: tab==='exams'?'bold':'normal' }}>Exams ({tab === 'exams' ? items.length : examCount})</button>
       </div>
       {!editId && (
         <div style={{ marginBottom: 12 }}>
@@ -203,7 +207,12 @@ export default function ManageQuestionsExams(){
           />
         </div>
       )}
-      {msg && <div className={msg.includes('failed') ? 'msg error' : 'msg success'} style={{ marginBottom: 8 }}>{msg}</div>}
+      {msg && (
+        <div style={{ marginBottom: 12, padding: '12px 16px', borderRadius: 8, fontWeight: 600, fontSize: 14, background: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#ffe6e6' : '#e6ffe6', color: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#991b1b' : '#166534', border: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '2px solid #dc3545' : '2px solid #28a745', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>{msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '\u26a0\ufe0f ' : '\u2705 '}{msg}</span>
+          <button onClick={() => setMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#666', padding: '0 4px' }}>\u2715</button>
+        </div>
+      )}
       <div>
         {visibleItems.map(item => (
           <div key={item.id} className="card" style={{ padding: 12, marginBottom: 12, borderLeft: item.status === 'rejected' ? '6px solid #dc3545' : 'none', background: item.status === 'rejected' ? '#fff8f8' : 'white', boxShadow: editId === item.id ? '0 12px 30px rgba(21,128,61,0.14)' : undefined }}>

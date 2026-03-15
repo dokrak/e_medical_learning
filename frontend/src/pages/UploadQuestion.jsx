@@ -50,7 +50,7 @@ export default function UploadQuestion(){
     if (image) {
       setUploading(true)
       try { images = [await uploadFile(image)] } catch(err) {
-        setMsg('Image upload failed: ' + (err?.response?.data?.message || err.message))
+        setMsg('Image upload failed: ' + (err?.response?.data?.message || err.message) + ' — Please try selecting a new image or submit without image.')
         setUploading(false)
         return
       }
@@ -128,11 +128,18 @@ export default function UploadQuestion(){
           </select>
         </div>
         <div style={{ marginTop: 8 }}>
-          <input type="file" accept="image/*" onChange={e=>setImage(e.target.files[0])} />
+          <label><strong>Image (optional)</strong></label>
+          <input type="file" accept="image/*" onChange={e=>{ setImage(e.target.files[0]); if(msg.includes('Image upload failed')) setMsg('') }} />
+          {image && <div style={{ marginTop: 4, fontSize: 12, color: '#555' }}>Selected: {image.name} ({(image.size/1024).toFixed(0)} KB)</div>}
         </div>
         <div style={{ marginTop: 8 }}><button className="btn btn-primary" disabled={uploading}>{uploading ? 'Uploading...' : 'Submit question'}</button></div>
       </form>
-      <div style={{ marginTop: 8 }}>{msg}</div>
+      {msg && (
+        <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 8, fontWeight: 600, fontSize: 14, background: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#ffe6e6' : '#e6ffe6', color: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#991b1b' : '#166534', border: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '2px solid #dc3545' : '2px solid #28a745', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>{msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '⚠️ ' : '✅ '}{msg}</span>
+          <button onClick={() => setMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#666', padding: '0 4px' }}>✕</button>
+        </div>
+      )}
     </div>
   )
 }

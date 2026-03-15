@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api'
+import { useLang } from '../LangContext'
 
 export default function HomePage(){
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
   const [stats, setStats] = useState(null)
+  const [platformStats, setPlatformStats] = useState(null)
+  const { t } = useLang()
   
   useEffect(() => {
-    if (user?.role === 'student') {
+    if (user?.role === 'student' || user?.role === 'resident' || user?.role === 'fellow') {
       loadStats()
     }
-  }, [user])
+    loadPlatformStats()
+  }, [])
 
   async function loadStats(){
     try {
@@ -19,197 +23,308 @@ export default function HomePage(){
     } catch(e) { /* ignore */ }
   }
 
-  const isStudent = user?.role === 'student'
+  async function loadPlatformStats(){
+    try {
+      const r = await api.get('/platform-stats')
+      setPlatformStats(r.data)
+    } catch(e) {
+      setPlatformStats({ questions: 0, exams: 0, users: 0, specialties: 0 })
+    }
+  }
+
+  const isStudent = user?.role === 'student' || user?.role === 'resident' || user?.role === 'fellow'
+  const isResident = user?.role === 'resident'
+  const isFellow = user?.role === 'fellow'
   const isClinician = user?.role === 'clinician'
   const isAdmin = user?.role === 'admin'
   const isModerator = user?.role === 'moderator'
 
-  const featureCards = [
-    {
-      icon: '🧠',
-      th: 'คลังข้อสอบทางการแพทย์คุณภาพ',
-      en: 'High-quality Medical Question Bank'
-    },
-    {
-      icon: '📈',
-      th: 'วิเคราะห์ผลการเรียนแบบเรียลไทม์',
-      en: 'Real-time Learning Analytics'
-    },
-    {
-      icon: '🩺',
-      th: 'เชื่อมโยงการเรียนรู้กับบริบททางคลินิก',
-      en: 'Clinically Contextualized Learning'
-    },
-    {
-      icon: '🔒',
-      th: 'แพลตฟอร์มปลอดภัยระดับมืออาชีพ',
-      en: 'Professional-grade Secure Platform'
-    }
-  ]
+  const activeRole = isResident ? 'resident' : isFellow ? 'fellow' : isStudent ? 'student' : isClinician ? 'clinician' : isModerator ? 'moderator' : isAdmin ? 'admin' : null
 
   const rolePanels = {
     student: {
-      title: 'เส้นทางผู้เรียน | Learner Path',
-      bullets: [
-        'ทำข้อสอบและติดตามพัฒนาการของตนเอง | Take exams and track your progress',
-        'ดูจุดแข็ง-จุดที่ต้องพัฒนา | Identify strengths and improvement areas',
-        'เข้าถึงรายงานผลแบบละเอียด | Access detailed performance reports'
-      ],
+      titleKey: 'learnerPath', icon: '📚',
+      bullets: ['studentBullet1', 'studentBullet2', 'studentBullet3'],
       actions: [
-        { to: '/exams', label: 'เริ่มทำข้อสอบ | Start Exam', primary: true },
-        { to: '/student-stats', label: 'ดูสถิติ | View Statistics', primary: false }
+        { to: '/exams', labelKey: 'startExamBtn', primary: true },
+        { to: '/student-stats', labelKey: 'viewStats', primary: false }
+      ]
+    },
+    resident: {
+      titleKey: 'residentPath', icon: '🩺',
+      bullets: ['residentBullet1', 'residentBullet2', 'residentBullet3'],
+      actions: [
+        { to: '/exams', labelKey: 'startExamBtn', primary: true },
+        { to: '/upload', labelKey: 'createQuestionBtn', primary: false }
+      ]
+    },
+    fellow: {
+      titleKey: 'fellowPath', icon: '🎓',
+      bullets: ['fellowBullet1', 'fellowBullet2', 'fellowBullet3'],
+      actions: [
+        { to: '/exams', labelKey: 'startExamBtn', primary: true },
+        { to: '/upload', labelKey: 'createQuestionBtn', primary: false }
       ]
     },
     clinician: {
-      title: 'เส้นทางผู้ออกข้อสอบ | Clinician Workflow',
-      bullets: [
-        'สร้างคำถามคุณภาพสูงพร้อมเหตุผลทางวิชาการ | Create high-quality questions with rationale',
-        'ติดตามสถานะการพิจารณาโดยผู้ตรวจ | Track moderation status',
-        'จัดการคลังคำถามของตนเองได้สะดวก | Manage your own question bank efficiently'
-      ],
+      titleKey: 'clinicianWorkflow', icon: '🏥',
+      bullets: ['clinicianBullet1', 'clinicianBullet2', 'clinicianBullet3'],
       actions: [
-        { to: '/upload', label: 'สร้างคำถาม | Create Question', primary: true },
-        { to: '/manage', label: 'จัดการรายการ | Manage Items', primary: false }
+        { to: '/upload', labelKey: 'createQuestionBtn', primary: true },
+        { to: '/manage', labelKey: 'manageItems', primary: false }
       ]
     },
     moderator: {
-      title: 'เส้นทางผู้ตรวจ | Moderator Workflow',
-      bullets: [
-        'ตรวจคุณภาพคำถามก่อนเผยแพร่ | Review quality before publication',
-        'อนุมัติหรือส่งกลับพร้อมข้อเสนอแนะ | Approve or return with feedback',
-        'ช่วยยกระดับมาตรฐานเนื้อหา | Maintain content standards'
-      ],
+      titleKey: 'moderatorWorkflow', icon: '✅',
+      bullets: ['moderatorBullet1', 'moderatorBullet2', 'moderatorBullet3'],
       actions: [
-        { to: '/moderator', label: 'คิวตรวจสอบ | Review Queue', primary: true },
-        { to: '/clinician-dashboard', label: 'ดูภาพรวม | View Analytics', primary: false }
+        { to: '/moderator', labelKey: 'reviewQueue', primary: true },
+        { to: '/clinician-dashboard', labelKey: 'viewAnalytics', primary: false }
       ]
     },
     admin: {
-      title: 'เส้นทางผู้ดูแลระบบ | Admin Control',
-      bullets: [
-        'จัดการผู้ใช้งานและสิทธิ์ | Manage users and permissions',
-        'ติดตามภาพรวมการใช้งานระบบ | Monitor platform usage',
-        'สนับสนุนการเติบโตของชุมชนการเรียนรู้ | Support learning ecosystem growth'
-      ],
+      titleKey: 'adminControl', icon: '🔐',
+      bullets: ['adminBullet1', 'adminBullet2', 'adminBullet3'],
       actions: [
-        { to: '/admin-users', label: 'จัดการผู้ใช้ | Manage Users', primary: true },
-        { to: '/clinician-dashboard', label: 'แดชบอร์ด | Dashboard', primary: false }
+        { to: '/admin-users', labelKey: 'manageUsersBtn', primary: true },
+        { to: '/clinician-dashboard', labelKey: 'dashboard', primary: false }
       ]
     }
   }
 
-  const activeRole = isStudent ? 'student' : isClinician ? 'clinician' : isModerator ? 'moderator' : isAdmin ? 'admin' : null
   const rolePanel = activeRole ? rolePanels[activeRole] : null
+
+  const whyCards = [
+    { icon: '🔬', titleKey: 'whyEvidence', descKey: 'whyEvidenceDesc' },
+    { icon: '📊', titleKey: 'whyAnalytics', descKey: 'whyAnalyticsDesc' },
+    { icon: '🤝', titleKey: 'whyMultiRole', descKey: 'whyMultiRoleDesc' },
+    { icon: '🌏', titleKey: 'whyBilingual', descKey: 'whyBilingualDesc' },
+    { icon: '🔄', titleKey: 'whyContinuous', descKey: 'whyContinuousDesc' },
+    { icon: '🛡️', titleKey: 'whySecure', descKey: 'whySecureDesc' },
+  ]
+
+  const kmSteps = [
+    { num: '01', icon: '✏️', titleKey: 'kmStep1', descKey: 'kmStep1Desc', color: '#16a34a' },
+    { num: '02', icon: '🔍', titleKey: 'kmStep2', descKey: 'kmStep2Desc', color: '#0f766e' },
+    { num: '03', icon: '📝', titleKey: 'kmStep3', descKey: 'kmStep3Desc', color: '#0369a1' },
+    { num: '04', icon: '📈', titleKey: 'kmStep4', descKey: 'kmStep4Desc', color: '#7c3aed' },
+    { num: '05', icon: '🚀', titleKey: 'kmStep5', descKey: 'kmStep5Desc', color: '#db2777' },
+  ]
 
   return (
     <div>
-      <div
-        style={{
-          backgroundImage: 'linear-gradient(140deg, rgba(15,81,50,0.72) 0%, rgba(15,118,110,0.68) 45%, rgba(22,78,99,0.72) 100%), url(/hero-bg.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          padding: '56px 24px',
-          borderRadius: 18,
-          marginBottom: 28,
-          color: '#ffffff',
-          position: 'relative',
-          overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.14)'
-        }}
-      >
+      {/* ========== HERO SECTION ========== */}
+      <div style={{
+        backgroundImage: 'linear-gradient(140deg, rgba(15,81,50,0.88) 0%, rgba(15,118,110,0.82) 40%, rgba(22,78,99,0.88) 100%), url(/hero-bg.jpg)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        padding: '64px 32px 56px', borderRadius: 20, marginBottom: 32,
+        color: '#fff', position: 'relative', overflow: 'hidden',
+        border: '1px solid rgba(255,255,255,0.14)'
+      }}>
+        {/* Decorative circles */}
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 260, height: 260, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 900 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.9, letterSpacing: '0.04em', marginBottom: 10 }}>
-            CHOMTHONG HOSPITAL · MEDICAL LEARNING PLATFORM
+          <div style={{
+            display: 'inline-block', padding: '6px 16px', borderRadius: 20,
+            background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)',
+            fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', marginBottom: 16,
+            border: '1px solid rgba(255,255,255,0.2)'
+          }}>
+            {t('heroSubtitle')}
           </div>
-          <h1 style={{ fontSize: 40, margin: '0 0 12px 0', fontWeight: 900 }}>
-            ยินดีต้อนรับ {user?.name ? `${user.name}` : ''}
-            <span style={{ display: 'block', fontSize: 26, fontWeight: 700, opacity: 0.95, marginTop: 6 }}>
-              Welcome to Professional Medical Learning
-            </span>
+          <h1 style={{ fontSize: 42, margin: '0 0 8px 0', fontWeight: 900, lineHeight: 1.2 }}>
+            {user?.name && <span style={{ opacity: 0.9, fontSize: 28, display: 'block', marginBottom: 4 }}>{t('heroWelcome')}, {user.name}</span>}
+            {t('heroTitle')}
           </h1>
-          <p style={{ margin: 0, lineHeight: 1.7, fontSize: 16, maxWidth: 760, opacity: 0.96 }}>
-            ระบบการเรียนรู้ทางการแพทย์ที่ผสานเทคโนโลยีสมัยใหม่กับมาตรฐานวิชาชีพ เพื่อพัฒนาศักยภาพบุคลากรสุขภาพอย่างต่อเนื่อง
-            <br />
-            A modern bilingual platform combining medical excellence and technology for continuous professional development.
+          <p style={{ margin: '16px 0 0 0', lineHeight: 1.8, fontSize: 16, maxWidth: 760, opacity: 0.95 }}>
+            {t('heroDesc')}
           </p>
-          <div style={{ marginTop: 24, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {isStudent && <Link to="/exams" className="btn" style={{ background: '#ffffff', color: '#0f5132', fontWeight: 800 }}>เริ่มทำข้อสอบ | Start Exam</Link>}
-            {isClinician && <Link to="/upload" className="btn" style={{ background: '#ffffff', color: '#0f5132', fontWeight: 800 }}>สร้างคำถาม | Create Question</Link>}
-            {isModerator && <Link to="/moderator" className="btn" style={{ background: '#ffffff', color: '#0f5132', fontWeight: 800 }}>ตรวจสอบคำถาม | Review Queue</Link>}
-            {isAdmin && <Link to="/admin-users" className="btn" style={{ background: '#ffffff', color: '#0f5132', fontWeight: 800 }}>จัดการระบบ | Manage System</Link>}
-            {!user && <Link to="/login" className="btn" style={{ background: '#ffffff', color: '#0f5132', fontWeight: 800 }}>เข้าสู่ระบบ | Sign In</Link>}
+          <div style={{ marginTop: 28, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            {isStudent && <Link to="/exams" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, fontSize: 15, padding: '12px 24px' }}>{t('heroStartExam')}</Link>}
+            {(isResident || isFellow || isClinician) && <Link to="/upload" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, fontSize: 15, padding: '12px 24px' }}>{t('heroCreateQ')}</Link>}
+            {isModerator && <Link to="/moderator" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, fontSize: 15, padding: '12px 24px' }}>{t('heroReviewQueue')}</Link>}
+            {isAdmin && <Link to="/admin-users" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, fontSize: 15, padding: '12px 24px' }}>{t('heroManageSystem')}</Link>}
+            {!user && <Link to="/login" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, fontSize: 15, padding: '12px 24px' }}>{t('heroSignIn')}</Link>}
           </div>
         </div>
       </div>
 
-      {isStudent && stats && (
-        <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontSize: 24, marginBottom: 14, color: '#0f5132' }}>ภาพรวมการเรียนรู้ | Learning Snapshot</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
-            <div className="card" style={{ borderTop: '5px solid #0f766e', textAlign: 'center' }}>
-              <div style={{ fontSize: 30, fontWeight: 900, color: '#0f5132' }}>{stats.attempts.length}</div>
-              <div className="small">จำนวนครั้งที่ทำข้อสอบ | Exams Completed</div>
-            </div>
-            <div className="card" style={{ borderTop: '5px solid #0f766e', textAlign: 'center' }}>
-              <div style={{ fontSize: 30, fontWeight: 900, color: '#0f5132' }}>{stats.avgScore}%</div>
-              <div className="small">คะแนนเฉลี่ย | Average Score</div>
-            </div>
-            <div className="card" style={{ borderTop: '5px solid #0f766e', textAlign: 'center' }}>
-              <div style={{ fontSize: 30, fontWeight: 900, color: '#0f5132' }}>{stats.bestScore}%</div>
-              <div className="small">คะแนนสูงสุด | Best Score</div>
-            </div>
-            <div className="card" style={{ borderTop: '5px solid #0f766e', textAlign: 'center' }}>
-              <div style={{ fontSize: 30, fontWeight: 900, color: stats.improvement > 0 ? 'var(--success)' : 'var(--danger)' }}>{stats.improvement > 0 ? '+' : ''}{stats.improvement}%</div>
-              <div className="small">พัฒนาการ | Improvement</div>
-            </div>
-          </div>
+      {/* ========== KM METRICS SECTION ========== */}
+      <div style={{ marginBottom: 36 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 28, color: '#0f5132', margin: '0 0 6px 0' }}>{t('kmMetricsTitle')}</h2>
+          <p style={{ color: '#475569', margin: 0, fontSize: 15 }}>{t('kmMetricsDesc')}</p>
         </div>
-      )}
-
-      <div style={{ marginBottom: 28 }}>
-        <h2 style={{ fontSize: 24, marginBottom: 14, color: '#0f5132' }}>จุดเด่นของแพลตฟอร์ม | Platform Highlights</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
-          {featureCards.map((feature, index) => (
-            <div key={index} className="card" style={{ background: 'linear-gradient(145deg, rgba(15,118,110,0.10), rgba(22,78,99,0.10))', border: '1px solid rgba(15,118,110,0.24)' }}>
-              <div style={{ fontSize: 34, marginBottom: 8 }}>{feature.icon}</div>
-              <div style={{ fontWeight: 800, color: '#0f5132', marginBottom: 4 }}>{feature.th}</div>
-              <div className="small" style={{ color: '#0f766e' }}>{feature.en}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
+          {[
+            { value: platformStats?.questions ?? '—', label: t('kmQuestionBank'), icon: '🧠', gradient: 'linear-gradient(135deg, #ecfdf5, #d1fae5)' },
+            { value: platformStats?.exams ?? '—', label: t('kmExamsCreated'), icon: '📋', gradient: 'linear-gradient(135deg, #ecfeff, #cffafe)' },
+            { value: platformStats?.users ?? '—', label: t('kmActiveUsers'), icon: '👥', gradient: 'linear-gradient(135deg, #eff6ff, #dbeafe)' },
+            { value: platformStats?.specialties ?? '—', label: t('kmSpecialties'), icon: '🩺', gradient: 'linear-gradient(135deg, #fdf4ff, #f3e8ff)' },
+          ].map((m, i) => (
+            <div key={i} style={{
+              background: m.gradient, borderRadius: 16, padding: '28px 20px', textAlign: 'center',
+              border: '1px solid rgba(15,118,110,0.12)', transition: 'transform 0.2s',
+              cursor: 'default'
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              <div style={{ fontSize: 36, marginBottom: 8 }}>{m.icon}</div>
+              <div style={{ fontSize: 36, fontWeight: 900, color: '#0f5132', lineHeight: 1 }}>{m.value}</div>
+              <div style={{ fontSize: 13, color: '#475569', marginTop: 6, fontWeight: 600 }}>{m.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {rolePanel && (
-        <div style={{ marginBottom: 28, background: 'linear-gradient(145deg, rgba(15,81,50,0.96), rgba(22,78,99,0.95))', color: '#fff', padding: 24, borderRadius: 14 }}>
-          <h2 style={{ margin: '0 0 12px 0', fontSize: 24 }}>{rolePanel.title}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-            <div>
-              <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.85 }}>
-                {rolePanel.bullets.map((item, index) => <li key={index}>{item}</li>)}
-              </ul>
+      {/* ========== PERSONAL STATS (Students only) ========== */}
+      {isStudent && stats && (
+        <div style={{ marginBottom: 36 }}>
+          <h2 style={{ fontSize: 24, marginBottom: 14, color: '#0f5132' }}>📊 {t('learningSnapshot')}</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+            <div className="card" style={{ borderLeft: '5px solid #16a34a', textAlign: 'center' }}>
+              <div style={{ fontSize: 34, fontWeight: 900, color: '#0f5132' }}>{stats.attempts.length}</div>
+              <div className="small" style={{ fontWeight: 600 }}>{t('examsCompleted')}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {rolePanel.actions.map((action, index) => (
-                <Link
-                  key={index}
-                  to={action.to}
-                  className={`btn ${action.primary ? 'btn-primary' : 'btn-ghost'}`}
-                  style={{ textAlign: 'center', justifyContent: 'center', background: action.primary ? '#ffffff' : 'transparent', color: action.primary ? '#0f5132' : '#ffffff', borderColor: action.primary ? '#ffffff' : 'rgba(255,255,255,0.45)' }}
-                >
-                  {action.label}
-                </Link>
-              ))}
+            <div className="card" style={{ borderLeft: '5px solid #0f766e', textAlign: 'center' }}>
+              <div style={{ fontSize: 34, fontWeight: 900, color: '#0f5132' }}>{stats.avgScore}%</div>
+              <div className="small" style={{ fontWeight: 600 }}>{t('avgScore')}</div>
+            </div>
+            <div className="card" style={{ borderLeft: '5px solid #0369a1', textAlign: 'center' }}>
+              <div style={{ fontSize: 34, fontWeight: 900, color: '#0f5132' }}>{stats.bestScore}%</div>
+              <div className="small" style={{ fontWeight: 600 }}>{t('bestScore')}</div>
+            </div>
+            <div className="card" style={{ borderLeft: `5px solid ${stats.improvement > 0 ? '#16a34a' : '#dc2626'}`, textAlign: 'center' }}>
+              <div style={{ fontSize: 34, fontWeight: 900, color: stats.improvement > 0 ? '#16a34a' : '#dc2626' }}>{stats.improvement > 0 ? '+' : ''}{stats.improvement}%</div>
+              <div className="small" style={{ fontWeight: 600 }}>{t('improvement')}</div>
             </div>
           </div>
         </div>
       )}
 
-      <div style={{ background: 'linear-gradient(140deg, #0f766e, #164e63)', color: '#fff', borderRadius: 14, padding: 28, textAlign: 'center' }}>
-        <h2 style={{ margin: '0 0 8px 0', fontSize: 26 }}>พร้อมพัฒนาทักษะทางการแพทย์ของคุณแล้วหรือยัง?</h2>
-        <p style={{ margin: '0 0 18px 0', opacity: 0.95 }}>
-          Ready to elevate your medical expertise with a professional bilingual learning experience?
-        </p>
-        {!user && <Link to="/login" className="btn" style={{ background: '#ffffff', color: '#0f5132', fontWeight: 800 }}>เริ่มต้นใช้งาน | Get Started</Link>}
+      {/* ========== ROLE PANEL ========== */}
+      {rolePanel && (
+        <div style={{
+          marginBottom: 36, borderRadius: 16, overflow: 'hidden',
+          background: 'linear-gradient(145deg, #0f5132, #0f766e 60%, #164e63)',
+          boxShadow: '0 12px 40px rgba(15,81,50,0.20)'
+        }}>
+          <div style={{ padding: '28px 28px 24px', color: '#fff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <span style={{ fontSize: 32 }}>{rolePanel.icon}</span>
+              <h2 style={{ margin: 0, fontSize: 24 }}>{t(rolePanel.titleKey)}</h2>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 24, alignItems: 'center' }}>
+              <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 2, fontSize: 15, opacity: 0.95 }}>
+                {rolePanel.bullets.map((key, i) => <li key={i}>{t(key)}</li>)}
+              </ul>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {rolePanel.actions.map((action, i) => (
+                  <Link key={i} to={action.to} className="btn"
+                    style={{
+                      textAlign: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14,
+                      minWidth: 160, padding: '10px 20px',
+                      background: action.primary ? '#fff' : 'transparent',
+                      color: action.primary ? '#0f5132' : '#fff',
+                      border: action.primary ? 'none' : '1.5px solid rgba(255,255,255,0.45)'
+                    }}
+                  >
+                    {t(action.labelKey)}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========== KM CYCLE SECTION ========== */}
+      <div style={{ marginBottom: 36 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h2 style={{ fontSize: 28, color: '#0f5132', margin: '0 0 6px 0' }}>{t('kmCycleTitle')}</h2>
+          <p style={{ color: '#475569', margin: 0, fontSize: 15 }}>{t('kmCycleDesc')}</p>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, justifyContent: 'center', position: 'relative' }}>
+          {kmSteps.map((step, i) => (
+            <div key={i} style={{ flex: '1 1 180px', maxWidth: 220, position: 'relative', textAlign: 'center', padding: '0 10px' }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: '50%', margin: '0 auto 12px',
+                background: `linear-gradient(135deg, ${step.color}22, ${step.color}11)`,
+                border: `3px solid ${step.color}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 28, position: 'relative'
+              }}>
+                {step.icon}
+                <span style={{
+                  position: 'absolute', top: -6, right: -6, width: 24, height: 24,
+                  borderRadius: '50%', background: step.color, color: '#fff',
+                  fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>{step.num}</span>
+              </div>
+              <div style={{ fontWeight: 800, color: step.color, fontSize: 16, marginBottom: 4 }}>{t(step.titleKey)}</div>
+              <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5 }}>{t(step.descKey)}</div>
+              {i < kmSteps.length - 1 && (
+                <div style={{
+                  position: 'absolute', top: 32, right: -14,
+                  fontSize: 20, color: '#b8d7d0', fontWeight: 900
+                }}>→</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ========== WHY SECTION ========== */}
+      <div style={{ marginBottom: 36 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 28, color: '#0f5132', margin: 0 }}>{t('whyTitle')}</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+          {whyCards.map((card, i) => (
+            <div key={i} className="card" style={{
+              background: 'linear-gradient(145deg, #ffffff, #f0fdf4)',
+              border: '1px solid rgba(15,118,110,0.15)',
+              padding: '24px', display: 'flex', gap: 16, alignItems: 'flex-start'
+            }}>
+              <div style={{
+                fontSize: 28, width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+                background: 'linear-gradient(135deg, rgba(15,118,110,0.12), rgba(22,78,99,0.08))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>{card.icon}</div>
+              <div>
+                <div style={{ fontWeight: 800, color: '#0f5132', fontSize: 15, marginBottom: 4 }}>{t(card.titleKey)}</div>
+                <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.65 }}>{t(card.descKey)}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ========== CTA SECTION ========== */}
+      <div style={{
+        background: 'linear-gradient(140deg, #0f5132, #0f766e 50%, #164e63)',
+        color: '#fff', borderRadius: 18, padding: '40px 32px', textAlign: 'center',
+        position: 'relative', overflow: 'hidden',
+        boxShadow: '0 12px 40px rgba(15,81,50,0.20)'
+      }}>
+        <div style={{ position: 'absolute', top: -30, right: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h2 style={{ margin: '0 0 10px 0', fontSize: 28 }}>{t('ctaTitle')}</h2>
+          <p style={{ margin: '0 auto 24px', opacity: 0.92, maxWidth: 600, lineHeight: 1.6 }}>
+            {t('ctaDesc')}
+          </p>
+          {!user && <Link to="/login" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, fontSize: 16, padding: '14px 32px' }}>{t('ctaGetStarted')}</Link>}
+          {user && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+              {isStudent && <Link to="/exams" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, padding: '12px 28px' }}>{t('heroStartExam')}</Link>}
+              {(isResident || isFellow || isClinician) && <Link to="/upload" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, padding: '12px 28px' }}>{t('heroCreateQ')}</Link>}
+              {isModerator && <Link to="/moderator" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, padding: '12px 28px' }}>{t('heroReviewQueue')}</Link>}
+              {isAdmin && <Link to="/clinician-dashboard" className="btn" style={{ background: '#fff', color: '#0f5132', fontWeight: 800, padding: '12px 28px' }}>{t('dashboard')}</Link>}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

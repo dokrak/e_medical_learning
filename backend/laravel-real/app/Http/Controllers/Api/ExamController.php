@@ -106,16 +106,13 @@ class ExamController extends Controller
             'title' => $q->title,
             'stem' => $q->stem,
             'body' => $q->body,
-            'answerExplanation' => $q->answer_explanation,
             'difficulty' => $q->difficulty,
-            'answer' => $q->answer,
             'choices' => $q->choices ?? [],
             'references' => $q->references ?? [],
             'images' => $q->images ?? [],
             'specialtyId' => $q->specialty_id,
             'subspecialtyId' => $q->subspecialty_id,
             'status' => $q->status,
-            'moderationFeedback' => $q->moderation_feedback,
             'authorId' => $q->author_id,
         ])->values();
 

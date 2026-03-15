@@ -16,6 +16,16 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::get('/specialties', [SpecialtyController::class, 'index']);
 
+// --- Platform stats (public, counts only) ---
+Route::get('/platform-stats', function () {
+    return response()->json([
+        'questions' => \App\Models\Question::where('status', 'approved')->count(),
+        'exams'     => \App\Models\Exam::count(),
+        'users'     => \App\Models\User::count(),
+        'specialties' => \App\Models\Specialty::count(),
+    ]);
+});
+
 // --- Approved questions (public, read-only) ---
 Route::get('/questions', [QuestionController::class, 'index']);
 

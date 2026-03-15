@@ -149,8 +149,17 @@ export default function ExamResultsDashboard(){
             <strong>Score: {selectedResult.score}% ({selectedResult.correct}/{selectedResult.total} correct)</strong>
           </div>
           {selectedResult.questions.map((q, i) => {
-            const studentAnswer = selectedResult.answers.find(a => a.questionId === q.id)?.answer
-            const isCorrect = (studentAnswer || '').trim().toLowerCase() === (q.answer || '').trim().toLowerCase()
+            const studentAnswerObj = selectedResult.answers.find(a => a.questionId === q.id)
+            const studentAnswer = studentAnswerObj?.answer
+            const answerIndex = studentAnswerObj?.answerIndex
+            // Index-based comparison when available
+            let isCorrect = false
+            if (answerIndex != null && answerIndex >= 0 && q.choices && q.choices.length > 0) {
+              const correctIdx = q.choices.findIndex(c => c.trim().toLowerCase() === (q.answer || '').trim().toLowerCase())
+              isCorrect = answerIndex === correctIdx
+            } else {
+              isCorrect = (studentAnswer || '').trim().toLowerCase() === (q.answer || '').trim().toLowerCase()
+            }
             return (
               <div key={q.id} className={`panel ${isCorrect ? 'panel-correct' : 'panel-incorrect'}`}>
                 <div><strong>{i+1}. {q.title}</strong> {isCorrect ? <span className="badge badge-success">✓</span> : <span className="badge badge-danger">✗</span>}</div>

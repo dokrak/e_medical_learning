@@ -382,6 +382,20 @@ app.get('/api/specialties', (req, res) => {
   res.json(specs);
 });
 
+// Platform stats (public)
+app.get('/api/platform-stats', (req, res) => {
+  const questions = readJson('questions.json').filter(q => q.status === 'approved');
+  const exams = readJson('exams.json');
+  const users = readJson('users.json');
+  const specialties = readJson('specialties.json');
+  res.json({
+    questions: questions.length,
+    exams: exams.length,
+    users: users.length,
+    specialties: specialties.length
+  });
+});
+
 app.get('/api/exams', authMiddleware, (req, res) => {
   const exams = readJson('exams.json');
   res.json(exams);

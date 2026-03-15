@@ -10,7 +10,7 @@ export default function ExamsList(){
   const [msg, setMsg] = useState('')
   const nav = useNavigate()
   const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
-  const isStaff = currentUser?.role !== 'student'
+  const isStaff = currentUser?.role === 'clinician' || currentUser?.role === 'moderator' || currentUser?.role === 'admin' || currentUser?.role === 'fellow'
 
   async function load(){
     try{ const r = await api.get('/exams'); setExams(r.data.value || r.data) }catch(e){ setMsg('Failed to load exams') }

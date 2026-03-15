@@ -23,8 +23,7 @@ class StudentExamController extends Controller
         $correct = 0;
         foreach ($answers as $a) {
             $q = $questions->get($a['questionId'] ?? '');
-            if (!$q) continue;
-            if (strtolower(trim($a['answer'] ?? '')) === strtolower(trim($q->answer ?? ''))) {
+            if ($this->isAnswerCorrect($a, $q)) {
                 $correct++;
             }
         }
@@ -75,7 +74,8 @@ class StudentExamController extends Controller
         $users = User::all()->keyBy('id');
         $questions = Question::all()->keyBy('id');
 
-        $results = $studentExams->map(function ($se) use ($exams, $users, $questions) {
+        $self = $this;
+        $results = $studentExams->map(function ($se) use ($exams, $users, $questions, $self) {
             $exam = $exams->get($se->exam_id);
             $student = $users->get($se->student_id);
             $examQuestions = $exam ? $questions->whereIn('id', $exam->questions ?? []) : collect();
@@ -83,7 +83,7 @@ class StudentExamController extends Controller
             $correct = 0;
             foreach ($se->answers ?? [] as $a) {
                 $q = $examQuestions->firstWhere('id', $a['questionId'] ?? '');
-                if ($q && strtolower(trim($a['answer'] ?? '')) === strtolower(trim($q->answer ?? ''))) {
+                if ($self->isAnswerCorrect($a, $q)) {
                     $correct++;
                 }
             }
@@ -115,12 +115,13 @@ class StudentExamController extends Controller
         $studentExams = StudentExam::where('exam_id', $examId)->get();
         $users = User::all()->keyBy('id');
 
-        $results = $studentExams->map(function ($se) use ($examQuestions, $users) {
+        $self = $this;
+        $results = $studentExams->map(function ($se) use ($examQuestions, $users, $self) {
             $student = $users->get($se->student_id);
             $correct = 0;
             foreach ($se->answers ?? [] as $a) {
                 $q = $examQuestions->get($a['questionId'] ?? '');
-                if ($q && strtolower(trim($a['answer'] ?? '')) === strtolower(trim($q->answer ?? ''))) {
+                if ($self->isAnswerCorrect($a, $q)) {
                     $correct++;
                 }
             }
@@ -194,9 +195,10 @@ class StudentExamController extends Controller
         $student = User::find($se->student_id);
         $questions = Question::whereIn('id', $exam?->questions ?? [])->get()->keyBy('id');
 
-        $breakdown = collect($se->answers ?? [])->map(function ($ans, $i) use ($questions) {
+        $self = $this;
+        $breakdown = collect($se->answers ?? [])->map(function ($ans, $i) use ($questions, $self) {
             $q = $questions->get($ans['questionId'] ?? '');
-            $isCorrect = $q && strtolower(trim($ans['answer'] ?? '')) === strtolower(trim($q->answer ?? ''));
+            $isCorrect = $self->isAnswerCorrect($ans, $q);
             return [
                 'number' => $i + 1,
                 'title' => $q?->title ?? 'Unknown',
@@ -227,6 +229,33 @@ class StudentExamController extends Controller
             ],
             'breakdown' => $breakdown->values(),
         ]);
+    }
+
+    /**
+     * Check if a student's answer is correct, preferring index-based comparison.
+     */
+    private function isAnswerCorrect(array $answer, $question): bool
+    {
+        if (!$question) return false;
+
+        $choices = $question->choices ?? [];
+        $correctAnswer = $question->answer ?? '';
+        $answerIndex = $answer['answerIndex'] ?? -1;
+
+        if ($answerIndex >= 0 && $answerIndex < count($choices)) {
+            // Index-based: find which index holds the correct answer
+            $correctIndex = -1;
+            foreach ($choices as $ci => $choiceText) {
+                if (strtolower(trim($choiceText)) === strtolower(trim($correctAnswer))) {
+                    $correctIndex = $ci;
+                    break;
+                }
+            }
+            return $answerIndex === $correctIndex;
+        }
+
+        // Fallback: text-based comparison for free-text or legacy answers
+        return strtolower(trim($answer['answer'] ?? '')) === strtolower(trim($correctAnswer));
     }
 
     private function buildStats($studentId)
