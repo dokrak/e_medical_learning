@@ -18,11 +18,49 @@ Route::get('/specialties', [SpecialtyController::class, 'index']);
 
 // --- Platform stats (public, counts only) ---
 Route::get('/platform-stats', function () {
+    $users = \App\Models\User::select('name', 'role', 'hospital', 'province', 'profile_picture')->get();
+
+    // Group by hospital
+    $hospitals = $users->filter(fn($u) => $u->hospital)
+        ->groupBy('hospital')
+        ->map(fn($group) => [
+            'hospital' => $group->first()->hospital,
+            'province' => $group->first()->province,
+            'count' => $group->count(),
+            'roles' => $group->pluck('role')->unique()->values(),
+        ])->values();
+
+    // Team members (staff roles only: clinician, moderator, admin, fellow)
+    $team = $users->filter(fn($u) => in_array($u->role, ['clinician', 'moderator', 'admin', 'fellow']))
+        ->map(fn($u) => [
+            'name' => $u->name,
+            'role' => $u->role,
+            'hospital' => $u->hospital,
+            'province' => $u->province,
+            'profile_picture' => $u->profile_picture,
+        ])->values();
+
+    // Role counts
+    $roleCounts = $users->groupBy('role')->map->count();
+
+    // Role to hospitals mapping
+    $roleHospitals = $users->filter(fn($u) => $u->hospital)
+        ->groupBy('role')
+        ->map(fn($group) => $group->groupBy('hospital')->map(fn($g) => [
+            'hospital' => $g->first()->hospital,
+            'province' => $g->first()->province,
+            'count' => $g->count(),
+        ])->values())->toArray();
+
     return response()->json([
         'questions' => \App\Models\Question::where('status', 'approved')->count(),
         'exams'     => \App\Models\Exam::count(),
-        'users'     => \App\Models\User::count(),
+        'users'     => $users->count(),
         'specialties' => \App\Models\Specialty::count(),
+        'hospitals' => $hospitals,
+        'team' => $team,
+        'roleCounts' => $roleCounts,
+        'roleHospitals' => $roleHospitals,
     ]);
 });
 
@@ -71,4 +109,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/users', [AdminUserController::class, 'store']);
     Route::put('/admin/users/{id}', [AdminUserController::class, 'update']);
     Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroy']);
+    // --- Specialties Management (admin only) ---
+    Route::get('/admin/specialties', [SpecialtyController::class, 'index']);
+    Route::post('/admin/specialties', [SpecialtyController::class, 'store']);
+    Route::put('/admin/specialties/{id}', [SpecialtyController::class, 'update']);
+    Route::delete('/admin/specialties/{id}', [SpecialtyController::class, 'destroy']);
 });

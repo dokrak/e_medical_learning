@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react'
+import { thaiProvinces } from '../thaiProvinces'
+import { thaiHospitals } from '../thaiHospitals'
+import { hospitalProvinceMap } from '../hospitalProvinceMap'
 import { Link } from 'react-router-dom'
 import api from '../api'
 import { useLang } from '../LangContext'
 
 export default function AdminUserManagement(){
   const { t } = useLang()
+  const [showProvinceDropdown, setShowProvinceDropdown] = useState(false);
+  const [showHospitalDropdown, setShowHospitalDropdown] = useState(false);
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
@@ -177,21 +182,102 @@ export default function AdminUserManagement(){
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
               <div>
                 <label>{t('hospital')}</label>
-                <input 
-                  type="text"
-                  value={formData.hospital}
-                  onChange={(e) => setFormData({...formData, hospital: e.target.value})}
-                  placeholder={t('hospital')}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    value={formData.hospital}
+                    onChange={e => {
+                      setFormData({ ...formData, hospital: e.target.value });
+                      setShowHospitalDropdown(true);
+                    }}
+                    placeholder={t('hospital')}
+                    autoComplete="off"
+                    onFocus={() => setShowHospitalDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowHospitalDropdown(false), 150)}
+                  />
+                  {showHospitalDropdown && formData.hospital && (
+                    <div style={{
+                      position: 'absolute',
+                      zIndex: 10,
+                      background: '#fff',
+                      border: '1px solid #ddd',
+                      borderRadius: 8,
+                      width: '100%',
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                    }}>
+                      {thaiHospitals
+                        .filter(h => h.includes(formData.hospital))
+                        .map((h, idx) => (
+                          <div
+                            key={h}
+                            style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: idx !== thaiHospitals.length - 1 ? '1px solid #eee' : 'none' }}
+                            onMouseDown={() => {
+                              const province = hospitalProvinceMap[h] || formData.province;
+                              setFormData({ ...formData, hospital: h, province });
+                              setShowHospitalDropdown(false);
+                            }}
+                          >
+                            {h}
+                          </div>
+                        ))
+                      }
+                      {thaiHospitals.filter(h => h.includes(formData.hospital)).length === 0 && (
+                        <div style={{ padding: '8px 12px', color: '#888' }}>ไม่พบโรงพยาบาล</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label>{t('province')}</label>
-                <input 
-                  type="text"
-                  value={formData.province}
-                  onChange={(e) => setFormData({...formData, province: e.target.value})}
-                  placeholder={t('province')}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    value={formData.province}
+                    onChange={e => {
+                      setFormData({ ...formData, province: e.target.value });
+                      setShowProvinceDropdown(true);
+                    }}
+                    placeholder={t('province')}
+                    autoComplete="off"
+                    onFocus={() => setShowProvinceDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowProvinceDropdown(false), 150)}
+                  />
+                  {showProvinceDropdown && formData.province && (
+                    <div style={{
+                      position: 'absolute',
+                      zIndex: 10,
+                      background: '#fff',
+                      border: '1px solid #ddd',
+                      borderRadius: 8,
+                      width: '100%',
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                    }}>
+                      {thaiProvinces
+                        .filter(p => p.includes(formData.province))
+                        .map((p, idx) => (
+                          <div
+                            key={p}
+                            style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: idx !== thaiProvinces.length - 1 ? '1px solid #eee' : 'none' }}
+                            onMouseDown={() => {
+                              setFormData({ ...formData, province: p });
+                              setShowProvinceDropdown(false);
+                            }}
+                          >
+                            {p}
+                          </div>
+                        ))
+                      }
+                      {thaiProvinces.filter(p => p.includes(formData.province)).length === 0 && (
+                        <div style={{ padding: '8px 12px', color: '#888' }}>ไม่พบจังหวัด</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

@@ -178,6 +178,23 @@ const translations = {
   ctaTitle: { en: 'Ready to Elevate Your Medical Expertise?', th: 'พร้อมยกระดับความเชี่ยวชาญทางการแพทย์แล้วหรือยัง?' },
   ctaDesc: { en: 'Join Chomthong Hospital\'s knowledge management community and experience professional medical education at its finest.', th: 'ร่วมเป็นส่วนหนึ่งของชุมชนจัดการความรู้ โรงพยาบาลจอมทอง และสัมผัสการศึกษาทางการแพทย์ระดับมืออาชีพ' },
   ctaGetStarted: { en: 'Get Started', th: 'เริ่มต้นใช้งาน' },
+
+  // HomePage - Network & Team Showcase
+  networkTitle: { en: 'Our Hospital Network', th: 'เครือข่ายโรงพยาบาลของเรา' },
+  networkDesc: { en: 'Healthcare institutions collaborating on our knowledge management platform', th: 'สถาบันสุขภาพที่ร่วมมือกันบนแพลตฟอร์มจัดการความรู้ของเรา' },
+  networkMembers: { en: 'members', th: 'สมาชิก' },
+  teamTitle: { en: 'Our Expert Team', th: 'ทีมผู้เชี่ยวชาญของเรา' },
+  teamDesc: { en: 'Dedicated healthcare professionals driving knowledge management and medical education excellence', th: 'บุคลากรทางการแพทย์ผู้ทุ่มเทขับเคลื่อนการจัดการความรู้และความเป็นเลิศด้านการศึกษาทางการแพทย์' },
+  teamRoleAdmin: { en: 'System Administrator', th: 'ผู้ดูแลระบบ' },
+  teamRoleModerator: { en: 'Content Reviewer', th: 'ผู้ตรวจสอบเนื้อหา' },
+  teamRoleClinician: { en: 'Question Creator', th: 'ผู้ออกข้อสอบ' },
+  teamRoleFellow: { en: 'Fellow · Question Creator', th: 'แพทย์ต่อยอด · ผู้ออกข้อสอบ' },
+  communityTitle: { en: 'Learning Community', th: 'ชุมชนการเรียนรู้' },
+  communityDesc: { en: 'Our platform brings together learners and educators from multiple roles', th: 'แพลตฟอร์มของเรารวบรวมผู้เรียนและผู้สอนจากหลากหลายบทบาท' },
+  networkHospitals: { en: 'hospitals', th: 'โรงพยาบาล' },
+  clickToView: { en: 'Click to view details', th: 'คลิกเพื่อดูรายละเอียด' },
+  hospitalProvinceDetail: { en: 'Hospital & Province Detail', th: 'รายละเอียดโรงพยาบาลและจังหวัด' },
+  noHospitalData: { en: 'No hospital data available', th: 'ไม่มีข้อมูลโรงพยาบาล' },
 }
 
 export function LangProvider({ children }) {

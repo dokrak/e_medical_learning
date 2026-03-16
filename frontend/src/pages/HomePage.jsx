@@ -7,6 +7,7 @@ export default function HomePage(){
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
   const [stats, setStats] = useState(null)
   const [platformStats, setPlatformStats] = useState(null)
+  const [expandedRole, setExpandedRole] = useState(null)
   const { t } = useLang()
   
   useEffect(() => {
@@ -301,6 +302,152 @@ export default function HomePage(){
           ))}
         </div>
       </div>
+
+      {/* ========== COMMUNITY & HOSPITAL SUMMARY ========== */}
+      {platformStats?.roleCounts && Object.keys(platformStats.roleCounts).length > 0 && (
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontSize: 28, color: '#0f5132', margin: '0 0 6px 0' }}>🌐 {t('communityTitle')}</h2>
+            <p style={{ color: '#475569', margin: 0, fontSize: 15 }}>{t('communityDesc')}</p>
+          </div>
+
+          {/* Role summary cards */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 24 }}>
+            {[
+              { key: 'admin', icon: '🔐', color: '#8b5cf6', bg: '#f5f3ff' },
+              { key: 'moderator', icon: '✅', color: '#3b82f6', bg: '#eff6ff' },
+              { key: 'clinician', icon: '🏥', color: '#22c55e', bg: '#f0fdf4' },
+              { key: 'fellow', icon: '🎓', color: '#ec4899', bg: '#fdf2f8' },
+              { key: 'resident', icon: '🩺', color: '#f97316', bg: '#fff7ed' },
+              { key: 'student', icon: '📚', color: '#6b7280', bg: '#f9fafb' },
+            ].filter(r => platformStats.roleCounts[r.key]).map((r, i) => {
+              const roleHospitals = (platformStats.roleHospitals || {})[r.key] || []
+              return (
+                <div key={i} style={{
+                  background: r.bg, borderRadius: 16, padding: '24px 24px 18px', textAlign: 'center',
+                  border: `2px solid ${r.color}20`, minWidth: 170, flex: '1 1 170px', maxWidth: 220,
+                  transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                }}
+                onClick={() => setExpandedRole(expandedRole === r.key ? null : r.key)}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)' }}
+                >
+                  <div style={{ fontSize: 32, marginBottom: 6 }}>{r.icon}</div>
+                  <div style={{ fontSize: 36, fontWeight: 900, color: r.color, lineHeight: 1 }}>{platformStats.roleCounts[r.key]}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: r.color, marginTop: 4, marginBottom: 8 }}>
+                    {t(`role${r.key.charAt(0).toUpperCase() + r.key.slice(1)}`)}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+                    {roleHospitals.length > 0 ? `🏥 ${roleHospitals.length} ${t('networkHospitals') || 'hospitals'}` : ''}
+                  </div>
+                  <div style={{ fontSize: 10, color: r.color, opacity: 0.6, marginTop: 6 }}>
+                    ▼ {t('clickToView') || 'Click to view'}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Expanded role detail modal */}
+          {expandedRole && (() => {
+            const roleConfig = [
+              { key: 'admin', icon: '🔐', color: '#8b5cf6', bg: '#f5f3ff' },
+              { key: 'moderator', icon: '✅', color: '#3b82f6', bg: '#eff6ff' },
+              { key: 'clinician', icon: '🏥', color: '#22c55e', bg: '#f0fdf4' },
+              { key: 'fellow', icon: '🎓', color: '#ec4899', bg: '#fdf2f8' },
+              { key: 'resident', icon: '🩺', color: '#f97316', bg: '#fff7ed' },
+              { key: 'student', icon: '📚', color: '#6b7280', bg: '#f9fafb' },
+            ]
+            const rc = roleConfig.find(r => r.key === expandedRole)
+            const roleHospitals = (platformStats.roleHospitals || {})[expandedRole] || []
+            const roleName = t(`role${expandedRole.charAt(0).toUpperCase() + expandedRole.slice(1)}`)
+            return (
+              <div style={{
+                background: rc?.bg || '#f9fafb', borderRadius: 16, padding: '24px 28px',
+                border: `2px solid ${rc?.color || '#ccc'}30`, marginBottom: 24,
+                animation: 'fadeIn 0.3s ease'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h3 style={{ margin: 0, fontSize: 20, color: rc?.color || '#333' }}>
+                    {rc?.icon} {roleName} — {t('hospitalProvinceDetail') || 'Hospital & Province Detail'}
+                  </h3>
+                  <button
+                    onClick={() => setExpandedRole(null)}
+                    style={{
+                      background: 'none', border: `1px solid ${rc?.color || '#ccc'}40`, borderRadius: 8,
+                      padding: '4px 12px', cursor: 'pointer', fontSize: 14, color: rc?.color || '#666'
+                    }}
+                  >✕</button>
+                </div>
+                {roleHospitals.length === 0 ? (
+                  <p style={{ color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>
+                    {t('noHospitalData') || 'No hospital data available'}
+                  </p>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+                    {roleHospitals.map((rh, j) => (
+                      <div key={j} style={{
+                        background: '#fff', borderRadius: 12, padding: '14px 18px',
+                        border: `1px solid ${rc?.color || '#ccc'}15`,
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                        display: 'flex', alignItems: 'center', gap: 12
+                      }}>
+                        <div style={{
+                          width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: `${rc?.color || '#ccc'}15`, fontSize: 20, flexShrink: 0
+                        }}>🏥</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: '#1e293b' }}>{rh.hospital}</div>
+                          {rh.province && <div style={{ fontSize: 12, color: '#64748b' }}>📍 {rh.province}</div>}
+                          {rh.count > 0 && <div style={{ fontSize: 11, color: rc?.color, fontWeight: 600, marginTop: 2 }}>{rh.count} {t('networkMembers') || 'members'}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
+          {/* Hospital network summary */}
+          {platformStats?.hospitals?.length > 0 && (
+            <div style={{
+              background: 'linear-gradient(145deg, #0f5132, #0f766e 60%, #164e63)',
+              borderRadius: 16, padding: '28px 28px 24px', color: '#fff'
+            }}>
+              <h3 style={{ margin: '0 0 16px 0', textAlign: 'center', fontSize: 20 }}>🏥 {t('networkTitle')}</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center' }}>
+                {platformStats.hospitals.map((h, i) => (
+                  <div key={i} style={{
+                    background: 'rgba(255,255,255,0.12)', borderRadius: 14, padding: '16px 20px',
+                    border: '1px solid rgba(255,255,255,0.15)', minWidth: 200, flex: '1 1 200px', maxWidth: 300,
+                    backdropFilter: 'blur(4px)'
+                  }}>
+                    <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4 }}>{h.hospital}</div>
+                    {h.province && <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 8 }}>📍 {h.province}</div>}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 13 }}>
+                        <strong style={{ fontSize: 22 }}>{h.count}</strong> {t('networkMembers')}
+                      </span>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {h.roles?.map((r, j) => (
+                          <span key={j} style={{
+                            padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700,
+                            background: 'rgba(255,255,255,0.2)', color: '#fff'
+                          }}>
+                            {t(`role${r.charAt(0).toUpperCase() + r.slice(1)}`)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ========== CTA SECTION ========== */}
       <div style={{

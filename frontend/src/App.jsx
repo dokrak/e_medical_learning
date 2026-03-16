@@ -15,6 +15,7 @@ import StudentStats from './pages/StudentStats'
 import ClinicianDashboard from './pages/ClinicianDashboard'
 import AdminUserManagement from './pages/AdminUserManagement'
 import ExamResult from './pages/ExamResult'
+import AdminSpecialtyManagement from './pages/AdminSpecialtyManagement'
 
 function Nav(){
   const token = localStorage.getItem('token')
@@ -54,6 +55,7 @@ function Nav(){
       {isStaff && <Link to="/clinician-dashboard" className={isActive('/clinician-dashboard') ? 'active' : ''}>{t('analytics')}</Link>}
       {(isModerator || isAdmin) && <Link to="/moderator" className={isActive('/moderator') ? 'active' : ''}>{t('moderator')}</Link>}
       {isAdmin && <Link to="/admin-users" className={isActive('/admin-users') ? 'active' : ''}>{t('users')}</Link>}
+      {isAdmin && <Link to="/admin-specialties" className={isActive('/admin-specialties') ? 'active' : ''}>Specialties</Link>}
       <div className="right">
         {token && <span style={{ color: '#fef08a', fontWeight: 600, border: '1px solid rgba(255,255,255,0.4)', borderRadius: 4, padding: '2px 8px' }}>{user ? user.name : t('signedIn')}</span>}
         <button className="btn btn-ghost" onClick={toggleLang} style={{
@@ -84,6 +86,7 @@ export default function App(){
           <Route path="/results" element={<ExamResultsDashboard />} />
           <Route path="/clinician-dashboard" element={<ClinicianDashboard />} />
           <Route path="/admin-users" element={<AdminUserManagement />} />
+          <Route path="/admin-specialties" element={<AdminSpecialtyManagement />} />
           <Route path="/student-stats" element={<StudentStats />} />
           <Route path="/student-stats/:id" element={<StudentStats />} />
           <Route path="/exams" element={<ExamsList />} />

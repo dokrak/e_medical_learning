@@ -388,11 +388,51 @@ app.get('/api/platform-stats', (req, res) => {
   const exams = readJson('exams.json');
   const users = readJson('users.json');
   const specialties = readJson('specialties.json');
+
+  // Group by hospital
+  const hospitalMap = {};
+  users.forEach(u => {
+    if (u.hospital) {
+      if (!hospitalMap[u.hospital]) hospitalMap[u.hospital] = { hospital: u.hospital, province: u.province || '', count: 0, roles: new Set() };
+      hospitalMap[u.hospital].count++;
+      hospitalMap[u.hospital].roles.add(u.role);
+    }
+  });
+  const hospitals = Object.values(hospitalMap).map(h => ({ ...h, roles: [...h.roles] }));
+
+  // Team: staff roles
+  const staffRoles = ['clinician', 'moderator', 'admin', 'fellow'];
+  const team = users.filter(u => staffRoles.includes(u.role)).map(u => ({
+    name: u.name, role: u.role, hospital: u.hospital || '', province: u.province || '', profile_picture: u.profile_picture || null
+  }));
+
+  // Role counts
+  const roleCounts = {};
+  users.forEach(u => { roleCounts[u.role] = (roleCounts[u.role] || 0) + 1; });
+
+  // Role to hospitals mapping
+  const roleHospitals = {};
+  users.forEach(u => {
+    if (u.hospital) {
+      if (!roleHospitals[u.role]) roleHospitals[u.role] = {};
+      if (!roleHospitals[u.role][u.hospital]) roleHospitals[u.role][u.hospital] = { hospital: u.hospital, province: u.province || '', count: 0 };
+      roleHospitals[u.role][u.hospital].count++;
+    }
+  });
+  const roleHospitalsArr = {};
+  Object.keys(roleHospitals).forEach(role => {
+    roleHospitalsArr[role] = Object.values(roleHospitals[role]);
+  });
+
   res.json({
     questions: questions.length,
     exams: exams.length,
     users: users.length,
-    specialties: specialties.length
+    specialties: specialties.length,
+    hospitals,
+    team,
+    roleCounts,
+    roleHospitals: roleHospitalsArr
   });
 });
 
