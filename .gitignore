@@ -1,0 +1,7 @@
+node_modules/
+frontend/dist/
+.env
+*.log
+storage/app/public/uploads/
+.idea/
+.vscode/

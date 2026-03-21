@@ -247,6 +247,16 @@ export default function ManageQuestionsExams(){
                     ))}
                   </div>
                 )}
+                {item.images && item.images.length > 0 && (
+                  <div className="small" style={{ marginBottom: 6 }}>
+                    <strong>Images:</strong>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                      {item.images.map((img, i) => (
+                        <img key={i} src={imgUrl(img)} alt={`preview-img-${i}`} style={{ maxHeight: 100, maxWidth: 150, borderRadius: 4, border: '1px solid #ddd' }} />
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #ddd', display: 'flex', gap: 8 }}>
                   <button className="btn btn-primary" onClick={()=>startEdit(item)} style={{ flex: 1 }}>✏ Edit & Resubmit</button>
                   <button className="btn btn-danger" onClick={()=>deleteItem(item.id)} style={{ flex: 1 }}>Delete</button>
@@ -408,6 +418,13 @@ export default function ManageQuestionsExams(){
                               <div>
                                 <div style={{ fontWeight: 700 }}>{q.title} <span className="small">(diff {q.difficulty})</span> {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>Selected</span>}</div>
                                 <div className="small">{q.stem}</div>
+                                {q.images && q.images.length > 0 && (
+                                  <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                                    {q.images.map((img, idx) => (
+                                      <img key={idx} src={imgUrl(img)} alt={`q-${q.id}-img-${idx}`} style={{ maxHeight: 60, maxWidth: 80, borderRadius: 4, border: '1px solid #ddd' }} />
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )})}

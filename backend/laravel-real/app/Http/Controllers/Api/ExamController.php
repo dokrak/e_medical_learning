@@ -48,6 +48,14 @@ class ExamController extends Controller
         }
 
         $selected = $selected->unique()->take($numQuestions)->values();
+
+        if ($selected->isEmpty()) {
+            return response()->json([
+                'error' => 'No approved questions match the selected criteria. Please adjust specialty, subspecialty, or difficulty filters.',
+                'poolSize' => $pool->count(),
+            ], 422);
+        }
+
         $selectedQuestions = $allQs->whereIn('id', $selected);
 
         $totalDifficultyScore = $selectedQuestions->sum(fn($q) => is_numeric($q->difficulty) ? (int) $q->difficulty : 3);
@@ -109,7 +117,7 @@ class ExamController extends Controller
             'difficulty' => $q->difficulty,
             'choices' => $q->choices ?? [],
             'references' => $q->references ?? [],
-            'images' => $q->images ?? [],
+            'images' => collect($q->images ?? [])->filter(fn($img) => $img && $img !== '/api/files/' && $img !== '/storage/')->values(),
             'specialtyId' => $q->specialty_id,
             'subspecialtyId' => $q->subspecialty_id,
             'status' => $q->status,

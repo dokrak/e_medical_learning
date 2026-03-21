@@ -93,6 +93,11 @@ export default function ExamTake(){
       <div className="small" style={{ marginBottom: 12, padding: 8, background: 'rgba(21,128,61,0.08)', borderRadius: 6, border: '1px solid rgba(21,128,61,0.2)' }}>
         <strong>✓ คะแนนผ่านขั้นต่ำ:</strong> {exam.passingScore || 50}%
       </div>
+      {exam.questions.length === 0 && (
+        <div style={{ padding: 16, background: '#fef3cd', border: '1px solid #ffc107', borderRadius: 8, marginBottom: 12 }}>
+          <strong>⚠ ข้อสอบนี้ยังไม่มีคำถาม</strong> — กรุณาติดต่อผู้ดูแลระบบเพื่อเพิ่มคำถามในข้อสอบ
+        </div>
+      )}
       <form onSubmit={submit}>
         {exam.questions.map((q, index) => (
           <div key={q.id} ref={el => { questionRefs.current[q.id] = el }} style={{ marginBottom: 12, padding: 12, borderRadius: 8, border: unansweredIds.includes(q.id) ? '2px solid #dc2626' : '2px solid transparent', background: unansweredIds.includes(q.id) ? 'rgba(220,38,38,0.04)' : 'transparent', transition: 'all 0.3s' }}>
