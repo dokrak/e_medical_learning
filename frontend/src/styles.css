@@ -84,7 +84,7 @@ tbody tr:hover{ background: var(--surface-2) }
 .panel-incorrect{ border:2px solid rgba(220,38,38,0.12); background: rgba(255,245,240,1); }
 
 /* Images */
-.q-image{ max-width:100%; border-radius:10px; border:1px solid var(--border); box-shadow: 0 8px 28px rgba(21,128,61,0.06); display:block }
+.q-image{ max-width:80%; border-radius:10px; border:1px solid var(--border); box-shadow: 0 8px 28px rgba(21,128,61,0.06); display:block; margin:0 auto }
 
 /* Message */
 .msg{ padding:10px 12px; border-radius:10px; font-weight:700; display:inline-block }
