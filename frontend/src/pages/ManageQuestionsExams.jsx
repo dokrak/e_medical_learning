@@ -224,6 +224,13 @@ export default function ManageQuestionsExams(){
                 {tab==='questions' && item.status === 'pending' && <span className="badge" style={{ background: '#ffc107', color: '#333', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>PENDING</span>}
                 {tab==='questions' && item.status === 'approved' && <span className="badge" style={{ background: '#28a745', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>APPROVED</span>}
               </div>
+              {tab==='questions' && item.images && item.images.length > 0 && !editId && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                  {item.images.map((img, i) => (
+                    <img key={i} src={imgUrl(img)} alt={`q-img-${i}`} style={{ maxHeight: 80, maxWidth: 120, borderRadius: 4, border: '1px solid #ddd' }} />
+                  ))}
+                </div>
+              )}
             </div>
             {tab==='questions' && item.status === 'rejected' && item.moderationFeedback && (
               <div style={{ marginTop: 8, padding: 10, background: '#ffe6e6', border: '2px solid #dc3545', borderRadius: 6 }}>

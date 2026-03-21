@@ -29,7 +29,7 @@ class QuestionController extends Controller
             $results = $results->take((int) $request->limit);
         }
 
-        return response()->json($results->values());
+        return response()->json($results->map(fn($q) => $this->formatQuestion($q))->values());
     }
 
     /**
@@ -195,7 +195,7 @@ class QuestionController extends Controller
             'answer' => $q->answer,
             'choices' => $q->choices ?? [],
             'references' => $q->references ?? [],
-            'images' => $q->images ?? [],
+            'images' => collect($q->images ?? [])->filter(fn($img) => $img && $img !== '/api/files/' && $img !== '/storage/' && strlen($img) > 15)->values(),
             'specialtyId' => $q->specialty_id,
             'subspecialtyId' => $q->subspecialty_id,
             'status' => $q->status,
