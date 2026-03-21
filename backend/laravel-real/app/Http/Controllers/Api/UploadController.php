@@ -22,6 +22,12 @@ class UploadController extends Controller
         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
         $path = $file->storeAs('uploads', $filename, 'public');
 
+        if (!$path) {
+            return response()->json([
+                'message' => 'File storage failed — the server cannot write to the uploads directory.',
+            ], 500);
+        }
+
         // Return API-served URL so it works through reverse proxies/gateways
         $url = '/api/files/' . $path;
 
