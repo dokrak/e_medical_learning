@@ -29,8 +29,8 @@ class ExamController extends Controller
 
         // Filter pool
         $pool = $allQs->filter(function ($q) use ($specialtyId, $subspecialtyId, $difficultyLevel, $difficultyDistribution) {
-            if ($specialtyId && $q->specialty_id !== $specialtyId) return false;
-            if ($subspecialtyId && $q->subspecialty_id !== $subspecialtyId) return false;
+            if ($specialtyId && $specialtyId !== 'all' && $q->specialty_id !== $specialtyId) return false;
+            if ($subspecialtyId && $subspecialtyId !== 'all' && $q->subspecialty_id !== $subspecialtyId) return false;
             if (!$difficultyDistribution && $difficultyLevel && !$this->matchesDifficulty($q, $difficultyLevel)) return false;
             return true;
         })->values();
@@ -69,18 +69,20 @@ class ExamController extends Controller
         elseif ($averageDifficultyScore <= 4) $computedDifficultyLevel = 'difficult';
         else $computedDifficultyLevel = 'extreme';
 
-        $spec = $specialtyId ? Specialty::find($specialtyId) : null;
+        $spec = ($specialtyId && $specialtyId !== 'all') ? Specialty::find($specialtyId) : null;
         $subspec = null;
         if ($spec && is_array($spec->subspecialties)) {
-            $subspec = collect($spec->subspecialties)->firstWhere('id', $subspecialtyId);
+            $subspec = ($subspecialtyId && $subspecialtyId !== 'all')
+                ? collect($spec->subspecialties)->firstWhere('id', $subspecialtyId)
+                : null;
         }
 
         $exam = Exam::create([
             'title' => $request->input('title', 'Exam'),
             'created_by' => $request->user()->id,
             'questions' => $selected->values()->toArray(),
-            'specialty' => $spec ? ['id' => $spec->id, 'name' => $spec->name] : null,
-            'subspecialty' => $subspec ? ['id' => $subspec['id'], 'name' => $subspec['name']] : null,
+            'specialty' => $spec ? ['id' => $spec->id, 'name' => $spec->name] : ['id' => 'all', 'name' => 'Comprehensive (All Specialties)'],
+            'subspecialty' => $subspec ? ['id' => $subspec['id'], 'name' => $subspec['name']] : ['id' => 'all', 'name' => 'All Subspecialties'],
             'difficulty_level' => $difficultyLevel,
             'difficulty_distribution' => $difficultyDistribution,
             'selection_mode' => $selectionMode,
@@ -160,8 +162,8 @@ class ExamController extends Controller
                 ->values()->toArray();
         } elseif ($request->has('numQuestions') || $request->has('specialtyId') || $request->has('subspecialtyId') || $request->has('difficultyLevel') || $request->has('difficultyDistribution')) {
             $pool = $allQs->filter(function ($q) use ($specialtyId, $subspecialtyId, $difficultyLevel, $difficultyDistribution) {
-                if ($specialtyId && $q->specialty_id !== $specialtyId) return false;
-                if ($subspecialtyId && $q->subspecialty_id !== $subspecialtyId) return false;
+                if ($specialtyId && $specialtyId !== 'all' && $q->specialty_id !== $specialtyId) return false;
+                if ($subspecialtyId && $subspecialtyId !== 'all' && $q->subspecialty_id !== $subspecialtyId) return false;
                 if (!$difficultyDistribution && $difficultyLevel && !$this->matchesDifficulty($q, $difficultyLevel)) return false;
                 return true;
             })->values();
@@ -172,13 +174,15 @@ class ExamController extends Controller
                 $exam->questions = $pool->shuffle()->take($numQuestions)->pluck('id')->values()->toArray();
             }
 
-            $spec = $specialtyId ? Specialty::find($specialtyId) : null;
+            $spec = ($specialtyId && $specialtyId !== 'all') ? Specialty::find($specialtyId) : null;
             $subspec = null;
             if ($spec && is_array($spec->subspecialties)) {
-                $subspec = collect($spec->subspecialties)->firstWhere('id', $subspecialtyId);
+                $subspec = ($subspecialtyId && $subspecialtyId !== 'all')
+                    ? collect($spec->subspecialties)->firstWhere('id', $subspecialtyId)
+                    : null;
             }
-            $exam->specialty = $spec ? ['id' => $spec->id, 'name' => $spec->name] : $exam->specialty;
-            $exam->subspecialty = $subspec ? ['id' => $subspec['id'], 'name' => $subspec['name']] : $exam->subspecialty;
+            $exam->specialty = $spec ? ['id' => $spec->id, 'name' => $spec->name] : ['id' => 'all', 'name' => 'Comprehensive (All Specialties)'];
+            $exam->subspecialty = $subspec ? ['id' => $subspec['id'], 'name' => $subspec['name']] : ['id' => 'all', 'name' => 'All Subspecialties'];
         }
 
         $exam->save();

@@ -49,7 +49,7 @@ export default function ExamBuilder(){
 
   async function loadAvailableQuestions(){
     try{
-      const qs = (await api.get(`/questions?limit=200${specialtyId ? '&specialtyId='+specialtyId : ''}${subspecialtyId ? '&subspecialtyId='+subspecialtyId : ''}`)).data
+      const qs = (await api.get(`/questions?limit=200${specialtyId && specialtyId !== 'all' ? '&specialtyId='+specialtyId : ''}${subspecialtyId && subspecialtyId !== 'all' ? '&subspecialtyId='+subspecialtyId : ''}`)).data
       setAvailableQuestions(qs.filter(q => difficultyMatch(q)))
       setSelectedQuestions([])
     }catch(err){ setMsg('Failed to load questions') }
@@ -89,7 +89,7 @@ export default function ExamBuilder(){
       setMsg('Please select specialty')
       return
     }
-    if (!subspecialtyId) {
+    if (!subspecialtyId && specialtyId !== 'all') {
       setMsg('Please select subspecialty')
       return
     }
@@ -103,7 +103,7 @@ export default function ExamBuilder(){
     }
 
     try{
-      let payload = { title, specialtyId, subspecialtyId, selectionMode, passingScore: Number(passingScore) }
+      let payload = { title, specialtyId: specialtyId === 'all' ? null : specialtyId, subspecialtyId: (subspecialtyId === 'all' || specialtyId === 'all') ? null : subspecialtyId, selectionMode, passingScore: Number(passingScore) }
       if (!useDistribution) payload.difficultyLevel = difficultyLevel
       else {
         // normalize distribution so it sums to 100
@@ -142,17 +142,21 @@ export default function ExamBuilder(){
         
         <div style={{ marginTop: 8 }}>
           <label>Specialty *</label>
-          <select value={specialtyId} onChange={e=>{ setSpecialtyId(e.target.value); setSubspecialtyId('') }} required>
+          <select value={specialtyId} onChange={e=>{ setSpecialtyId(e.target.value); setSubspecialtyId(e.target.value === 'all' ? 'all' : '') }} required>
             <option value="">-- select major specialty --</option>
+            <option value="all">✱ Comprehensive (All Specialties)</option>
             {specialties.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
 
         <div style={{ marginTop: 8 }}>
           <label>Subspecialty *</label>
-          <select value={subspecialtyId} onChange={e=>setSubspecialtyId(e.target.value)} required>
+          <select value={subspecialtyId} onChange={e=>setSubspecialtyId(e.target.value)} required disabled={specialtyId === 'all'}>
             <option value="">-- select subspecialty --</option>
-            {(specialties.find(s=>s.id===specialtyId)?.subspecialties||[]).map((ss, i) => { const val = typeof ss === 'object' ? ss.id : ss; const label = typeof ss === 'object' ? ss.name : ss; return <option key={val || i} value={val}>{label}</option>; })}
+            {specialtyId === 'all'
+              ? <option value="all" selected>✱ All Subspecialties</option>
+              : (specialties.find(s=>s.id===specialtyId)?.subspecialties||[]).map((ss, i) => { const val = typeof ss === 'object' ? ss.id : ss; const label = typeof ss === 'object' ? ss.name : ss; return <option key={val || i} value={val}>{label}</option>; })}
+            {specialtyId !== 'all' && <option value="all">✱ All Subspecialties</option>}
           </select>
         </div>
 
