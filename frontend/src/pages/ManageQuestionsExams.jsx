@@ -13,6 +13,7 @@ export default function ManageQuestionsExams(){
   const [editForm, setEditForm] = useState({})
   const [editImages, setEditImages] = useState([])
   const [newImageFile, setNewImageFile] = useState(null)
+  const [expandedGroups, setExpandedGroups] = useState({})
   const [msg, setMsg] = useState('')
   const [search, setSearch] = useState('')
   const [specialties, setSpecialties] = useState([])
@@ -24,7 +25,7 @@ export default function ManageQuestionsExams(){
   useEffect(()=>{
     async function loadCounts(){
       try{
-        const [qr, er] = await Promise.all([api.get('/my-questions'), api.get('/exams')])
+        const [qr, er] = await Promise.all([api.get('/all-questions'), api.get('/exams')])
         setQuestionCount(qr.data.length)
         setExamCount(er.data.length)
       } catch(e){}
@@ -46,7 +47,7 @@ export default function ManageQuestionsExams(){
   async function loadItems(){
     try{
       if (tab === 'questions'){
-        const r = await api.get('/my-questions');
+        const r = await api.get('/all-questions');
         const sorted = r.data.sort((a, b) => {
           if (a.status === 'rejected' && b.status !== 'rejected') return -1;
           if (a.status !== 'rejected' && b.status === 'rejected') return 1;
@@ -182,6 +183,17 @@ export default function ManageQuestionsExams(){
     setEditSelectedQuestions([])
   }
 
+  function getSpecName(specId) {
+    const s = specialties.find(s => s.id === specId)
+    return s ? s.name : 'Unspecified'
+  }
+  function getSubspecName(specId, subId) {
+    const s = specialties.find(s => s.id === specId)
+    if (!s) return 'Unspecified'
+    const sub = (s.subspecialties || []).find(ss => (typeof ss === 'object' ? ss.id : ss) === subId)
+    return sub ? (typeof sub === 'object' ? sub.name : sub) : 'Unspecified'
+  }
+
   const visibleItems = editId
     ? items.filter(item => String(item.id) === String(editId))
     : items.filter(item => {
@@ -191,7 +203,10 @@ export default function ManageQuestionsExams(){
           const titleText = (item.title || '').toLowerCase()
           const stemText = (item.stem || '').toLowerCase()
           const statusText = (item.status || '').toLowerCase()
-          return [titleText, stemText, statusText].some(text => text.includes(keyword))
+          const authorText = (item.authorName || '').toLowerCase()
+          const specText = getSpecName(item.specialtyId).toLowerCase()
+          const subText = getSubspecName(item.specialtyId, item.subspecialtyId).toLowerCase()
+          return [titleText, stemText, statusText, authorText, specText, subText].some(text => text.includes(keyword))
         }
         const titleText = (item.title || '').toLowerCase()
         const specialtyText = (item.specialty?.name || '').toLowerCase()
@@ -200,36 +215,35 @@ export default function ManageQuestionsExams(){
         return [titleText, specialtyText, subspecialtyText, modeText].some(text => text.includes(keyword))
       })
 
-  return (
-    <div className="card container">
-      <h3>Manage questions & exams</h3>
-      <div style={{ marginBottom: 12 }}>
-        <button onClick={()=>setTab('questions')} style={{ fontWeight: tab==='questions'?'bold':'normal' }}>Questions ({tab === 'questions' ? items.length : questionCount})</button>
-        <button onClick={()=>setTab('exams')} style={{ marginLeft: 8, fontWeight: tab==='exams'?'bold':'normal' }}>Exams ({tab === 'exams' ? items.length : examCount})</button>
-      </div>
-      {!editId && (
-        <div style={{ marginBottom: 12 }}>
-          <input
-            className="search-box"
-            placeholder={tab === 'questions' ? 'Search questions by title, content, status...' : 'Search exams by title, specialty, mode...'}
-            value={search}
-            onChange={e=>setSearch(e.target.value)}
-          />
-        </div>
-      )}
-      {msg && (
-        <div style={{ marginBottom: 12, padding: '12px 16px', borderRadius: 8, fontWeight: 600, fontSize: 14, background: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#ffe6e6' : '#e6ffe6', color: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#991b1b' : '#166534', border: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '2px solid #dc3545' : '2px solid #28a745', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span>{msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '\u26a0\ufe0f ' : '\u2705 '}{msg}</span>
-          <button onClick={() => setMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#666', padding: '0 4px' }}>\u2715</button>
-        </div>
-      )}
-      <div>
-        {visibleItems.map(item => (
+  // Group questions by specialty → subspecialty
+  const groupedQuestions = (() => {
+    if (tab !== 'questions' || editId) return null
+    const groups = {}
+    visibleItems.forEach(item => {
+      const specKey = item.specialtyId || '_none'
+      const specName = getSpecName(item.specialtyId)
+      const subKey = item.subspecialtyId || '_none'
+      const subName = getSubspecName(item.specialtyId, item.subspecialtyId)
+      if (!groups[specKey]) groups[specKey] = { name: specName, subs: {} }
+      if (!groups[specKey].subs[subKey]) groups[specKey].subs[subKey] = { name: subName, items: [] }
+      groups[specKey].subs[subKey].items.push(item)
+    })
+    return groups
+  })()
+
+  function toggleGroup(key) {
+    setExpandedGroups(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  function renderItemCard(item) {
+    return (
           <div key={item.id} className="card" style={{ padding: 12, marginBottom: 12, borderLeft: item.status === 'rejected' ? '6px solid #dc3545' : 'none', background: item.status === 'rejected' ? '#fff8f8' : 'white', boxShadow: editId === item.id ? '0 12px 30px rgba(21,128,61,0.14)' : undefined }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <strong>{item.title}</strong>
                 {tab==='questions' && <span className="small">(Difficulty: {item.difficulty})</span>}
+                {tab==='questions' && item.authorName && <span className="small" style={{ color: '#666' }}>by {item.authorName}</span>}
+                {tab==='questions' && currentUser && item.createdBy === currentUser.id && <span className="badge" style={{ background: 'var(--brand-green)', color: '#fff', padding: '3px 7px', fontSize: '10px' }}>MINE</span>}
                 {tab==='questions' && item.status === 'rejected' && <span className="badge" style={{ background: '#dc3545', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>REJECTED</span>}
                 {tab==='questions' && item.status === 'pending' && <span className="badge" style={{ background: '#ffc107', color: '#333', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>PENDING</span>}
                 {tab==='questions' && item.status === 'approved' && <span className="badge" style={{ background: '#28a745', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>APPROVED</span>}
@@ -510,8 +524,74 @@ export default function ManageQuestionsExams(){
               </div>
             )}
           </div>
-        ))}
-        {!editId && visibleItems.length === 0 && <div className="small">No items found</div>}
+    )
+  }
+
+  return (
+    <div className="card container">
+      <h3>Manage questions & exams</h3>
+      <div style={{ marginBottom: 12 }}>
+        <button onClick={()=>setTab('questions')} style={{ fontWeight: tab==='questions'?'bold':'normal' }}>Questions ({tab === 'questions' ? items.length : questionCount})</button>
+        <button onClick={()=>setTab('exams')} style={{ marginLeft: 8, fontWeight: tab==='exams'?'bold':'normal' }}>Exams ({tab === 'exams' ? items.length : examCount})</button>
+      </div>
+      {!editId && (
+        <div style={{ marginBottom: 12 }}>
+          <input
+            className="search-box"
+            placeholder={tab === 'questions' ? 'Search questions by title, content, author, specialty...' : 'Search exams by title, specialty, mode...'}
+            value={search}
+            onChange={e=>setSearch(e.target.value)}
+          />
+        </div>
+      )}
+      {msg && (
+        <div style={{ marginBottom: 12, padding: '12px 16px', borderRadius: 8, fontWeight: 600, fontSize: 14, background: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#ffe6e6' : '#e6ffe6', color: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#991b1b' : '#166534', border: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '2px solid #dc3545' : '2px solid #28a745', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>{msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '\u26a0\ufe0f ' : '\u2705 '}{msg}</span>
+          <button onClick={() => setMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#666', padding: '0 4px' }}>\u2715</button>
+        </div>
+      )}
+      <div>
+        {tab === 'questions' && !editId && groupedQuestions ? (
+          <>
+            {Object.entries(groupedQuestions).map(([specKey, specGroup]) => (
+              <div key={specKey} style={{ marginBottom: 12 }}>
+                <div
+                  onClick={() => toggleGroup(specKey)}
+                  style={{ cursor: 'pointer', padding: '10px 14px', background: 'linear-gradient(90deg, rgba(21,128,61,0.08), rgba(16,185,129,0.04))', borderRadius: 8, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 700 }}
+                >
+                  <span>{expandedGroups[specKey] ? '▼' : '▶'} {specGroup.name}</span>
+                  <span className="badge badge-success" style={{ fontSize: '0.8em' }}>{Object.values(specGroup.subs).reduce((s, sub) => s + sub.items.length, 0)}</span>
+                </div>
+                {expandedGroups[specKey] && (
+                  <div style={{ marginLeft: 12, marginTop: 6 }}>
+                    {Object.entries(specGroup.subs).map(([subKey, subGroup]) => (
+                      <div key={subKey} style={{ marginBottom: 8 }}>
+                        <div
+                          onClick={() => toggleGroup(specKey + '/' + subKey)}
+                          style={{ cursor: 'pointer', padding: '8px 12px', background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 600, fontSize: '0.92em' }}
+                        >
+                          <span>{expandedGroups[specKey + '/' + subKey] ? '▼' : '▶'} {subGroup.name}</span>
+                          <span className="small">({subGroup.items.length})</span>
+                        </div>
+                        {expandedGroups[specKey + '/' + subKey] && (
+                          <div style={{ marginLeft: 8, marginTop: 6 }}>
+                            {subGroup.items.map(item => renderItemCard(item))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            {visibleItems.length === 0 && <div className="small">No items found</div>}
+          </>
+        ) : (
+          <>
+            {visibleItems.map(item => renderItemCard(item))}
+            {visibleItems.length === 0 && <div className="small">No items found</div>}
+          </>
+        )}
       </div>
     </div>
   )

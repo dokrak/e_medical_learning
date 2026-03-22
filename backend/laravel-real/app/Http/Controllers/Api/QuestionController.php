@@ -78,6 +78,22 @@ class QuestionController extends Controller
     }
 
     /**
+     * GET /api/all-questions — all questions (any status) with author name
+     */
+    public function all(Request $request)
+    {
+        $users = \App\Models\User::all()->keyBy('id');
+        return response()->json(
+            Question::all()->map(function ($q) use ($users) {
+                $data = $this->formatQuestion($q);
+                $author = $users->get($q->author_id);
+                $data['authorName'] = $author ? $author->name : 'Unknown';
+                return $data;
+            })->values()
+        );
+    }
+
+    /**
      * POST /api/questions/{id}/approve
      */
     public function approve(string $id, Request $request)

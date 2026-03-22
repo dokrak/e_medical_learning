@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- Questions ---
     Route::post('/questions', [QuestionController::class, 'store']);
     Route::get('/my-questions', [QuestionController::class, 'mine']);
+    Route::get('/all-questions', [QuestionController::class, 'all']);
     Route::put('/questions/{id}', [QuestionController::class, 'update']);
     Route::delete('/questions/{id}', [QuestionController::class, 'destroy']);
 
