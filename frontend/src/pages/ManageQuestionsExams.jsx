@@ -21,6 +21,16 @@ export default function ManageQuestionsExams(){
   useEffect(()=>{ loadSpecialties() }, [])
   useEffect(()=>{ loadItems() }, [tab])
   useEffect(()=>{ setSearch('') }, [tab])
+  useEffect(()=>{
+    async function loadCounts(){
+      try{
+        const [qr, er] = await Promise.all([api.get('/my-questions'), api.get('/exams')])
+        setQuestionCount(qr.data.length)
+        setExamCount(er.data.length)
+      } catch(e){}
+    }
+    loadCounts()
+  }, [])
 
   useEffect(() => {
     if (!location.state) return
