@@ -58,6 +58,7 @@ input, textarea, button, select { font-family: inherit; }
 /* Forms */
 /* Form controls */
 input, textarea, select{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--surface-1); color: var(--text); outline:none; font-size:0.98rem }
+input[type="radio"], input[type="checkbox"]{ width:auto; padding:0; box-shadow:none !important; transform:none !important }
 input::placeholder, textarea::placeholder{ color: rgba(21,128,61,0.35) }
 input:focus, textarea:focus, select:focus{ box-shadow: 0 10px 30px rgba(21,128,61,0.12); border-color: rgba(21,128,61,0.3); transform: translateZ(0) }
 label{ font-weight:700; color:var(--muted); display:block; margin-bottom:6px }
