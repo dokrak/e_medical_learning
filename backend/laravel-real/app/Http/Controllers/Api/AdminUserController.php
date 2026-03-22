@@ -44,8 +44,10 @@ class AdminUserController extends Controller
         if ($request->hasFile('profile_picture')) {
             $file = $request->file('profile_picture');
             $filename = 'uploads/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-            Storage::disk('public')->put($filename, file_get_contents($file));
-            $data['profile_picture'] = '/api/files/' . $filename;
+            $stored = Storage::disk('public')->put($filename, file_get_contents($file));
+            if ($stored) {
+                $data['profile_picture'] = '/api/files/' . $filename;
+            }
         }
 
         $user = User::create($data);
@@ -86,8 +88,10 @@ class AdminUserController extends Controller
         if ($request->hasFile('profile_picture')) {
             $file = $request->file('profile_picture');
             $filename = 'uploads/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-            Storage::disk('public')->put($filename, file_get_contents($file));
-            $user->profile_picture = '/api/files/' . $filename;
+            $stored = Storage::disk('public')->put($filename, file_get_contents($file));
+            if ($stored) {
+                $user->profile_picture = '/api/files/' . $filename;
+            }
         } elseif ($request->has('remove_picture')) {
             $user->profile_picture = null;
         }
