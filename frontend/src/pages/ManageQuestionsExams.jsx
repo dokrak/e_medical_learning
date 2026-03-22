@@ -371,7 +371,7 @@ export default function ManageQuestionsExams(){
                           <option value="extreme">Extreme difficult (5)</option>
                         </select>
                         <label style={{ display: 'flex', alignItems: 'center' }}>
-                          <input type="checkbox" checked={!!editForm.difficultyDistribution} onChange={e=>setEditForm({...editForm, difficultyDistribution: e.target.checked ? (editForm.difficultyDistribution || { '1-3':50, '4':25, '5':25 }) : null })} />
+                          <input type="checkbox" checked={!!editForm.difficultyDistribution} onChange={e=>setEditForm({...editForm, difficultyDistribution: e.target.checked ? (editForm.difficultyDistribution || { '1-2':25, '3':25, '4':25, '5':25 }) : null })} />
                           <span style={{ marginLeft: 6 }}>Use distribution</span>
                         </label>
                       </div>
@@ -387,26 +387,63 @@ export default function ManageQuestionsExams(){
                       {(specialties.find(s=>s.id===editForm.specialtyId)?.subspecialties||[]).map((ss, i) => { const val = typeof ss === 'object' ? ss.id : ss; const label = typeof ss === 'object' ? ss.name : ss; return <option key={val || i} value={val}>{label}</option>; })}
                     </select>
 
-                    { editForm.difficultyDistribution && (
-                      <div style={{ marginTop: 8, padding: 8, border: '1px dashed var(--border)', borderRadius: 6 }}>
-                        <div className="small">Distribution</div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                          <div>
-                            <label>Levels 1–3</label>
-                            <input type="number" min={0} max={100} value={editForm.difficultyDistribution['1-3']||0} onChange={e=>setEditForm({...editForm, difficultyDistribution: {...editForm.difficultyDistribution, '1-3': Number(e.target.value)}})} style={{ width: 80 }} />
-                          </div>
-                          <div>
-                            <label>Level 4</label>
-                            <input type="number" min={0} max={100} value={editForm.difficultyDistribution['4']||0} onChange={e=>setEditForm({...editForm, difficultyDistribution: {...editForm.difficultyDistribution, '4': Number(e.target.value)}})} style={{ width: 80 }} />
-                          </div>
-                          <div>
-                            <label>Level 5</label>
-                            <input type="number" min={0} max={100} value={editForm.difficultyDistribution['5']||0} onChange={e=>setEditForm({...editForm, difficultyDistribution: {...editForm.difficultyDistribution, '5': Number(e.target.value)}})} style={{ width: 80 }} />
-                          </div>
+                    { editForm.difficultyDistribution && (() => {
+                      const d = editForm.difficultyDistribution
+                      const boxes = [
+                        { label: 'Level 1–2', key: '1-2', fallbackKey: '1-3' },
+                        { label: 'Level 3', key: '3', fallbackKey: null },
+                        { label: 'Level 4', key: '4', fallbackKey: null },
+                        { label: 'Level 5', key: '5', fallbackKey: null },
+                      ]
+                      const getVal = (b) => d[b.key] ?? (b.fallbackKey ? d[b.fallbackKey] : null) ?? 0
+                      const total = boxes.reduce((s, b) => s + getVal(b), 0)
+                      return (
+                      <div style={{ marginTop: 8, padding: 12, border: '1px dashed var(--border)', borderRadius: 6 }}>
+                        <div className="small" style={{ marginBottom: 8 }}>Distribution (auto-adjusts to sum to 100%)</div>
+                        <div className="exam-dist-row">
+                          {boxes.map((b, idx) => {
+                            const val = getVal(b)
+                            return (
+                              <div key={b.key}>
+                                <label>{b.label}</label>
+                                <select value={val} onChange={e => {
+                                  const newVal = Number(e.target.value)
+                                  const remainder = 100 - newVal
+                                  const otherBoxes = boxes.filter((_, i) => i !== idx)
+                                  const otherSum = otherBoxes.reduce((s, ob) => s + getVal(ob), 0)
+                                  const newDist = {}
+                                  newDist[b.key] = newVal
+                                  if (otherSum === 0) {
+                                    const each = Math.floor(remainder / otherBoxes.length)
+                                    otherBoxes.forEach((ob, j) => { newDist[ob.key] = j === otherBoxes.length - 1 ? remainder - each * (otherBoxes.length - 1) : each })
+                                  } else {
+                                    let assigned = 0
+                                    otherBoxes.forEach((ob, j) => {
+                                      if (j === otherBoxes.length - 1) { newDist[ob.key] = remainder - assigned }
+                                      else { const v = Math.round((getVal(ob) / otherSum) * remainder); newDist[ob.key] = v; assigned += v }
+                                    })
+                                  }
+                                  setEditForm({...editForm, difficultyDistribution: newDist})
+                                }}>
+                                  <option value={0}>0%</option>
+                                  <option value={25}>25%</option>
+                                  <option value={50}>50%</option>
+                                  <option value={75}>75%</option>
+                                  <option value={100}>100%</option>
+                                </select>
+                              </div>
+                            )
+                          })}
                         </div>
-                        <div className="small" style={{ marginTop: 6 }}>Total: {( (editForm.difficultyDistribution['1-3']||0) + (editForm.difficultyDistribution['4']||0) + (editForm.difficultyDistribution['5']||0) )}%</div>
+                        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span className="small" style={{ fontWeight: 700 }}>Total: {total}%</span>
+                          {total === 100
+                            ? <span className="badge badge-success" style={{ fontSize: '0.78em' }}>✓</span>
+                            : <span className="badge badge-danger" style={{ fontSize: '0.78em' }}>≠ 100%</span>}
+                        </div>
                       </div>
-                    )}
+                      )
+                    })()}
 
                     { (editForm.selectionMode || 'random') === 'manual' && (
                       <div style={{ marginTop: 8, padding: 8, border: '1px dashed var(--border)', borderRadius: 6 }}>
