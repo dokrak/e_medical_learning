@@ -49,7 +49,9 @@ export default function UploadQuestion(){
   const [correctIndex, setCorrectIndex] = useState(0)
   const [msg, setMsg] = useState('')
   const [image, setImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const fileInputRef = React.useRef(null)
   const [specialties, setSpecialties] = useState([])
   const [specialtyId, setSpecialtyId] = useState('')
   const [subspecialtyId, setSubspecialtyId] = useState('')
@@ -81,7 +83,14 @@ export default function UploadQuestion(){
       return
     }
     setImage(file)
+    setImagePreview(URL.createObjectURL(file))
     if (msg.includes('Image') || msg.includes('image')) setMsg('')
+  }
+
+  function removeImage() {
+    setImage(null)
+    if (imagePreview) { URL.revokeObjectURL(imagePreview); setImagePreview(null) }
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function setChoice(i, val){
@@ -122,7 +131,7 @@ export default function UploadQuestion(){
       
       const payload = { title, stem, body: detail, answerExplanation, difficulty, answer: selectedAnswer, choices: normalizedChoices, references: [], images, specialtyId: specialtyId || null, subspecialtyId: subspecialtyId || null }
       await api.post('/questions', payload)
-      setQuestion(''); setDetail(''); setAnswerExplanation(''); setImage(null); setChoices(['','','','','']); setCorrectIndex(0); setSpecialtyId(''); setSubspecialtyId('')
+      setQuestion(''); setDetail(''); setAnswerExplanation(''); setImage(null); setImagePreview(null); setChoices(['','','','','']); setCorrectIndex(0); setSpecialtyId(''); setSubspecialtyId('')
       navigate('/manage', { state: { msg: 'Question submitted successfully.', tab: 'questions' } })
     }catch(err){
       if (err?.response?.status === 401) {
@@ -191,8 +200,19 @@ export default function UploadQuestion(){
         </div>
         <div style={{ marginTop: 8 }}>
           <label><strong>Image (optional)</strong></label>
-          <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp,.heic,.heif" onChange={handleImageSelect} />
-          {image && <div style={{ marginTop: 4, fontSize: 12, color: '#555' }}>Selected: {image.name} ({(image.size/1024).toFixed(0)} KB){image.size > COMPRESS_THRESHOLD ? ' — will be auto-compressed before upload' : ''}</div>}
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp,.heic,.heif" onChange={handleImageSelect} />
+          {image && (
+            <div style={{ marginTop: 8, padding: 10, background: 'rgba(21,128,61,0.05)', borderRadius: 8, border: '1px solid rgba(21,128,61,0.15)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {imagePreview && <img src={imagePreview} alt="preview" style={{ maxHeight: 120, maxWidth: 180, borderRadius: 6, border: '1px solid #ddd', objectFit: 'contain' }} />}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, color: '#333', fontWeight: 500 }}>{image.name}</div>
+                  <div style={{ fontSize: 12, color: '#777' }}>{(image.size/1024).toFixed(0)} KB{image.size > COMPRESS_THRESHOLD ? ' — will be auto-compressed' : ''}</div>
+                </div>
+                <button type="button" onClick={removeImage} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap' }}>✕ Remove</button>
+              </div>
+            </div>
+          )}
         </div>
         <div style={{ marginTop: 8 }}><button className="btn btn-primary" disabled={uploading}>{uploading ? 'Uploading...' : 'Submit question'}</button></div>
       </form>
