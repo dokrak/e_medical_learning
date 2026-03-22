@@ -28,6 +28,7 @@ export default function AdminUserManagement(){
   const [pictureFile, setPictureFile] = useState(null)
   const [picturePreview, setPicturePreview] = useState(null)
   const [lightbox, setLightbox] = useState(null)
+  const [expandedRoles, setExpandedRoles] = useState({})
 
   useEffect(() => { loadUsers() }, [])
 
@@ -346,7 +347,7 @@ export default function AdminUserManagement(){
         </div>
       )}
 
-      {/* Users List */}
+      {/* Users List — grouped by role */}
       <div>
         <h3 style={{ marginBottom: 16 }}>{t('existingUsers')} ({users.length})</h3>
         
@@ -356,87 +357,116 @@ export default function AdminUserManagement(){
           <div className="panel">{t('noUsers')}</div>
         )}
 
-        {users.length > 0 && (
-          <div style={{ overflowX: 'auto' }}>
-            <table>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'center', width: 60 }}>{t('picture')}</th>
-                  <th style={{ textAlign: 'left' }}>{t('name')}</th>
-                  <th style={{ textAlign: 'left' }}>{t('email')}</th>
-                  <th style={{ textAlign: 'left' }}>{t('hospital')}</th>
-                  <th style={{ textAlign: 'center' }}>{t('role')}</th>
-                  <th style={{ textAlign: 'center' }}>{t('actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(user => (
-                  <tr key={user.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '12px 0', textAlign: 'center' }}>
-                      {user.profile_picture ? (
-                        <img src={imgUrl(user.profile_picture)} alt={user.name}
-                          onClick={() => setLightbox({ src: imgUrl(user.profile_picture), name: user.name })}
-                          style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }} />
-                      ) : (
-                        <span style={{ display: 'inline-flex', width: 40, height: 40, borderRadius: '50%', background: '#e5e7eb', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                          {user.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ padding: '12px 0' }}>
-                      <strong>{user.name}</strong>
-                    </td>
-                    <td style={{ padding: '12px 0', fontSize: 13 }}>
-                      {user.email}
-                    </td>
-                    <td style={{ padding: '12px 0', fontSize: 13 }}>
-                      {user.hospital && <div>{user.hospital}</div>}
-                      {user.province && <div style={{ color: '#6b7280', fontSize: 12 }}>{user.province}</div>}
-                    </td>
-                    <td style={{ padding: '12px 0', textAlign: 'center' }}>
-                      <span style={{
-                        padding: '4px 10px',
-                        borderRadius: 12,
-                        fontSize: 12,
-                        fontWeight: 600,
-                        background: user.role === 'admin' ? 'rgba(139, 92, 246, 0.1)' : 
-                                   user.role === 'moderator' ? 'rgba(59, 130, 246, 0.1)' :
-                                   user.role === 'clinician' ? 'rgba(34, 197, 94, 0.1)' :
-                                   user.role === 'resident' ? 'rgba(249, 115, 22, 0.1)' :
-                                   user.role === 'fellow' ? 'rgba(236, 72, 153, 0.1)' :
-                                   'rgba(107, 114, 128, 0.1)',
-                        color: user.role === 'admin' ? '#8b5cf6' :
-                               user.role === 'moderator' ? '#3b82f6' :
-                               user.role === 'clinician' ? '#22c55e' :
-                               user.role === 'resident' ? '#f97316' :
-                               user.role === 'fellow' ? '#ec4899' :
-                               '#6b7280'
-                      }}>
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 0', textAlign: 'center' }}>
-                      <button
-                        className="btn btn-small"
-                        onClick={() => handleEditClick(user)}
-                        style={{ marginRight: 8 }}
-                      >
-                        ✏️ {t('edit')}
-                      </button>
-                      <button
-                        className="btn btn-small"
-                        onClick={() => handleDelete(user.id)}
-                        style={{ background: 'rgba(220, 38, 38, 0.1)', color: '#dc2626' }}
-                      >
-                        🗑️ {t('delete')}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {users.length > 0 && (() => {
+          const roleOrder = ['admin', 'moderator', 'clinician', 'fellow', 'resident', 'student']
+          const roleIcons = { admin: '🔐', moderator: '✅', clinician: '🏥', fellow: '🎓', resident: '🩺', student: '👤' }
+          const roleColors = {
+            admin: { bg: 'rgba(139,92,246,0.1)', color: '#8b5cf6', border: '#8b5cf6' },
+            moderator: { bg: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '#3b82f6' },
+            clinician: { bg: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '#22c55e' },
+            fellow: { bg: 'rgba(236,72,153,0.1)', color: '#ec4899', border: '#ec4899' },
+            resident: { bg: 'rgba(249,115,22,0.1)', color: '#f97316', border: '#f97316' },
+            student: { bg: 'rgba(107,114,128,0.1)', color: '#6b7280', border: '#6b7280' },
+          }
+          const grouped = {}
+          users.forEach(u => {
+            const r = u.role || 'student'
+            if (!grouped[r]) grouped[r] = []
+            grouped[r].push(u)
+          })
+          const sortedRoles = roleOrder.filter(r => grouped[r]?.length > 0)
+          // include any roles not in the predefined order
+          Object.keys(grouped).forEach(r => { if (!sortedRoles.includes(r)) sortedRoles.push(r) })
+
+          return sortedRoles.map(role => {
+            const roleUsers = grouped[role]
+            const isExpanded = expandedRoles[role]
+            const rc = roleColors[role] || roleColors.student
+            return (
+              <div key={role} style={{ marginBottom: 12 }}>
+                <div
+                  onClick={() => setExpandedRoles(prev => ({ ...prev, [role]: !prev[role] }))}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '12px 16px', borderRadius: 8, cursor: 'pointer', userSelect: 'none',
+                    background: rc.bg, border: `1px solid ${rc.border}33`,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 20 }}>{roleIcons[role] || '👤'}</span>
+                    <strong style={{ color: rc.color, fontSize: 15 }}>
+                      {role.charAt(0).toUpperCase() + role.slice(1)}
+                    </strong>
+                    <span style={{ background: rc.color, color: '#fff', padding: '2px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>
+                      {roleUsers.length}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 18, color: rc.color, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+                </div>
+
+                {isExpanded && (
+                  <div style={{ overflowX: 'auto', marginTop: 4, borderRadius: '0 0 8px 8px', border: '1px solid var(--border)', borderTop: 'none' }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th style={{ textAlign: 'center', width: 60 }}>{t('picture')}</th>
+                          <th style={{ textAlign: 'left' }}>{t('name')}</th>
+                          <th style={{ textAlign: 'left' }}>{t('email')}</th>
+                          <th style={{ textAlign: 'left' }}>{t('hospital')}</th>
+                          <th style={{ textAlign: 'center' }}>{t('actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roleUsers.map(user => (
+                          <tr key={user.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                            <td style={{ padding: '12px 0', textAlign: 'center' }}>
+                              {user.profile_picture ? (
+                                <img src={imgUrl(user.profile_picture)} alt={user.name}
+                                  onClick={() => setLightbox({ src: imgUrl(user.profile_picture), name: user.name })}
+                                  style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }} />
+                              ) : (
+                                <span style={{ display: 'inline-flex', width: 40, height: 40, borderRadius: '50%', background: '#e5e7eb', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                                  {user.name.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ padding: '12px 0' }}>
+                              <strong>{user.name}</strong>
+                            </td>
+                            <td style={{ padding: '12px 0', fontSize: 13 }}>
+                              {user.email}
+                            </td>
+                            <td style={{ padding: '12px 0', fontSize: 13 }}>
+                              {user.hospital && <div>{user.hospital}</div>}
+                              {user.province && <div style={{ color: '#6b7280', fontSize: 12 }}>{user.province}</div>}
+                            </td>
+                            <td style={{ padding: '12px 0', textAlign: 'center' }}>
+                              <button
+                                className="btn btn-small"
+                                onClick={() => handleEditClick(user)}
+                                style={{ marginRight: 8 }}
+                              >
+                                ✏️ {t('edit')}
+                              </button>
+                              <button
+                                className="btn btn-small"
+                                onClick={() => handleDelete(user.id)}
+                                style={{ background: 'rgba(220, 38, 38, 0.1)', color: '#dc2626' }}
+                              >
+                                🗑️ {t('delete')}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )
+          })
+        })()}
       </div>
 
       {/* Role Reference */}
