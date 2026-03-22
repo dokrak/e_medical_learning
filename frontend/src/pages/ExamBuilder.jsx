@@ -133,6 +133,10 @@ export default function ExamBuilder(){
       setSelectedQuestions([])
       navigate('/manage', { state: { msg: t('elExamCreated'), tab: 'exams' } })
     }catch(err){
+      if (err?.response?.status === 401) {
+        setMsg(t('ebCreateFailed') + ' Session expired — please log in again using the overlay, then retry.')
+        return
+      }
       const detailMessage = err?.response?.data?.error || err?.response?.data?.message || err.message || 'Unknown error'
       setMsg(`${t('ebCreateFailed')} ${detailMessage}`)
     }

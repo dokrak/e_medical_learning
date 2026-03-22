@@ -18,6 +18,12 @@ const translations = {
   login: { en: 'Login', th: 'เข้าสู่ระบบ' },
   signedIn: { en: 'Signed in', th: 'เข้าสู่ระบบแล้ว' },
 
+  // Session expired overlay
+  sessionExpired: { en: 'Session Expired', th: 'เซสชันหมดอายุ' },
+  sessionExpiredMsg: { en: 'Your session has expired. Please log in again to continue. Your form data is preserved.', th: 'เซสชันของคุณหมดอายุ กรุณาเข้าสู่ระบบอีกครั้งเพื่อดำเนินการต่อ ข้อมูลในฟอร์มของคุณยังคงอยู่' },
+  reLogin: { en: 'Log In Again', th: 'เข้าสู่ระบบอีกครั้ง' },
+  sessionRestored: { en: 'Session restored! You can now retry your action.', th: 'เข้าสู่ระบบสำเร็จ! คุณสามารถดำเนินการต่อได้' },
+
   // Login page
   loginTitle: { en: 'Chomthong Hospital Medical Learning Platform', th: 'ระบบการเรียนรู้ทางการแพทย์ โรงพยาบาลจอมทอง' },
   loginSubtitle: { en: 'Login', th: 'เข้าสู่ระบบ' },

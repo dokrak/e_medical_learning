@@ -16,7 +16,9 @@ api.interceptors.response.use(
     if (err.response && err.response.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/elearning'
+      // Dispatch event so App can show re-login overlay — do NOT hard redirect,
+      // which would destroy unsaved form data on pages like UploadQuestion / ExamBuilder.
+      window.dispatchEvent(new CustomEvent('session-expired'))
     }
     return Promise.reject(err)
   }

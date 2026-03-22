@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
 import { useLang } from './LangContext'
+import api from './api'
 import Login from './pages/Login'
 import HomePage from './pages/HomePage'
 import UploadQuestion from './pages/UploadQuestion'
@@ -72,10 +73,78 @@ function Nav(){
   )
 }
 
+function SessionExpiredOverlay({ onClose }) {
+  const { t } = useLang()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [msg, setMsg] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleReLogin(e) {
+    e.preventDefault()
+    setMsg('')
+    setLoading(true)
+    try {
+      const r = await api.post('/login', { email, password })
+      localStorage.setItem('token', r.data.token)
+      try {
+        const me = await api.get('/user')
+        localStorage.setItem('user', JSON.stringify(me.data))
+      } catch (_) {
+        if (r.data.user) localStorage.setItem('user', JSON.stringify(r.data.user))
+      }
+      onClose(true)
+    } catch (_) {
+      setMsg(t('loginFailed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: 12, padding: '28px 32px', maxWidth: 400, width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+        <h3 style={{ color: '#dc3545', marginBottom: 8 }}>⚠️ {t('sessionExpired')}</h3>
+        <p style={{ color: '#555', fontSize: 14, marginBottom: 16 }}>{t('sessionExpiredMsg')}</p>
+        <form onSubmit={handleReLogin}>
+          <div><input value={email} onChange={e => setEmail(e.target.value)} placeholder={t('email')} style={{ width: '100%' }} required /></div>
+          <div style={{ marginTop: 8 }}><input value={password} onChange={e => setPassword(e.target.value)} placeholder={t('password')} type="password" style={{ width: '100%' }} required /></div>
+          <div style={{ marginTop: 12 }}><button className="btn btn-primary" disabled={loading} style={{ width: '100%', justifyContent: 'center' }}>{loading ? '...' : t('reLogin')}</button></div>
+        </form>
+        {msg && <div style={{ marginTop: 8, color: '#dc3545', fontWeight: 600 }}>{msg}</div>}
+      </div>
+    </div>
+  )
+}
+
 export default function App(){
+  const [sessionExpired, setSessionExpired] = useState(false)
+  const { t } = useLang()
+  const [restoredMsg, setRestoredMsg] = useState('')
+
+  useEffect(() => {
+    function onExpired() { setSessionExpired(true) }
+    window.addEventListener('session-expired', onExpired)
+    return () => window.removeEventListener('session-expired', onExpired)
+  }, [])
+
+  function handleOverlayClose(success) {
+    setSessionExpired(false)
+    if (success) {
+      setRestoredMsg(t('sessionRestored'))
+      setTimeout(() => setRestoredMsg(''), 4000)
+    }
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Nav />
+      {sessionExpired && <SessionExpiredOverlay onClose={handleOverlayClose} />}
+      {restoredMsg && (
+        <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 9998, background: '#166534', color: '#fff', padding: '10px 24px', borderRadius: 8, fontWeight: 600, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          ✅ {restoredMsg}
+        </div>
+      )}
       <div style={{ padding: 20, flex: 1 }}>
         <Routes>
           <Route path="/" element={<HomePage />} />

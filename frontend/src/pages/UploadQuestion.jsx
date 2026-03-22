@@ -50,6 +50,11 @@ export default function UploadQuestion(){
     if (image) {
       setUploading(true)
       try { images = [await uploadFile(image)] } catch(err) {
+        if (err?.response?.status === 401) {
+          setMsg('Session expired — please log in again using the overlay, then retry. Your form data is preserved.')
+          setUploading(false)
+          return
+        }
         setMsg('Image upload failed: ' + (err?.response?.data?.message || err.message) + ' — Please try selecting a new image or submit without image.')
         setUploading(false)
         return
@@ -67,6 +72,10 @@ export default function UploadQuestion(){
       setQuestion(''); setDetail(''); setAnswerExplanation(''); setImage(null); setChoices(['','','','','']); setCorrectIndex(0); setSpecialtyId(''); setSubspecialtyId('')
       navigate('/manage', { state: { msg: 'Question submitted successfully.', tab: 'questions' } })
     }catch(err){
+      if (err?.response?.status === 401) {
+        setMsg('Session expired — please log in again using the overlay, then retry. Your form data is preserved.')
+        return
+      }
       const detailMessage = err?.response?.data?.error || err?.response?.data?.message || err.message || 'Unknown error'
       setMsg(`Submit failed: ${detailMessage}`)
     }
