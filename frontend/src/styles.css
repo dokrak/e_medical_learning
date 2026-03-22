@@ -141,3 +141,19 @@ tbody tr:hover{ background: var(--surface-2) }
 .fade-in{ animation: fadeIn .48s ease both }
 @keyframes fadeIn{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
 
+/* ExamBuilder responsive */
+.exam-controls-row{ display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-top:12px }
+.exam-controls-row > div{ min-width:200px; flex:1 }
+.exam-dist-row{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap }
+.exam-dist-row > div{ min-width:100px; flex:1 }
+.exam-q-grid{ display:grid; grid-template-columns:50px 1fr 80px; gap:8px; padding:8px; align-items:center }
+
+@media (max-width:600px){
+  .exam-controls-row{ flex-direction:column; gap:8px }
+  .exam-controls-row > div{ width:100%; min-width:unset }
+  .exam-q-grid{ grid-template-columns:40px 1fr; }
+  .exam-q-diff-col{ display:none }
+  .container{ padding:0 12px }
+  .card{ padding:14px }
+}
+

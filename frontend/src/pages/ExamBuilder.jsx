@@ -162,7 +162,7 @@ export default function ExamBuilder(){
           <div className="small" style={{ marginTop: 4 }}>Students must score at least {passingScore}% to pass</div>
         </div>
         
-        <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
+        <div className="exam-controls-row">
           <div>
             <label>Selection mode:</label>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -173,14 +173,14 @@ export default function ExamBuilder(){
 
           <div>
             <label>Difficulty:</label>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <select value={difficultyLevel} onChange={e=>setDifficultyLevel(e.target.value)} disabled={useDistribution}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <select value={difficultyLevel} onChange={e=>setDifficultyLevel(e.target.value)} disabled={useDistribution} style={{ flex: 1, minWidth: 140 }}>
                 <option value="easy">Easy (1-2)</option>
                 <option value="medium">Medium (3)</option>
                 <option value="difficult">Difficult (4)</option>
                 <option value="extreme">Extreme difficult (5)</option>
               </select>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={useDistribution} onChange={e=>setUseDistribution(e.target.checked)} /> Use distribution</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}><input type="checkbox" checked={useDistribution} onChange={e=>setUseDistribution(e.target.checked)} style={{ width: 'auto' }} /> Use distribution</label>
             </div>
           </div>
 
@@ -188,7 +188,7 @@ export default function ExamBuilder(){
             <label>Number of questions:</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button type="button" className="btn" onClick={decrementNum}>-</button>
-              <input type="number" min={1} max={50} value={num} onChange={e=>setNum(Number(e.target.value))} style={{ width: 90 }} />
+              <input type="number" min={1} max={50} value={num} onChange={e=>setNum(Number(e.target.value))} style={{ width: 90, minWidth: 60 }} />
               <button type="button" className="btn" onClick={incrementNum}>+</button>
             </div>
           </div>
@@ -197,18 +197,18 @@ export default function ExamBuilder(){
         {useDistribution && (
           <div style={{ marginTop: 8, padding: 8, border: '1px dashed var(--border)', borderRadius: 6 }}>
             <div className="small">Difficulty distribution (percentages must sum to ~100)</div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+            <div className="exam-dist-row">
               <div>
                 <label>Levels 1–3</label>
-                <input type="number" min={0} max={100} value={dist13} onChange={e=>setDist13(Number(e.target.value))} style={{ width: 80 }} />
+                <input type="number" min={0} max={100} value={dist13} onChange={e=>setDist13(Number(e.target.value))} />
               </div>
               <div>
                 <label>Level 4</label>
-                <input type="number" min={0} max={100} value={dist4} onChange={e=>setDist4(Number(e.target.value))} style={{ width: 80 }} />
+                <input type="number" min={0} max={100} value={dist4} onChange={e=>setDist4(Number(e.target.value))} />
               </div>
               <div>
                 <label>Level 5</label>
-                <input type="number" min={0} max={100} value={dist5} onChange={e=>setDist5(Number(e.target.value))} style={{ width: 80 }} />
+                <input type="number" min={0} max={100} value={dist5} onChange={e=>setDist5(Number(e.target.value))} />
               </div>
             </div>
             <div className="small" style={{ marginTop: 6 }}>Total: {dist13 + dist4 + dist5}%</div>
@@ -222,10 +222,10 @@ export default function ExamBuilder(){
             </div>
             <div style={{ maxHeight: 320, overflow: 'auto', border: '1px solid var(--border)', borderRadius: 8, padding: 8 }}>
               {availableQuestions.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: '84px 1fr 90px', gap: 8, padding: '6px 8px', borderBottom: '1px solid var(--border)', fontWeight: 700 }}>
+                <div className="exam-q-grid" style={{ borderBottom: '1px solid var(--border)', fontWeight: 700 }}>
                   <div>Select</div>
                   <div>Question</div>
-                  <div>Difficulty</div>
+                  <div className="exam-q-diff-col">Difficulty</div>
                 </div>
               )}
               {availableQuestions.length === 0 && <div className="small">No questions loaded. Click "Load questions".</div>}
@@ -238,17 +238,13 @@ export default function ExamBuilder(){
                 <div
                   key={q.id}
                   onClick={() => toggleSelect(q.id)}
+                  className="exam-q-grid"
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: '84px 1fr 90px',
-                    gap: 8,
-                    padding: 8,
                     borderBottom: '1px solid var(--border)',
                     borderLeft: isSelected ? '6px solid var(--brand-green)' : '4px solid transparent',
                     background: isSelected ? 'linear-gradient(90deg, var(--brand-light-green), var(--surface-2))' : 'transparent',
                     boxShadow: isSelected ? '0 8px 20px rgba(21,128,61,0.10)' : 'none',
                     cursor: 'pointer',
-                    alignItems: 'center',
                     borderRadius: isSelected ? 8 : 0
                   }}
                 >
@@ -258,6 +254,7 @@ export default function ExamBuilder(){
                       checked={isSelected}
                       onChange={() => toggleSelect(q.id)}
                       onClick={e => e.stopPropagation()}
+                      style={{ width: 'auto' }}
                     />
                     <span className="small">#{index + 1}</span>
                   </label>
@@ -265,7 +262,7 @@ export default function ExamBuilder(){
                     <div style={{ fontWeight: 700 }}>{q.title} {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>Selected</span>}</div>
                     <div className="small">{q.stem}</div>
                   </div>
-                  <div className="small" style={{ fontWeight: 700 }}>{q.difficulty}</div>
+                  <div className="exam-q-diff-col small" style={{ fontWeight: 700 }}>{q.difficulty}</div>
                 </div>
                 )})()
               ))}
