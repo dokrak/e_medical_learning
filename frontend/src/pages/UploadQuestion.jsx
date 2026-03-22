@@ -3,6 +3,41 @@ import api from '../api'
 import { useNavigate } from 'react-router-dom'
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D', 'E']
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif']
+const COMPRESS_THRESHOLD = 2 * 1024 * 1024 // compress if > 2MB
+const COMPRESS_MAX_WIDTH = 1920
+
+function compressImage(file) {
+  return new Promise((resolve) => {
+    // Skip non-compressible formats or small files
+    if (!file.type.match(/jpeg|jpg|png|webp/) || file.size <= COMPRESS_THRESHOLD) {
+      return resolve(file)
+    }
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      let { width, height } = img
+      if (width > COMPRESS_MAX_WIDTH) {
+        height = Math.round(height * (COMPRESS_MAX_WIDTH / width))
+        width = COMPRESS_MAX_WIDTH
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, width, height)
+      canvas.toBlob((blob) => {
+        if (!blob) return resolve(file)
+        const compressed = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+        resolve(compressed.size < file.size ? compressed : file)
+      }, 'image/jpeg', 0.82)
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+    img.src = url
+  })
+}
 
 export default function UploadQuestion(){
   const navigate = useNavigate()
@@ -25,10 +60,28 @@ export default function UploadQuestion(){
   }
 
   async function uploadFile(file){
+    const compressed = await compressImage(file)
     const fd = new FormData()
-    fd.append('file', file)
-    const r = await api.post('/upload', fd)
+    fd.append('file', compressed)
+    const r = await api.post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
     return r.data.url
+  }
+
+  function handleImageSelect(e) {
+    const file = e.target.files[0]
+    if (!file) { setImage(null); return }
+    if (!ALLOWED_TYPES.includes(file.type) && !file.name.match(/\.(jpe?g|png|gif|webp|heic|heif)$/i)) {
+      setMsg(`Image format not supported (${file.type || file.name.split('.').pop()}). Please use JPEG, PNG, GIF, or WebP.`)
+      e.target.value = ''
+      return
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setMsg(`Image too large (${(file.size/1024/1024).toFixed(1)} MB). Maximum is 10 MB. Please resize or choose a smaller image.`)
+      e.target.value = ''
+      return
+    }
+    setImage(file)
+    if (msg.includes('Image') || msg.includes('image')) setMsg('')
   }
 
   function setChoice(i, val){
@@ -138,8 +191,8 @@ export default function UploadQuestion(){
         </div>
         <div style={{ marginTop: 8 }}>
           <label><strong>Image (optional)</strong></label>
-          <input type="file" accept="image/*" onChange={e=>{ setImage(e.target.files[0]); if(msg.includes('Image upload failed')) setMsg('') }} />
-          {image && <div style={{ marginTop: 4, fontSize: 12, color: '#555' }}>Selected: {image.name} ({(image.size/1024).toFixed(0)} KB)</div>}
+          <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp,.heic,.heif" onChange={handleImageSelect} />
+          {image && <div style={{ marginTop: 4, fontSize: 12, color: '#555' }}>Selected: {image.name} ({(image.size/1024).toFixed(0)} KB){image.size > COMPRESS_THRESHOLD ? ' — will be auto-compressed before upload' : ''}</div>}
         </div>
         <div style={{ marginTop: 8 }}><button className="btn btn-primary" disabled={uploading}>{uploading ? 'Uploading...' : 'Submit question'}</button></div>
       </form>
