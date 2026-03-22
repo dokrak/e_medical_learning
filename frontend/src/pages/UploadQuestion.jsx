@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import api from '../api'
 import { useNavigate } from 'react-router-dom'
+import { useLang } from '../LangContext'
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D', 'E']
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -41,6 +42,7 @@ function compressImage(file) {
 
 export default function UploadQuestion(){
   const navigate = useNavigate()
+  const { t } = useLang()
   const [question, setQuestion] = useState('')
   const [detail, setDetail] = useState('')
   const [answerExplanation, setAnswerExplanation] = useState('')
@@ -73,12 +75,12 @@ export default function UploadQuestion(){
     const file = e.target.files[0]
     if (!file) { setImage(null); return }
     if (!ALLOWED_TYPES.includes(file.type) && !file.name.match(/\.(jpe?g|png|gif|webp|heic|heif)$/i)) {
-      setMsg(`Image format not supported (${file.type || file.name.split('.').pop()}). Please use JPEG, PNG, GIF, or WebP.`)
+      setMsg(t('uqImageFormatError'))
       e.target.value = ''
       return
     }
     if (file.size > MAX_FILE_SIZE) {
-      setMsg(`Image too large (${(file.size/1024/1024).toFixed(1)} MB). Maximum is 10 MB. Please resize or choose a smaller image.`)
+      setMsg(t('uqImageTooLarge').replace('{0}', (file.size/1024/1024).toFixed(1)))
       e.target.value = ''
       return
     }
@@ -113,11 +115,11 @@ export default function UploadQuestion(){
       setUploading(true)
       try { images = [await uploadFile(image)] } catch(err) {
         if (err?.response?.status === 401) {
-          setMsg('Session expired — please log in again using the overlay, then retry. Your form data is preserved.')
+          setMsg(t('uqSessionExpired'))
           setUploading(false)
           return
         }
-        setMsg('Image upload failed: ' + (err?.response?.data?.message || err.message) + ' — Please try selecting a new image or submit without image.')
+        setMsg(t('uqImageUploadFailed') + ': ' + (err?.response?.data?.message || err.message) + ' — ' + t('uqRetryHint'))
         setUploading(false)
         return
       }
@@ -135,22 +137,22 @@ export default function UploadQuestion(){
       navigate('/manage', { state: { msg: 'Question submitted successfully.', tab: 'questions' } })
     }catch(err){
       if (err?.response?.status === 401) {
-        setMsg('Session expired — please log in again using the overlay, then retry. Your form data is preserved.')
+        setMsg(t('uqSessionExpired'))
         return
       }
       const detailMessage = err?.response?.data?.error || err?.response?.data?.message || err.message || 'Unknown error'
-      setMsg(`Submit failed: ${detailMessage}`)
+      setMsg(`${t('uqSubmitFailed')} ${detailMessage}`)
     }
   }
 
   return (
     <div className="card container" style={{ background: 'linear-gradient(145deg, rgba(15,81,50,0.10) 0%, rgba(15,118,110,0.10) 45%, rgba(22,78,99,0.10) 100%)', border: '1px solid rgba(15,118,110,0.30)' }}>
-      <h3 style={{ color: '#0f5132', marginBottom: 14 }}>Upload question (clinician)</h3>
+      <h3 style={{ color: '#0f5132', marginBottom: 14 }}>{t('uqTitle')}</h3>
       <form onSubmit={submit}>
-        <div><input type="text" placeholder="Question title (first line = title)" value={question} onChange={e=>setQuestion(e.target.value)} style={{ width: '100%' }} /></div>
-        <div style={{ marginTop: 8 }}><textarea placeholder="Detail (clinical information, findings, vital signs, etc.)" value={detail} onChange={e=>setDetail(e.target.value)} rows={5} /></div>
+        <div><input type="text" placeholder={t('uqQuestionPlaceholder')} value={question} onChange={e=>setQuestion(e.target.value)} style={{ width: '100%' }} /></div>
+        <div style={{ marginTop: 8 }}><textarea placeholder={t('uqDetailPlaceholder')} value={detail} onChange={e=>setDetail(e.target.value)} rows={5} /></div>
         <div style={{ marginTop: 8 }}>
-          <label><strong>Difficulty Level:</strong></label>
+          <label><strong>{t('uqDifficulty')}</strong></label>
           <div style={{ display: 'flex', gap: 20, marginTop: 8, flexWrap: 'wrap' }}>
             {[1, 2, 3, 4, 5].map(level => (
               <label key={level} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '6px 12px', borderRadius: 8, border: difficulty === level ? '2px solid var(--brand-green)' : '2px solid var(--border)', background: difficulty === level ? 'rgba(21, 128, 61, 0.08)' : 'transparent', transition: 'all 0.2s' }}>
@@ -163,7 +165,7 @@ export default function UploadQuestion(){
                   style={{ cursor: 'pointer' }}
                 />
                 <span style={{ fontWeight: difficulty === level ? 700 : 400 }}>
-                  {level === 1 ? 'Very Easy' : level === 2 ? 'Easy' : level === 3 ? 'Medium' : level === 4 ? 'Hard' : 'Very Hard'}
+                  {level === 1 ? t('uqVeryEasy') : level === 2 ? t('uqEasy') : level === 3 ? t('uqMedium') : level === 4 ? t('uqHard') : t('uqVeryHard')}
                 </span>
                 <span style={{ fontSize: 11, color: '#999' }}>({level})</span>
               </label>
@@ -171,35 +173,35 @@ export default function UploadQuestion(){
           </div>
         </div>
         <div style={{ marginTop: 8 }}>
-          <label><strong>Choices (5)</strong></label>
+          <label><strong>{t('uqChoices')}</strong></label>
           {choices.map((c, i) => (
             <div key={i} style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ minWidth: 18, fontWeight: 600 }}>{CHOICE_LABELS[i]}.</span>
-              <input placeholder={`Choice ${CHOICE_LABELS[i]}`} value={c} onChange={e=>setChoice(i, e.target.value)} style={{ width: '70%' }} />
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><input type="radio" name="correct" checked={correctIndex===i} onChange={()=>setCorrectIndex(i)} />correct</label>
+              <input placeholder={`${t('uqChoicePlaceholder')} ${CHOICE_LABELS[i]}`} value={c} onChange={e=>setChoice(i, e.target.value)} style={{ width: '70%' }} />
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><input type="radio" name="correct" checked={correctIndex===i} onChange={()=>setCorrectIndex(i)} />{t('uqCorrect')}</label>
             </div>
           ))}
           <div style={{ marginTop: 8 }}>
-            <label><strong>Correct answer & explanation</strong></label>
-            <textarea placeholder="Describe why the selected correct choice is correct" value={answerExplanation} onChange={e=>setAnswerExplanation(e.target.value)} rows={5} />
+            <label><strong>{t('uqExplanationLabel')}</strong></label>
+            <textarea placeholder={t('uqExplanationPlaceholder')} value={answerExplanation} onChange={e=>setAnswerExplanation(e.target.value)} rows={5} />
           </div>
         </div>
         <div style={{ marginTop: 8 }}>
-          <label>Specialty:</label>
+          <label>{t('uqSpecialty')}</label>
           <select value={specialtyId} onChange={e=>{ setSpecialtyId(e.target.value); setSubspecialtyId('') }}>
-            <option value="">-- select major specialty --</option>
+            <option value="">{t('uqSelectSpecialty')}</option>
             {specialties.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
         <div style={{ marginTop: 8 }}>
-          <label>Subspecialty:</label>
+          <label>{t('uqSubspecialty')}</label>
           <select value={subspecialtyId} onChange={e=>setSubspecialtyId(e.target.value)}>
-            <option value="">-- select subspecialty --</option>
+            <option value="">{t('uqSelectSubspecialty')}</option>
             {(specialties.find(s=>s.id===specialtyId)?.subspecialties||[]).map((ss, i) => { const val = typeof ss === 'object' ? ss.id : ss; const label = typeof ss === 'object' ? ss.name : ss; return <option key={val || i} value={val}>{label}</option>; })}
           </select>
         </div>
         <div style={{ marginTop: 8 }}>
-          <label><strong>Image (optional)</strong></label>
+          <label><strong>{t('uqImageLabel')}</strong></label>
           <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp,.heic,.heif" onChange={handleImageSelect} />
           {image && (
             <div style={{ marginTop: 8, padding: 10, background: 'rgba(21,128,61,0.05)', borderRadius: 8, border: '1px solid rgba(21,128,61,0.15)' }}>
@@ -207,14 +209,14 @@ export default function UploadQuestion(){
                 {imagePreview && <img src={imagePreview} alt="preview" style={{ maxHeight: 120, maxWidth: 180, borderRadius: 6, border: '1px solid #ddd', objectFit: 'contain' }} />}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, color: '#333', fontWeight: 500 }}>{image.name}</div>
-                  <div style={{ fontSize: 12, color: '#777' }}>{(image.size/1024).toFixed(0)} KB{image.size > COMPRESS_THRESHOLD ? ' — will be auto-compressed' : ''}</div>
+                  <div style={{ fontSize: 12, color: '#777' }}>{(image.size/1024).toFixed(0)} KB{image.size > COMPRESS_THRESHOLD ? ` — ${t('uqAutoCompress')}` : ''}</div>
                 </div>
-                <button type="button" onClick={removeImage} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap' }}>✕ Remove</button>
+                <button type="button" onClick={removeImage} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap' }}>{t('uqRemove')}</button>
               </div>
             </div>
           )}
         </div>
-        <div style={{ marginTop: 8 }}><button className="btn btn-primary" disabled={uploading}>{uploading ? 'Uploading...' : 'Submit question'}</button></div>
+        <div style={{ marginTop: 8 }}><button className="btn btn-primary" disabled={uploading}>{uploading ? t('uqUploading') : t('uqSubmit')}</button></div>
       </form>
       {msg && (
         <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 8, fontWeight: 600, fontSize: 14, background: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#ffe6e6' : '#e6ffe6', color: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '#991b1b' : '#166534', border: msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('error') ? '2px solid #dc3545' : '2px solid #28a745', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
