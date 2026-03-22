@@ -85,7 +85,7 @@ tbody tr:hover{ background: var(--surface-2) }
 .panel-incorrect{ border:2px solid rgba(220,38,38,0.12); background: rgba(255,245,240,1); }
 
 /* Images */
-.q-image{ max-width:100%; max-height:420px; width:auto; height:auto; object-fit:contain; border-radius:10px; border:1px solid var(--border); box-shadow: 0 8px 28px rgba(21,128,61,0.06); display:block; margin:0 auto; cursor:pointer }
+.q-image{ max-width:100%; max-height:420px; width:auto; height:auto; object-fit:contain; border-radius:10px; border:1px solid var(--border); box-shadow: 0 8px 28px rgba(21,128,61,0.06); display:block; margin:0; cursor:pointer }
 .q-image:hover{ box-shadow: 0 8px 28px rgba(21,128,61,0.14) }
 
 /* Image lightbox */
