@@ -199,23 +199,45 @@ export default function ExamBuilder(){
         </div>
 
         {useDistribution && (
-          <div style={{ marginTop: 8, padding: 8, border: '1px dashed var(--border)', borderRadius: 6 }}>
-            <div className="small">Difficulty distribution (percentages must sum to ~100)</div>
+          <div style={{ marginTop: 8, padding: 12, border: '1px dashed var(--border)', borderRadius: 6 }}>
+            <div className="small" style={{ marginBottom: 8 }}>Difficulty distribution (auto-adjusts to sum to 100%)</div>
             <div className="exam-dist-row">
-              <div>
-                <label>Levels 1–3</label>
-                <input type="number" min={0} max={100} value={dist13} onChange={e=>setDist13(Number(e.target.value))} />
-              </div>
-              <div>
-                <label>Level 4</label>
-                <input type="number" min={0} max={100} value={dist4} onChange={e=>setDist4(Number(e.target.value))} />
-              </div>
-              <div>
-                <label>Level 5</label>
-                <input type="number" min={0} max={100} value={dist5} onChange={e=>setDist5(Number(e.target.value))} />
-              </div>
+              {[
+                { label: 'Levels 1–3', value: dist13, setter: setDist13, others: [setDist4, setDist5], otherVals: [dist4, dist5] },
+                { label: 'Level 4', value: dist4, setter: setDist4, others: [setDist13, setDist5], otherVals: [dist13, dist5] },
+                { label: 'Level 5', value: dist5, setter: setDist5, others: [setDist13, setDist4], otherVals: [dist13, dist4] },
+              ].map(({ label, value, setter, others, otherVals }) => (
+                <div key={label}>
+                  <label>{label}</label>
+                  <select value={value} onChange={e => {
+                    const newVal = Number(e.target.value)
+                    const remainder = 100 - newVal
+                    const otherSum = otherVals[0] + otherVals[1]
+                    setter(newVal)
+                    if (otherSum === 0) {
+                      others[0](Math.round(remainder / 2))
+                      others[1](remainder - Math.round(remainder / 2))
+                    } else {
+                      const r0 = Math.round((otherVals[0] / otherSum) * remainder)
+                      others[0](r0)
+                      others[1](remainder - r0)
+                    }
+                  }}>
+                    <option value={0}>0%</option>
+                    <option value={25}>25%</option>
+                    <option value={50}>50%</option>
+                    <option value={75}>75%</option>
+                    <option value={100}>100%</option>
+                  </select>
+                </div>
+              ))}
             </div>
-            <div className="small" style={{ marginTop: 6 }}>Total: {dist13 + dist4 + dist5}%</div>
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className="small" style={{ fontWeight: 700 }}>Total: {dist13 + dist4 + dist5}%</span>
+              {dist13 + dist4 + dist5 === 100
+                ? <span className="badge badge-success" style={{ fontSize: '0.78em' }}>✓</span>
+                : <span className="badge badge-danger" style={{ fontSize: '0.78em' }}>≠ 100%</span>}
+            </div>
           </div>
         )}
 
