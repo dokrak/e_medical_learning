@@ -15,7 +15,8 @@ export default function ExamBuilder(){
   const [selectionMode, setSelectionMode] = useState('random')
   const [difficultyLevel, setDifficultyLevel] = useState('medium')
   const [useDistribution, setUseDistribution] = useState(false)
-  const [dist13, setDist13] = useState(50)
+  const [dist12, setDist12] = useState(25)
+  const [dist3, setDist3] = useState(25)
   const [dist4, setDist4] = useState(25)
   const [dist5, setDist5] = useState(25)
   const [availableQuestions, setAvailableQuestions] = useState([])
@@ -107,10 +108,11 @@ export default function ExamBuilder(){
       if (!useDistribution) payload.difficultyLevel = difficultyLevel
       else {
         // normalize distribution so it sums to 100
-        const total = dist13 + dist4 + dist5
+        const total = dist12 + dist3 + dist4 + dist5
         const normalize = total > 0 ? (v => Math.round((v / total) * 100)) : (v => 0)
         payload.difficultyDistribution = {
-          '1-3': normalize(dist13),
+          '1-2': normalize(dist12),
+          '3': normalize(dist3),
           '4': normalize(dist4),
           '5': normalize(dist5)
         }
@@ -203,38 +205,46 @@ export default function ExamBuilder(){
             <div className="small" style={{ marginBottom: 8 }}>Difficulty distribution (auto-adjusts to sum to 100%)</div>
             <div className="exam-dist-row">
               {[
-                { label: 'Levels 1–3', value: dist13, setter: setDist13, others: [setDist4, setDist5], otherVals: [dist4, dist5] },
-                { label: 'Level 4', value: dist4, setter: setDist4, others: [setDist13, setDist5], otherVals: [dist13, dist5] },
-                { label: 'Level 5', value: dist5, setter: setDist5, others: [setDist13, setDist4], otherVals: [dist13, dist4] },
-              ].map(({ label, value, setter, others, otherVals }) => (
-                <div key={label}>
-                  <label>{label}</label>
-                  <select value={value} onChange={e => {
-                    const newVal = Number(e.target.value)
-                    const remainder = 100 - newVal
-                    const otherSum = otherVals[0] + otherVals[1]
-                    setter(newVal)
-                    if (otherSum === 0) {
-                      others[0](Math.round(remainder / 2))
-                      others[1](remainder - Math.round(remainder / 2))
-                    } else {
-                      const r0 = Math.round((otherVals[0] / otherSum) * remainder)
-                      others[0](r0)
-                      others[1](remainder - r0)
-                    }
-                  }}>
-                    <option value={0}>0%</option>
-                    <option value={25}>25%</option>
-                    <option value={50}>50%</option>
-                    <option value={75}>75%</option>
-                    <option value={100}>100%</option>
-                  </select>
-                </div>
-              ))}
+                { label: 'Level 1–2', val: dist12, set: setDist12, idx: 0 },
+                { label: 'Level 3', val: dist3, set: setDist3, idx: 1 },
+                { label: 'Level 4', val: dist4, set: setDist4, idx: 2 },
+                { label: 'Level 5', val: dist5, set: setDist5, idx: 3 },
+              ].map(({ label, val, set, idx }) => {
+                const allSetters = [setDist12, setDist3, setDist4, setDist5]
+                const allVals = [dist12, dist3, dist4, dist5]
+                return (
+                  <div key={label}>
+                    <label>{label}</label>
+                    <select value={val} onChange={e => {
+                      const newVal = Number(e.target.value)
+                      const remainder = 100 - newVal
+                      const otherIdxs = [0,1,2,3].filter(i => i !== idx)
+                      const otherSum = otherIdxs.reduce((s, i) => s + allVals[i], 0)
+                      set(newVal)
+                      if (otherSum === 0) {
+                        const each = Math.floor(remainder / otherIdxs.length)
+                        otherIdxs.forEach((i, j) => allSetters[i](j === otherIdxs.length - 1 ? remainder - each * (otherIdxs.length - 1) : each))
+                      } else {
+                        let assigned = 0
+                        otherIdxs.forEach((i, j) => {
+                          if (j === otherIdxs.length - 1) { allSetters[i](remainder - assigned) }
+                          else { const v = Math.round((allVals[i] / otherSum) * remainder); allSetters[i](v); assigned += v }
+                        })
+                      }
+                    }}>
+                      <option value={0}>0%</option>
+                      <option value={25}>25%</option>
+                      <option value={50}>50%</option>
+                      <option value={75}>75%</option>
+                      <option value={100}>100%</option>
+                    </select>
+                  </div>
+                )
+              })}
             </div>
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span className="small" style={{ fontWeight: 700 }}>Total: {dist13 + dist4 + dist5}%</span>
-              {dist13 + dist4 + dist5 === 100
+              <span className="small" style={{ fontWeight: 700 }}>Total: {dist12 + dist3 + dist4 + dist5}%</span>
+              {dist12 + dist3 + dist4 + dist5 === 100
                 ? <span className="badge badge-success" style={{ fontSize: '0.78em' }}>✓</span>
                 : <span className="badge badge-danger" style={{ fontSize: '0.78em' }}>≠ 100%</span>}
             </div>
