@@ -10,6 +10,7 @@ export default function ExamTake(){
   const [answers, setAnswers] = useState({})
   const [msg, setMsg] = useState('')
   const [unansweredIds, setUnansweredIds] = useState([])
+  const [lightbox, setLightbox] = useState(null)
   const questionRefs = useRef({})
   const { t } = useLang()
 
@@ -111,7 +112,7 @@ export default function ExamTake(){
               <div style={{ marginTop: 8 }}>
                 {q.images.map((img, i) => (
                   <div key={i} style={{ marginTop: 6 }}>
-                    <img src={imgUrl(img)} alt={`question-${q.id}-img-${i}`} className="q-image" />
+                    <img src={imgUrl(img)} alt={`question-${q.id}-img-${i}`} className="q-image" onClick={() => setLightbox(imgUrl(img))} title={t('etClickZoom') || 'Click to enlarge'} />
                   </div>
                 ))}
               </div>
@@ -136,6 +137,12 @@ export default function ExamTake(){
         <div><button className="btn btn-primary">{t('etSubmit')}</button></div>
       </form>
       {msg && <div style={{ padding: 12, marginBottom: 12, borderRadius: 8, background: 'rgba(220,38,38,0.08)', border: '1px solid #dc2626', color: '#dc2626', fontWeight: 600 }}>{msg}</div>}
+      {lightbox && (
+        <div className="img-lightbox-overlay" onClick={() => setLightbox(null)}>
+          <button className="img-lightbox-close" onClick={() => setLightbox(null)}>&times;</button>
+          <img src={lightbox} alt="enlarged" />
+        </div>
+      )}
     </div>
   )
 }

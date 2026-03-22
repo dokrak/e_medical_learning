@@ -276,6 +276,7 @@ const translations = {
   etNoQuestions: { en: '⚠ This exam has no questions — please contact administrator to add questions.', th: '⚠ ข้อสอบนี้ยังไม่มีคำถาม — กรุณาติดต่อผู้ดูแลระบบเพื่อเพิ่มคำถามในข้อสอบ' },
   etQuestionNum: { en: 'Question {0}', th: 'ข้อที่ {0}' },
   etYourAnswer: { en: 'Your answer', th: 'คำตอบของคุณ' },
+  etClickZoom: { en: 'Click to enlarge', th: 'คลิกเพื่อขยาย' },
   etSubmit: { en: 'Submit Exam', th: 'ส่งข้อสอบ' },
   etSubmitFailed: { en: 'Failed to submit exam', th: 'ส่งข้อสอบไม่สำเร็จ' },
   etUnanswered: { en: 'Please answer all questions before submitting — {0} unanswered: Question {1}', th: 'กรุณาตอบให้ครบทุกข้อก่อนส่ง — ยังไม่ได้ตอบ {0} ข้อ: ข้อที่ {1}' },
