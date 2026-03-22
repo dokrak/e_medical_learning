@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import api from '../api'
 import { useNavigate } from 'react-router-dom'
+import { useLang } from '../LangContext'
 
 export default function ExamsList(){
   const [exams, setExams] = useState([])
@@ -9,11 +10,12 @@ export default function ExamsList(){
   const [num, setNum] = useState(5)
   const [msg, setMsg] = useState('')
   const nav = useNavigate()
+  const { t } = useLang()
   const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
   const isStaff = currentUser?.role === 'clinician' || currentUser?.role === 'moderator' || currentUser?.role === 'admin' || currentUser?.role === 'fellow'
 
   async function load(){
-    try{ const r = await api.get('/exams'); setExams(r.data.value || r.data) }catch(e){ setMsg('Failed to load exams') }
+    try{ const r = await api.get('/exams'); setExams(r.data.value || r.data) }catch(e){ setMsg(t('elLoadFailed')) }
   }
   useEffect(()=>{ load() }, [])
 
@@ -21,9 +23,9 @@ export default function ExamsList(){
     e.preventDefault()
     try{
       const r = await api.post('/exams', { title, num_questions: num })
-      setMsg('Exam created')
+      setMsg(t('elExamCreated'))
       load()
-    }catch(err){ setMsg('Create failed — ensure you are authenticated') }
+    }catch(err){ setMsg(t('elCreateFailed')) }
   }
 
   const filteredExams = exams.filter(ex => {
@@ -38,27 +40,27 @@ export default function ExamsList(){
 
   return (
     <div className="card container">
-      <h3>Exams</h3>
+      <h3>{t('elExams')}</h3>
       <div style={{ marginBottom: 12 }}>
         <input
           className="search-box"
-          placeholder="Search exams by name, specialty, difficulty..."
+          placeholder={t('elSearch')}
           value={search}
           onChange={e=>setSearch(e.target.value)}
         />
       </div>
       <form onSubmit={create} style={{ marginBottom: 12, padding: 12, backgroundColor: '#f0f4ff', borderRadius: 6 }}>
-        <div className="small" style={{ marginBottom: 8, fontWeight: 600 }}>กำหนดการสอบด้วยตัวเอง</div>
+        <div className="small" style={{ marginBottom: 8, fontWeight: 600 }}>{t('elSelfPractice')}</div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
           <div style={{ flex: 1 }}>
-            <label>Exam name:</label>
-            <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="My practice exam" style={{ width: '100%' }} />
+            <label>{t('elExamName')}</label>
+            <input value={title} onChange={e=>setTitle(e.target.value)} placeholder={t('elMyPractice')} style={{ width: '100%' }} />
           </div>
           <div>
-            <label>Questions:</label>
+            <label>{t('elQuestions')}</label>
             <input type="number" value={num} onChange={e=>setNum(Number(e.target.value))} min={1} max={50} style={{ width: 80 }} />
           </div>
-          <button className="btn btn-primary" style={{ marginLeft: 8 }}>Create</button>
+          <button className="btn btn-primary" style={{ marginLeft: 8 }}>{t('elCreate')}</button>
         </div>
       </form>
       {msg && <div>{msg}</div>}
@@ -74,7 +76,7 @@ export default function ExamsList(){
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 20 }}>📝</span>
                   <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--brand-green)' }}>
-                    {ex.questions?.length || 0} Questions
+                    {ex.questions?.length || 0} {t('elNQuestions')}
                   </span>
                 </div>
                 
@@ -101,29 +103,29 @@ export default function ExamsList(){
               
               {/* Additional Details */}
               <div style={{ marginTop: 8, fontSize: 12, color: '#999' }}>
-                {ex.created_at ? `Created: ${new Date(ex.created_at).toLocaleDateString()}` : ''}
+                {ex.created_at ? `${t('elCreated')} ${new Date(ex.created_at).toLocaleDateString()}` : ''}
               </div>
               
               {ex.difficultyDistribution && (
                 <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
-                  Distribution: <strong>{Object.entries(ex.difficultyDistribution).map(([k,v])=>`${k}:${v}%`).join(' • ')}</strong>
+                  {t('elDistribution')} <strong>{Object.entries(ex.difficultyDistribution).map(([k,v])=>`${k}:${v}%`).join(' • ')}</strong>
                 </div>
               )}
               {(ex.totalDifficultyScore !== undefined || ex.averageDifficultyScore !== undefined) && (
                 <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
-                  Difficulty Score: <strong>Total {ex.totalDifficultyScore ?? 0}</strong> • <strong>Avg {ex.averageDifficultyScore ?? 0}</strong>
+                  {t('elDiffScore')} <strong>{t('elTotal')} {ex.totalDifficultyScore ?? 0}</strong> • <strong>{t('elAvg')} {ex.averageDifficultyScore ?? 0}</strong>
                   {ex.computedDifficultyLevel ? ` • ${ex.computedDifficultyLevel}` : ''}
                 </div>
               )}
-              {ex.selectionMode && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>Selection: <strong>{ex.selectionMode}</strong> {ex.selectedQuestionIds?.length ? ` — ${ex.selectedQuestionIds.length} chosen` : ''}</div>}
+              {ex.selectionMode && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{t('elSelection')} <strong>{ex.selectionMode}</strong> {ex.selectedQuestionIds?.length ? ` — ${ex.selectedQuestionIds.length} ${t('elChosen')}` : ''}</div>}
             </div>
             <div>
-              <button className="btn btn-primary" onClick={()=>nav(`/exams/${ex.id}/take`)}>Take Exam</button>
+              <button className="btn btn-primary" onClick={()=>nav(`/exams/${ex.id}/take`)}>{t('elTakeExam')}</button>
             </div>
           </div>
         </div>
       ))}
-      {filteredExams.length === 0 && <div className="small">No exams found</div>}
+      {filteredExams.length === 0 && <div className="small">{t('elNoExams')}</div>}
     </div>
   )
 }

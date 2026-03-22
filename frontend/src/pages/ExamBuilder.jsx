@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import api from '../api'
 import { useNavigate } from 'react-router-dom'
+import { useLang } from '../LangContext'
 
 export default function ExamBuilder(){
   const navigate = useNavigate()
+  const { t } = useLang()
   const [title, setTitle] = useState('')
   const [num, setNum] = useState(5)
   const [passingScore, setPassingScore] = useState(50)
@@ -62,7 +64,7 @@ export default function ExamBuilder(){
       const hasItem = prev.some(x => String(x) === key)
       if (hasItem) return prev.filter(x => String(x) !== key)
       if (prev.length >= num) {
-        setMsg(`You can select up to ${num} questions.`)
+        setMsg(t('ebMaxSelect').replace('{0}', num))
         return prev
       }
       return [...prev, qid]
@@ -83,23 +85,23 @@ export default function ExamBuilder(){
     
     // Validation
     if (!title.trim()) {
-      setMsg('Please enter exam name')
+      setMsg(t('ebEnterName'))
       return
     }
     if (!specialtyId) {
-      setMsg('Please select specialty')
+      setMsg(t('ebSelectSpec'))
       return
     }
     if (!subspecialtyId && specialtyId !== 'all') {
-      setMsg('Please select subspecialty')
+      setMsg(t('ebSelectSubspec'))
       return
     }
     if (num < 1) {
-      setMsg('Please set number of questions to at least 1')
+      setMsg(t('ebMinQuestions'))
       return
     }
     if (selectionMode === 'manual' && selectedQuestions.length !== num) {
-      setMsg(`Please select exactly ${num} questions (currently selected: ${selectedQuestions.length})`)
+      setMsg(t('ebSelectExact').replace('{0}', num).replace('{1}', selectedQuestions.length))
       return
     }
 
@@ -129,69 +131,69 @@ export default function ExamBuilder(){
       setPreview([])
       setAvailableQuestions([])
       setSelectedQuestions([])
-      navigate('/manage', { state: { msg: 'Exam submitted successfully.', tab: 'exams' } })
+      navigate('/manage', { state: { msg: t('elExamCreated'), tab: 'exams' } })
     }catch(err){
       const detailMessage = err?.response?.data?.error || err?.response?.data?.message || err.message || 'Unknown error'
-      setMsg(`Create exam failed: ${detailMessage}`)
+      setMsg(`${t('ebCreateFailed')} ${detailMessage}`)
     }
   }
 
   return (
     <div className="card container">
-      <h3>Create Exam</h3>
+      <h3>{t('ebCreateExam')}</h3>
       <form onSubmit={generate}>
-        <div><input placeholder="Name of exam *" value={title} onChange={e=>setTitle(e.target.value)} required /></div>
+        <div><input placeholder={t('ebExamName')} value={title} onChange={e=>setTitle(e.target.value)} required /></div>
         
         <div style={{ marginTop: 8 }}>
-          <label>Specialty *</label>
+          <label>{t('ebSpecialty')}</label>
           <select value={specialtyId} onChange={e=>{ setSpecialtyId(e.target.value); setSubspecialtyId(e.target.value === 'all' ? 'all' : '') }} required>
-            <option value="">-- select major specialty --</option>
-            <option value="all">✱ Comprehensive (All Specialties)</option>
+            <option value="">{t('ebSelectSpecialty')}</option>
+            <option value="all">{t('ebAllSpecialties')}</option>
             {specialties.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
 
         <div style={{ marginTop: 8 }}>
-          <label>Subspecialty *</label>
+          <label>{t('ebSubspecialty')}</label>
           <select value={subspecialtyId} onChange={e=>setSubspecialtyId(e.target.value)} required disabled={specialtyId === 'all'}>
-            <option value="">-- select subspecialty --</option>
+            <option value="">{t('ebSelectSubspecialty')}</option>
             {specialtyId === 'all'
-              ? <option value="all" selected>✱ All Subspecialties</option>
+              ? <option value="all" selected>{t('ebAllSubspecialties')}</option>
               : (specialties.find(s=>s.id===specialtyId)?.subspecialties||[]).map((ss, i) => { const val = typeof ss === 'object' ? ss.id : ss; const label = typeof ss === 'object' ? ss.name : ss; return <option key={val || i} value={val}>{label}</option>; })}
-            {specialtyId !== 'all' && <option value="all">✱ All Subspecialties</option>}
+            {specialtyId !== 'all' && <option value="all">{t('ebAllSubspecialties')}</option>}
           </select>
         </div>
 
         <div style={{ marginTop: 8 }}>
-          <label>Passing Score (%) *</label>
+          <label>{t('ebPassingScore')}</label>
           <input type="number" min={0} max={100} value={passingScore} onChange={e=>setPassingScore(Number(e.target.value))} required />
-          <div className="small" style={{ marginTop: 4 }}>Students must score at least {passingScore}% to pass</div>
+          <div className="small" style={{ marginTop: 4 }}>{t('ebPassingScoreHint').replace('{0}', passingScore)}</div>
         </div>
         
         <div className="exam-controls-row">
           <div>
-            <label>Selection mode:</label>
+            <label>{t('ebSelectionMode')}</label>
             <div style={{ display: 'flex', gap: 12 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="radio" name="mode" value="random" checked={selectionMode==='random'} onChange={e=>setSelectionMode('random')} /> Random</label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="radio" name="mode" value="manual" checked={selectionMode==='manual'} onChange={e=>setSelectionMode('manual')} /> Manual</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="radio" name="mode" value="random" checked={selectionMode==='random'} onChange={e=>setSelectionMode('random')} /> {t('ebRandom')}</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="radio" name="mode" value="manual" checked={selectionMode==='manual'} onChange={e=>setSelectionMode('manual')} /> {t('ebManual')}</label>
             </div>
           </div>
 
           <div>
-            <label>Difficulty:</label>
+            <label>{t('ebDifficulty')}</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <select value={difficultyLevel} onChange={e=>setDifficultyLevel(e.target.value)} disabled={useDistribution} style={{ flex: 1, minWidth: 140 }}>
-                <option value="easy">Easy (1-2)</option>
-                <option value="medium">Medium (3)</option>
-                <option value="difficult">Difficult (4)</option>
-                <option value="extreme">Extreme difficult (5)</option>
+                <option value="easy">{t('ebEasy')}</option>
+                <option value="medium">{t('ebMedium')}</option>
+                <option value="difficult">{t('ebDifficult')}</option>
+                <option value="extreme">{t('ebExtreme')}</option>
               </select>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}><input type="checkbox" checked={useDistribution} onChange={e=>setUseDistribution(e.target.checked)} style={{ width: 'auto' }} /> Use distribution</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}><input type="checkbox" checked={useDistribution} onChange={e=>setUseDistribution(e.target.checked)} style={{ width: 'auto' }} /> {t('ebUseDistribution')}</label>
             </div>
           </div>
 
           <div>
-            <label>Number of questions:</label>
+            <label>{t('ebNumQuestions')}</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button type="button" className="btn" onClick={decrementNum}>-</button>
               <input type="number" min={1} max={50} value={num} onChange={e=>setNum(Number(e.target.value))} style={{ width: 90, minWidth: 60 }} />
@@ -202,13 +204,13 @@ export default function ExamBuilder(){
 
         {useDistribution && (
           <div style={{ marginTop: 8, padding: 12, border: '1px dashed var(--border)', borderRadius: 6 }}>
-            <div className="small" style={{ marginBottom: 8 }}>Difficulty distribution (auto-adjusts to sum to 100%)</div>
+            <div className="small" style={{ marginBottom: 8 }}>{t('ebDistHint')}</div>
             <div className="exam-dist-row">
               {[
-                { label: 'Level 1–2', val: dist12, set: setDist12, idx: 0 },
-                { label: 'Level 3', val: dist3, set: setDist3, idx: 1 },
-                { label: 'Level 4', val: dist4, set: setDist4, idx: 2 },
-                { label: 'Level 5', val: dist5, set: setDist5, idx: 3 },
+                { label: t('ebLevel12'), val: dist12, set: setDist12, idx: 0 },
+                { label: t('ebLevel3'), val: dist3, set: setDist3, idx: 1 },
+                { label: t('ebLevel4'), val: dist4, set: setDist4, idx: 2 },
+                { label: t('ebLevel5'), val: dist5, set: setDist5, idx: 3 },
               ].map(({ label, val, set, idx }) => {
                 const allSetters = [setDist12, setDist3, setDist4, setDist5]
                 const allVals = [dist12, dist3, dist4, dist5]
@@ -243,7 +245,7 @@ export default function ExamBuilder(){
               })}
             </div>
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span className="small" style={{ fontWeight: 700 }}>Total: {dist12 + dist3 + dist4 + dist5}%</span>
+              <span className="small" style={{ fontWeight: 700 }}>{t('ebTotal')} {dist12 + dist3 + dist4 + dist5}%</span>
               {dist12 + dist3 + dist4 + dist5 === 100
                 ? <span className="badge badge-success" style={{ fontSize: '0.78em' }}>✓</span>
                 : <span className="badge badge-danger" style={{ fontSize: '0.78em' }}>≠ 100%</span>}
@@ -254,17 +256,17 @@ export default function ExamBuilder(){
         {selectionMode === 'manual' && (
           <div style={{ marginTop: 12 }}>
             <div style={{ marginBottom: 8 }}>
-              <span className="small">Select questions to include in exam. Shows approved questions matching specialty + difficulty filters.</span>
+              <span className="small">{t('ebSelectQHint')}</span>
             </div>
             <div style={{ maxHeight: 320, overflow: 'auto', border: '1px solid var(--border)', borderRadius: 8, padding: 8 }}>
               {availableQuestions.length > 0 && (
                 <div className="exam-q-grid" style={{ borderBottom: '1px solid var(--border)', fontWeight: 700 }}>
-                  <div>Select</div>
-                  <div>Question</div>
-                  <div className="exam-q-diff-col">Difficulty</div>
+                  <div>{t('ebSelect')}</div>
+                  <div>{t('ebQuestion')}</div>
+                  <div className="exam-q-diff-col">{t('ebDifficulty')}</div>
                 </div>
               )}
-              {availableQuestions.length === 0 && <div className="small">No questions loaded. Click "Load questions".</div>}
+              {availableQuestions.length === 0 && <div className="small">{t('ebNoQuestions')}</div>}
               {[...availableQuestions]
                 .sort((a, b) => Number(selectedQuestions.some(x => String(x) === String(b.id))) - Number(selectedQuestions.some(x => String(x) === String(a.id))))
                 .map((q, index) => (
@@ -295,7 +297,7 @@ export default function ExamBuilder(){
                     <span className="small">#{index + 1}</span>
                   </label>
                   <div>
-                    <div style={{ fontWeight: 700 }}>{q.title} {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>Selected</span>}</div>
+                    <div style={{ fontWeight: 700 }}>{q.title} {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>{t('ebSelected')}</span>}</div>
                     <div className="small">{q.stem}</div>
                   </div>
                   <div className="exam-q-diff-col small" style={{ fontWeight: 700 }}>{q.difficulty}</div>
@@ -303,11 +305,11 @@ export default function ExamBuilder(){
                 )})()
               ))}
             </div>
-            <div className="small" style={{ marginTop: 8 }}>Selected: {selectedQuestions.length} / {num}</div>
+            <div className="small" style={{ marginTop: 8 }}>{t('ebSelected')}: {selectedQuestions.length} / {num}</div>
           </div>
         )}
 
-        <div style={{ marginTop: 12 }}><button className="btn btn-primary">Create Exam</button></div>
+        <div style={{ marginTop: 12 }}><button className="btn btn-primary">{t('ebCreateExamBtn')}</button></div>
       </form>
       <div style={{ marginTop: 12 }}>{msg && <div style={{ padding: 8, backgroundColor: msg.includes('failed') || msg.includes('Please') ? '#ffebee' : '#e8f5e9', borderRadius: 4, color: msg.includes('failed') || msg.includes('Please') ? '#c62828' : '#2e7d32' }}>{msg}</div>}</div>
       <div style={{ marginTop: 12 }}>
@@ -315,7 +317,7 @@ export default function ExamBuilder(){
           <div key={q.id} className="card">
             <strong>{q.title}</strong>
             <div>{q.stem}</div>
-            <div style={{ marginTop: 6 }}><em>Difficulty {q.difficulty}</em></div>
+            <div style={{ marginTop: 6 }}><em>{t('ebDifficulty')} {q.difficulty}</em></div>
           </div>
         ))}
       </div>

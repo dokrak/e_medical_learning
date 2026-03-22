@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api, { imgUrl } from '../api'
+import { useLang } from '../LangContext'
 
 export default function ExamTake(){
   const { id } = useParams()
@@ -10,6 +11,7 @@ export default function ExamTake(){
   const [msg, setMsg] = useState('')
   const [unansweredIds, setUnansweredIds] = useState([])
   const questionRefs = useRef({})
+  const { t } = useLang()
 
   useEffect(()=>{ load() }, [id])
 
@@ -38,7 +40,7 @@ export default function ExamTake(){
       setExam(prepareExamSession(r.data))
     }catch(err){
       // fallback to listing exams and find locally
-      try{ const r2 = await api.get('/exams'); const ex = r2.data.find(x=>x.id===id); setExam(prepareExamSession(ex)) }catch(e){ setMsg('โหลดข้อสอบไม่สำเร็จ') }
+      try{ const r2 = await api.get('/exams'); const ex = r2.data.find(x=>x.id===id); setExam(prepareExamSession(ex)) }catch(e){ setMsg(t('etLoadFailed')) }
     }
   }
 
@@ -65,8 +67,8 @@ export default function ExamTake(){
       setUnansweredIds(unanswered.map(q => q.id))
       const nums = unanswered.map(q => exam.questions.indexOf(q) + 1)
       const preview = nums.slice(0, 12).join(', ')
-      const more = nums.length > 12 ? ` และอีก ${nums.length - 12} ข้อ` : ''
-      setMsg(`กรุณาตอบให้ครบทุกข้อก่อนส่ง — ยังไม่ได้ตอบ ${unanswered.length} ข้อ: ข้อที่ ${preview}${more}`)
+      const more = nums.length > 12 ? t('etAndMore').replace('{0}', nums.length - 12) : ''
+      setMsg(t('etUnanswered').replace('{0}', unanswered.length).replace('{1}', preview) + more)
       scrollToQuestion(unanswered[0].id)
       return
     }
@@ -79,29 +81,29 @@ export default function ExamTake(){
     try{
       const r = await api.post(`/student-exams/${exam.id}/submit`, payload)
       navigate(`/exam-result/${r.data.resultId}`)
-    }catch(err){ setMsg('ส่งข้อสอบไม่สำเร็จ') }
+    }catch(err){ setMsg(t('etSubmitFailed')) }
   }
 
-  if (!exam) return <div className="card container">กำลังโหลด...</div>
+  if (!exam) return <div className="card container">{t('etLoading')}</div>
 
   return (
     <div className="card container">
       <h3>{exam.title}</h3>
       {exam.specialty && <div style={{ color: '#666', marginBottom: 8 }}>{exam.specialty.name}</div>}
-      {exam.difficultyLevel && <div className="small" style={{ marginBottom: 6 }}>ระดับความยาก: <strong>{exam.difficultyLevel}</strong></div>}
-      {exam.selectionMode && <div className="small" style={{ marginBottom: 6 }}>รูปแบบการเลือกข้อสอบ: <strong>{exam.selectionMode}</strong></div>}
+      {exam.difficultyLevel && <div className="small" style={{ marginBottom: 6 }}>{t('etDifficulty')} <strong>{exam.difficultyLevel}</strong></div>}
+      {exam.selectionMode && <div className="small" style={{ marginBottom: 6 }}>{t('etSelectionMode')} <strong>{exam.selectionMode}</strong></div>}
       <div className="small" style={{ marginBottom: 12, padding: 8, background: 'rgba(21,128,61,0.08)', borderRadius: 6, border: '1px solid rgba(21,128,61,0.2)' }}>
-        <strong>✓ คะแนนผ่านขั้นต่ำ:</strong> {exam.passingScore || 50}%
+        <strong>{t('etPassingScore')}</strong> {exam.passingScore || 50}%
       </div>
       {exam.questions.length === 0 && (
         <div style={{ padding: 16, background: '#fef3cd', border: '1px solid #ffc107', borderRadius: 8, marginBottom: 12 }}>
-          <strong>⚠ ข้อสอบนี้ยังไม่มีคำถาม</strong> — กรุณาติดต่อผู้ดูแลระบบเพื่อเพิ่มคำถามในข้อสอบ
+          <strong>{t('etNoQuestions')}</strong>
         </div>
       )}
       <form onSubmit={submit}>
         {exam.questions.map((q, index) => (
           <div key={q.id} ref={el => { questionRefs.current[q.id] = el }} style={{ marginBottom: 12, padding: 12, borderRadius: 8, border: unansweredIds.includes(q.id) ? '2px solid #dc2626' : '2px solid transparent', background: unansweredIds.includes(q.id) ? 'rgba(220,38,38,0.04)' : 'transparent', transition: 'all 0.3s' }}>
-            <div><span className="question-order-badge">ข้อที่ {index + 1}</span></div>
+            <div><span className="question-order-badge">{t('etQuestionNum').replace('{0}', index + 1)}</span></div>
             <div style={{ marginTop: 2 }}><strong>{q.title}</strong></div>
             {q.stem && q.stem !== q.title && <div style={{ marginTop: 4 }}>{q.stem}</div>}
             {q.body && <div style={{ marginTop: 4, whiteSpace: 'pre-wrap' }}>{q.body}</div>}
@@ -126,12 +128,12 @@ export default function ExamTake(){
                   ))}
                 </div>
               ) : (
-                <input placeholder="คำตอบของคุณ" value={answers[q.id]||''} onChange={e=>setAnswer(q.id, e.target.value)} />
+                <input placeholder={t('etYourAnswer')} value={answers[q.id]||''} onChange={e=>setAnswer(q.id, e.target.value)} />
               )}
             </div>
           </div>
         ))}
-        <div><button className="btn btn-primary">ส่งข้อสอบ</button></div>
+        <div><button className="btn btn-primary">{t('etSubmit')}</button></div>
       </form>
       {msg && <div style={{ padding: 12, marginBottom: 12, borderRadius: 8, background: 'rgba(220,38,38,0.08)', border: '1px solid #dc2626', color: '#dc2626', fontWeight: 600 }}>{msg}</div>}
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api'
+import { useLang } from '../LangContext'
 
 export default function ExamResultsDashboard(){
   const [allResults, setAllResults] = useState([])
@@ -9,6 +10,7 @@ export default function ExamResultsDashboard(){
   const [selectedResult, setSelectedResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
+  const { t } = useLang()
 
   useEffect(()=>{ loadAllResults() }, [])
 
@@ -18,7 +20,7 @@ export default function ExamResultsDashboard(){
       const r = await api.get('/all-student-exams')
       setAllResults(r.data)
     } catch(err){
-      setMsg('Failed to load results')
+      setMsg(t('erdLoadFailed'))
     } finally {
       setLoading(false)
     }
@@ -31,7 +33,7 @@ export default function ExamResultsDashboard(){
       setExamResults(r.data)
       setSelectedResult(null)
     } catch(err){
-      setMsg('Failed to load exam results')
+      setMsg(t('erdLoadFailed'))
     } finally {
       setLoading(false)
     }
@@ -59,21 +61,21 @@ export default function ExamResultsDashboard(){
 
   return (
     <div className="card container">
-      <h3>Exam Results Dashboard</h3>
+      <h3>{t('erdTitle')}</h3>
       {msg && <div className="msg error" style={{ marginBottom: 12 }}>{msg}</div>}
-      {loading && <div style={{ marginBottom: 12 }}>Loading...</div>}
+      {loading && <div style={{ marginBottom: 12 }}>{t('loading')}</div>}
 
       <div className="panel" style={{ marginBottom: 20 }}>
-        <h4>Overall Statistics</h4>
+        <h4>{t('erdOverallStats')}</h4>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          <div><strong>Total Exams Taken:</strong> {stats.total}</div>
-          <div><strong>Average Score:</strong> {Math.round(stats.avgScore)}%</div>
-          <div><strong>Pass Rate (≥70%):</strong> {stats.total > 0 ? Math.round((stats.passed / stats.total) * 100) : 0}%</div>
+          <div><strong>{t('erdTotalExams')}</strong> {stats.total}</div>
+          <div><strong>{t('erdAvgScore')}</strong> {Math.round(stats.avgScore)}%</div>
+          <div><strong>{t('erdPassRate')}</strong> {stats.total > 0 ? Math.round((stats.passed / stats.total) * 100) : 0}%</div>
         </div>
       </div>
 
       <div style={{ marginBottom: 20 }}>
-        <h4>Select Exam to View Details</h4>
+        <h4>{t('erdSelectExam')}</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
           {exams.map(([examId, examTitle]) => (
             <button 
@@ -90,27 +92,27 @@ export default function ExamResultsDashboard(){
 
       {selectedExam && examStats && (
         <div style={{ marginBottom: 20, padding: 12, background: '#f0f9ff', borderRadius: 6 }}>
-          <h4>Exam Statistics</h4>
+          <h4>{t('erdExamStats')}</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-            <div><strong>Students:</strong> {examStats.count}</div>
-            <div><strong>Average Score:</strong> {examStats.avg}%</div>
-            <div><strong>Passed (≥70%):</strong> {examStats.passed}/{examStats.count}</div>
+            <div><strong>{t('erdStudents')}</strong> {examStats.count}</div>
+            <div><strong>{t('erdAvgScore')}</strong> {examStats.avg}%</div>
+            <div><strong>{t('erdPassed')}</strong> {examStats.passed}/{examStats.count}</div>
           </div>
         </div>
       )}
 
       {selectedExam && (
         <div style={{ marginBottom: 20 }}>
-          <h4>Student Results</h4>
+          <h4>{t('erdStudentResults')}</h4>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={{ padding: 8, textAlign: 'left' }}>Student</th>
-                  <th style={{ padding: 8, textAlign: 'center' }}>Score</th>
-                  <th style={{ padding: 8, textAlign: 'center' }}>Correct</th>
-                  <th style={{ padding: 8, textAlign: 'left' }}>Date</th>
-                  <th style={{ padding: 8, textAlign: 'center' }}>Action</th>
+                  <th style={{ padding: 8, textAlign: 'left' }}>{t('erdStudent')}</th>
+                  <th style={{ padding: 8, textAlign: 'center' }}>{t('erdScore')}</th>
+                  <th style={{ padding: 8, textAlign: 'center' }}>{t('erdCorrect')}</th>
+                  <th style={{ padding: 8, textAlign: 'left' }}>{t('erdDate')}</th>
+                  <th style={{ padding: 8, textAlign: 'center' }}>{t('erdAction')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -127,8 +129,8 @@ export default function ExamResultsDashboard(){
                     <td style={{ padding: 8, fontSize: '0.85em' }}>{new Date(result.taken_at).toLocaleDateString()} {new Date(result.taken_at).toLocaleTimeString()}</td>
                     <td style={{ padding: 8, textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                        <button className="btn btn-primary" onClick={()=>setSelectedResult(result)}>View</button>
-                        <Link to={`/student-stats/${result.studentId}`} className="btn btn-ghost">History</Link>
+                        <button className="btn btn-primary" onClick={()=>setSelectedResult(result)}>{t('erdView')}</button>
+                        <Link to={`/student-stats/${result.studentId}`} className="btn btn-ghost">{t('erdHistory')}</Link>
                       </div>
                     </td>
                   </tr>
@@ -142,7 +144,7 @@ export default function ExamResultsDashboard(){
       {selectedResult && (
         <div className="panel panel-warning" style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h4>{selectedResult.studentName}'s Detailed Answers</h4>
+            <h4>{selectedResult.studentName} — {t('erdDetailedAnswers')}</h4>
             <button className="btn btn-ghost" onClick={()=>setSelectedResult(null)}>×</button>
           </div>
           <div className="panel" style={{ marginBottom: 12 }}>
@@ -166,8 +168,8 @@ export default function ExamResultsDashboard(){
                 <div style={{ fontSize: '0.9em', color: '#666', marginTop: 4 }}>{q.stem}</div>
                 {q.choices && q.choices.length > 0 && (
                   <div style={{ marginTop: 8 }}>
-                    <div><strong>Student answered:</strong> {studentAnswer || '(blank)'}</div>
-                    <div><strong>Correct answer:</strong> {q.answer}</div>
+                    <div><strong>{t('erdStudentAnswered')}</strong> {studentAnswer || t('erdBlank')}</div>
+                    <div><strong>{t('erdCorrectAnswerIs')}</strong> {q.answer}</div>
                   </div>
                 )}
               </div>

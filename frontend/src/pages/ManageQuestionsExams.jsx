@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import api, { imgUrl } from '../api'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useLang } from '../LangContext'
 
 export default function ManageQuestionsExams(){
   const location = useLocation()
@@ -18,6 +19,7 @@ export default function ManageQuestionsExams(){
   const [search, setSearch] = useState('')
   const [specialties, setSpecialties] = useState([])
   const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
+  const { t } = useLang()
 
   useEffect(()=>{ loadSpecialties() }, [])
   useEffect(()=>{ loadItems() }, [tab])
@@ -60,7 +62,7 @@ export default function ManageQuestionsExams(){
         setItems(r.data);
         setExamCount(r.data.length);
       }
-    } catch(err){ setMsg('Failed to load: ' + err.message) }
+    } catch(err){ setMsg(t('mqLoadFailed') + ' ' + err.message) }
   }
 
   async function uploadFile(file){
@@ -120,7 +122,7 @@ export default function ManageQuestionsExams(){
       const filtered = qs.filter(q => difficultyMatchForEdit(q))
       setAvailableQuestionsForEdit(filtered)
       setEditSelectedQuestions(editForm.selectedQuestionIds || [])
-    }catch(err){ setMsg('Failed to load questions') }
+    }catch(err){ setMsg(t('mqLoadQFailed')) }
   }
 
   function toggleEditSelect(qid){
@@ -139,7 +141,7 @@ export default function ManageQuestionsExams(){
           const url = await uploadFile(newImageFile);
           images = [...editImages, url];
         } catch(err) {
-          setMsg('Image upload failed: ' + (err?.response?.data?.message || err.message) + ' — Please try selecting a new image.');
+          setMsg(t('mqImgUploadFailed') + ' ' + (err?.response?.data?.message || err.message) + ' — ' + t('mqTryNewImg'));
           return;
         }
       }
@@ -150,13 +152,13 @@ export default function ManageQuestionsExams(){
         if (payload.selectionMode === 'manual') payload.selectedQuestionIds = editSelectedQuestions
         await api.put(`/exams/${editId}`, payload);
       }
-      setMsg('Saved successfully');
+      setMsg(t('mqSaved'));
       setEditId(null);
       setNewImageFile(null);
       setAvailableQuestionsForEdit([])
       setEditSelectedQuestions([])
       loadItems();
-    } catch(err){ setMsg('Save failed: ' + (err.response?.data?.error || err.message)) }
+    } catch(err){ setMsg(t('mqSaveFailed') + ' ' + (err.response?.data?.error || err.message)) }
   }
 
   function deleteImage(idx){
@@ -164,16 +166,16 @@ export default function ManageQuestionsExams(){
   }
 
   async function deleteItem(id){
-    if (!window.confirm('Confirm delete?')) return;
+    if (!window.confirm(t('mqConfirmDelete'))) return;
     try{
       if (tab === 'questions'){
         await api.delete(`/questions/${id}`);
       } else {
         await api.delete(`/exams/${id}`);
       }
-      setMsg('Deleted');
+      setMsg(t('mqDeleted'));
       loadItems();
-    } catch(err){ setMsg('Delete failed: ' + (err.response?.data?.error || err.message)) }
+    } catch(err){ setMsg(t('mqDeleteFailed') + ' ' + (err.response?.data?.error || err.message)) }
   }
 
   function cancelEdit(){
@@ -185,13 +187,13 @@ export default function ManageQuestionsExams(){
 
   function getSpecName(specId) {
     const s = specialties.find(s => s.id === specId)
-    return s ? s.name : 'Unspecified'
+    return s ? s.name : t('mqUnspecified')
   }
   function getSubspecName(specId, subId) {
     const s = specialties.find(s => s.id === specId)
-    if (!s) return 'Unspecified'
+    if (!s) return t('mqUnspecified')
     const sub = (s.subspecialties || []).find(ss => (typeof ss === 'object' ? ss.id : ss) === subId)
-    return sub ? (typeof sub === 'object' ? sub.name : sub) : 'Unspecified'
+    return sub ? (typeof sub === 'object' ? sub.name : sub) : t('mqUnspecified')
   }
 
   const visibleItems = editId
@@ -241,12 +243,12 @@ export default function ManageQuestionsExams(){
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <strong>{item.title}</strong>
-                {tab==='questions' && <span className="small">(Difficulty: {item.difficulty})</span>}
-                {tab==='questions' && item.authorName && <span className="small" style={{ color: '#666' }}>by {item.authorName}</span>}
-                {tab==='questions' && currentUser && item.createdBy === currentUser.id && <span className="badge" style={{ background: 'var(--brand-green)', color: '#fff', padding: '3px 7px', fontSize: '10px' }}>MINE</span>}
-                {tab==='questions' && item.status === 'rejected' && <span className="badge" style={{ background: '#dc3545', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>REJECTED</span>}
-                {tab==='questions' && item.status === 'pending' && <span className="badge" style={{ background: '#ffc107', color: '#333', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>PENDING</span>}
-                {tab==='questions' && item.status === 'approved' && <span className="badge" style={{ background: '#28a745', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>APPROVED</span>}
+                {tab==='questions' && <span className="small">({t('mqDiffLabel')} {item.difficulty})</span>}
+                {tab==='questions' && item.authorName && <span className="small" style={{ color: '#666' }}>{t('mqBy')} {item.authorName}</span>}
+                {tab==='questions' && currentUser && item.createdBy === currentUser.id && <span className="badge" style={{ background: 'var(--brand-green)', color: '#fff', padding: '3px 7px', fontSize: '10px' }}>{t('mqMine')}</span>}
+                {tab==='questions' && item.status === 'rejected' && <span className="badge" style={{ background: '#dc3545', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>{t('mqRejected')}</span>}
+                {tab==='questions' && item.status === 'pending' && <span className="badge" style={{ background: '#ffc107', color: '#333', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>{t('mqPending')}</span>}
+                {tab==='questions' && item.status === 'approved' && <span className="badge" style={{ background: '#28a745', color: 'white', padding: '4px 8px', fontSize: '11px', fontWeight: 600 }}>{t('mqApproved')}</span>}
               </div>
               {tab==='questions' && item.images && item.images.length > 0 && !editId && (
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
@@ -258,29 +260,29 @@ export default function ManageQuestionsExams(){
             </div>
             {tab==='questions' && item.status === 'rejected' && item.moderationFeedback && (
               <div style={{ marginTop: 8, padding: 10, background: '#ffe6e6', border: '2px solid #dc3545', borderRadius: 6 }}>
-                <div style={{ fontWeight: 600, color: '#721c24', marginBottom: 6 }}>⚠ Moderator Feedback:</div>
+                <div style={{ fontWeight: 600, color: '#721c24', marginBottom: 6 }}>{t('mqModFeedback')}</div>
                 <div className="small" style={{ color: '#721c24', lineHeight: 1.5 }}>{item.moderationFeedback}</div>
               </div>
             )}
             {tab==='questions' && item.status === 'rejected' && !editId && (
               <div style={{ marginTop: 8, padding: 10, background: '#f0f0f0', borderRadius: 6 }}>
-                <div className="small" style={{ fontWeight: 600, marginBottom: 8 }}>📋 Question Preview:</div>
-                <div className="small" style={{ marginBottom: 6 }}><strong>Stem:</strong> {item.stem || '(no stem)'}</div>
-                <div className="small" style={{ marginBottom: 6 }}><strong>Details:</strong> {item.body || '(no details)'}</div>
-                <div className="small" style={{ marginBottom: 6 }}><strong>Answer explanation:</strong> {item.answerExplanation || '(no explanation)'}</div>
+                <div className="small" style={{ fontWeight: 600, marginBottom: 8 }}>{t('mqPreview')}</div>
+                <div className="small" style={{ marginBottom: 6 }}><strong>{t('mqStem')}</strong> {item.stem || t('mqNoStem')}</div>
+                <div className="small" style={{ marginBottom: 6 }}><strong>{t('mqDetails')}</strong> {item.body || t('mqNoDetails')}</div>
+                <div className="small" style={{ marginBottom: 6 }}><strong>{t('mqAnswerExpl')}</strong> {item.answerExplanation || t('mqNoExpl')}</div>
                 {item.choices && item.choices.length > 0 && (
                   <div className="small" style={{ marginBottom: 6 }}>
-                    <strong>Choices:</strong>
+                    <strong>{t('mqChoices')}</strong>
                     {item.choices.map((c, i) => (
                       <div key={i} style={{ marginLeft: 12, marginTop: 2, fontSize: '12px' }}>
-                        {String.fromCharCode(65+i)}. {c} {c === item.answer && <span style={{ color: '#28a745', fontWeight: 600 }}>✓ Correct</span>}
+                        {String.fromCharCode(65+i)}. {c} {c === item.answer && <span style={{ color: '#28a745', fontWeight: 600 }}>✓ {t('mqCorrect')}</span>}
                       </div>
                     ))}
                   </div>
                 )}
                 {item.images && item.images.length > 0 && (
                   <div className="small" style={{ marginBottom: 6 }}>
-                    <strong>Images:</strong>
+                    <strong>{t('mqImages')}</strong>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
                       {item.images.map((img, i) => (
                         <img key={i} src={imgUrl(img)} alt={`preview-img-${i}`} style={{ maxHeight: 100, maxWidth: 150, borderRadius: 4, border: '1px solid #ddd' }} />
@@ -289,26 +291,26 @@ export default function ManageQuestionsExams(){
                   </div>
                 )}
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #ddd', display: 'flex', gap: 8 }}>
-                  <button className="btn btn-primary" onClick={()=>startEdit(item)} style={{ flex: 1 }}>✏ Edit & Resubmit</button>
-                  <button className="btn btn-danger" onClick={()=>deleteItem(item.id)} style={{ flex: 1 }}>Delete</button>
+                  <button className="btn btn-primary" onClick={()=>startEdit(item)} style={{ flex: 1 }}>{t('mqEditResubmit')}</button>
+                  <button className="btn btn-danger" onClick={()=>deleteItem(item.id)} style={{ flex: 1 }}>{t('delete')}</button>
                 </div>
               </div>
             )}
             {editId === item.id ? (
               <div style={{ marginTop: 8 }}>
-                <label><strong>Title</strong></label>
-                <input placeholder="Title" value={editForm.title||''} onChange={e=>setEditForm({...editForm, title: e.target.value})} style={{ width: '100%', marginBottom: 6 }} />
+                <label><strong>{t('mqTitle2')}</strong></label>
+                <input placeholder={t('mqTitle2')} value={editForm.title||''} onChange={e=>setEditForm({...editForm, title: e.target.value})} style={{ width: '100%', marginBottom: 6 }} />
                 {tab === 'questions' ? (
                   <>
-                    <label><strong>Question (Stem)</strong></label>
-                    <textarea placeholder="Stem" value={editForm.stem||''} onChange={e=>setEditForm({...editForm, stem: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={2} />
-                    <label><strong>Detail</strong></label>
-                    <textarea placeholder="Body" value={editForm.body||''} onChange={e=>setEditForm({...editForm, body: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={2} />
-                    <label><strong>Correct Answer & Explanation</strong></label>
-                    <textarea placeholder="Answer explanation" value={editForm.answerExplanation||''} onChange={e=>setEditForm({...editForm, answerExplanation: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={3} />
-                    <label><strong>Difficulty (1-5)</strong></label>
-                    <input type="number" min={1} max={5} placeholder="Difficulty" value={editForm.difficulty||3} onChange={e=>setEditForm({...editForm, difficulty: Number(e.target.value)})} style={{ width: '100%', marginBottom: 6 }} />
-                    <label><strong>Choices (A–E)</strong></label>
+                    <label><strong>{t('mqQuestionStem')}</strong></label>
+                    <textarea placeholder={t('mqQuestionStem')} value={editForm.stem||''} onChange={e=>setEditForm({...editForm, stem: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={2} />
+                    <label><strong>{t('mqDetail')}</strong></label>
+                    <textarea placeholder={t('mqDetail')} value={editForm.body||''} onChange={e=>setEditForm({...editForm, body: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={2} />
+                    <label><strong>{t('mqAnswerExplLabel')}</strong></label>
+                    <textarea placeholder={t('mqAnswerExplLabel')} value={editForm.answerExplanation||''} onChange={e=>setEditForm({...editForm, answerExplanation: e.target.value})} style={{ width: '100%', marginBottom: 6 }} rows={3} />
+                    <label><strong>{t('mqDifficulty')}</strong></label>
+                    <input type="number" min={1} max={5} placeholder={t('mqDifficulty')} value={editForm.difficulty||3} onChange={e=>setEditForm({...editForm, difficulty: Number(e.target.value)})} style={{ width: '100%', marginBottom: 6 }} />
+                    <label><strong>{t('mqChoicesLabel')}</strong></label>
                     {['A','B','C','D','E'].map((label, i) => {
                       const choicesList = editForm.choices || []
                       const isCorrect = choicesList[i] && choicesList[i] === editForm.answer
@@ -337,33 +339,33 @@ export default function ManageQuestionsExams(){
                               onChange={() => setEditForm({ ...editForm, answer: choicesList[i] || '' })}
                             />
                             <span style={{ fontSize: 12, color: isCorrect ? '#28a745' : '#888' }}>
-                              {isCorrect ? '✓ Correct' : 'Correct'}
+                              {isCorrect ? '✓ ' + t('mqCorrect') : t('mqCorrect')}
                             </span>
                           </label>
                         </div>
                       )
                     })}
-                    <label><strong>Correct Answer</strong></label>
-                    <input placeholder="Answer" value={editForm.answer||''} onChange={e=>setEditForm({...editForm, answer: e.target.value})} style={{ width: '100%', marginBottom: 6 }} />
-                    <label><strong>Specialty</strong></label>
+                    <label><strong>{t('mqCorrectAnswer')}</strong></label>
+                    <input placeholder={t('mqCorrectAnswer')} value={editForm.answer||''} onChange={e=>setEditForm({...editForm, answer: e.target.value})} style={{ width: '100%', marginBottom: 6 }} />
+                    <label><strong>{t('mqSpecialty')}</strong></label>
                     <select value={editForm.specialtyId||''} onChange={e=>{ setEditForm({...editForm, specialtyId: e.target.value}); }} style={{ width: '100%', marginBottom: 6 }}>
-                      <option value="">-- select specialty --</option>
+                      <option value="">{t('mqSelectSpec')}</option>
                       {specialties.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
-                    <label><strong>Subspecialty</strong></label>
+                    <label><strong>{t('mqSubspecialty')}</strong></label>
                     <select value={editForm.subspecialtyId||''} onChange={e=>setEditForm({...editForm, subspecialtyId: e.target.value})} style={{ width: '100%', marginBottom: 6 }}>
-                      <option value="">-- select subspecialty --</option>
+                      <option value="">{t('mqSelectSubspec')}</option>
                       {(specialties.find(s=>s.id===editForm.specialtyId)?.subspecialties||[]).map((ss, i) => { const val = typeof ss === 'object' ? ss.id : ss; const label = typeof ss === 'object' ? ss.name : ss; return <option key={val || i} value={val}>{label}</option>; })}
                     </select>
                     <div style={{ marginBottom: 6, padding: 8 }} className="panel">
-                      <label><strong>Images</strong></label>
+                      <label><strong>{t('mqImages')}</strong></label>
                       {editImages.length > 0 && (
                         <div style={{ marginTop: 8 }}>
                           {editImages.map((img, i) => (
                             <div key={i} style={{ marginBottom: 8 }}>
                               <img src={imgUrl(img)} alt={`edit-img-${i}`} className="q-image" style={{ maxHeight: 150 }} />
                               <div style={{ marginTop: 4 }}>
-                                <button className="btn btn-danger small" onClick={()=>deleteImage(i)}>Delete image</button>
+                                <button className="btn btn-danger small" onClick={()=>deleteImage(i)}>{t('mqDeleteImage')}</button>
                               </div>
                             </div>
                           ))}
@@ -371,22 +373,22 @@ export default function ManageQuestionsExams(){
                       )}
                       <div style={{ marginTop: 8 }}>
                         <input type="file" accept="image/*" onChange={e=>setNewImageFile(e.target.files[0])} />
-                        {newImageFile && <div style={{ marginTop: 4 }} className="small"><span className="badge badge-success">✓</span> New image selected: {newImageFile.name}</div>}
+                        {newImageFile && <div style={{ marginTop: 4 }} className="small"><span className="badge badge-success">✓</span> {t('mqNewImgSelected')} {newImageFile.name}</div>}
                       </div>
                     </div>
                   </>
                 ) : (
                   <>
                     <div style={{ marginBottom: 8 }}>
-                      <label>Selection mode:</label>
+                      <label>{t('mqSelectionMode')}</label>
                       <div style={{ display: 'flex', gap: 12 }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="radio" name="edit-mode" value="random" checked={(editForm.selectionMode||'random')==='random'} onChange={e=>setEditForm({...editForm, selectionMode: 'random'})} /> Random</label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="radio" name="edit-mode" value="manual" checked={(editForm.selectionMode||'random')==='manual'} onChange={e=>setEditForm({...editForm, selectionMode: 'manual'})} /> Manual</label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="radio" name="edit-mode" value="random" checked={(editForm.selectionMode||'random')==='random'} onChange={e=>setEditForm({...editForm, selectionMode: 'random'})} /> {t('mqRandom')}</label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="radio" name="edit-mode" value="manual" checked={(editForm.selectionMode||'random')==='manual'} onChange={e=>setEditForm({...editForm, selectionMode: 'manual'})} /> {t('mqManualMode')}</label>
                       </div>
                     </div>
 
                     <div style={{ marginBottom: 8 }}>
-                      <label>Difficulty:</label>
+                      <label>{t('mqDiffLabel')}</label>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         <select value={editForm.difficultyLevel||'medium'} onChange={e=>setEditForm({...editForm, difficultyLevel: e.target.value})} style={{ width: '70%' }} disabled={!!editForm.difficultyDistribution}>
                           <option value="easy">Easy (1-2)</option>
@@ -396,18 +398,18 @@ export default function ManageQuestionsExams(){
                         </select>
                         <label style={{ display: 'flex', alignItems: 'center' }}>
                           <input type="checkbox" checked={!!editForm.difficultyDistribution} onChange={e=>setEditForm({...editForm, difficultyDistribution: e.target.checked ? (editForm.difficultyDistribution || { '1-2':25, '3':25, '4':25, '5':25 }) : null })} />
-                          <span style={{ marginLeft: 6 }}>Use distribution</span>
+                          <span style={{ marginLeft: 6 }}>{t('mqUseDistribution')}</span>
                         </label>
                       </div>
                     </div>
 
-                    <input type="number" placeholder="Num questions" value={editForm.numQuestions||10} onChange={e=>setEditForm({...editForm, numQuestions: Number(e.target.value)})} style={{ width: '100%', marginBottom: 6 }} />
+                    <input type="number" placeholder={t('mqNumQuestions')} value={editForm.numQuestions||10} onChange={e=>setEditForm({...editForm, numQuestions: Number(e.target.value)})} style={{ width: '100%', marginBottom: 6 }} />
                     <select value={editForm.specialtyId||''} onChange={e=>setEditForm({...editForm, specialtyId: e.target.value})} style={{ width: '100%', marginBottom: 6 }}>
-                      <option value="">-- select specialty --</option>
+                      <option value="">{t('mqSelectSpec')}</option>
                       {specialties.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                     <select value={editForm.subspecialtyId||''} onChange={e=>setEditForm({...editForm, subspecialtyId: e.target.value})} style={{ width: '100%', marginBottom: 6 }}>
-                      <option value="">-- select subspecialty --</option>
+                      <option value="">{t('mqSelectSubspec')}</option>
                       {(specialties.find(s=>s.id===editForm.specialtyId)?.subspecialties||[]).map((ss, i) => { const val = typeof ss === 'object' ? ss.id : ss; const label = typeof ss === 'object' ? ss.name : ss; return <option key={val || i} value={val}>{label}</option>; })}
                     </select>
 
@@ -423,7 +425,7 @@ export default function ManageQuestionsExams(){
                       const total = boxes.reduce((s, b) => s + getVal(b), 0)
                       return (
                       <div style={{ marginTop: 8, padding: 12, border: '1px dashed var(--border)', borderRadius: 6 }}>
-                        <div className="small" style={{ marginBottom: 8 }}>Distribution (auto-adjusts to sum to 100%)</div>
+                        <div className="small" style={{ marginBottom: 8 }}>{t('mqDistAutoAdj')}</div>
                         <div className="exam-dist-row">
                           {boxes.map((b, idx) => {
                             const val = getVal(b)
@@ -460,7 +462,7 @@ export default function ManageQuestionsExams(){
                           })}
                         </div>
                         <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span className="small" style={{ fontWeight: 700 }}>Total: {total}%</span>
+                          <span className="small" style={{ fontWeight: 700 }}>{t('mqTotal')} {total}%</span>
                           {total === 100
                             ? <span className="badge badge-success" style={{ fontSize: '0.78em' }}>✓</span>
                             : <span className="badge badge-danger" style={{ fontSize: '0.78em' }}>≠ 100%</span>}
@@ -472,8 +474,8 @@ export default function ManageQuestionsExams(){
                     { (editForm.selectionMode || 'random') === 'manual' && (
                       <div style={{ marginTop: 8, padding: 8, border: '1px dashed var(--border)', borderRadius: 6 }}>
                         <div style={{ marginBottom: 6 }}>
-                          <button type="button" className="btn" onClick={loadQuestionsForEdit}>Load questions</button>
-                          <span className="small" style={{ marginLeft: 8 }}>Choose questions to include in this exam</span>
+                          <button type="button" className="btn" onClick={loadQuestionsForEdit}>{t('mqLoadQuestions')}</button>
+                          <span className="small" style={{ marginLeft: 8 }}>{t('mqChooseQuestions')}</span>
                         </div>
                         <div style={{ maxHeight: 220, overflow: 'auto' }}>
                           {[...availableQuestionsForEdit]
@@ -484,7 +486,7 @@ export default function ManageQuestionsExams(){
                             <div key={q.id} style={{ display: 'flex', gap: 8, padding: 6, borderBottom: '1px solid var(--border)', borderLeft: isSelected ? '6px solid var(--brand-green)' : '4px solid transparent', background: isSelected ? 'linear-gradient(90deg, var(--brand-light-green), var(--surface-2))' : 'transparent', boxShadow: isSelected ? '0 8px 20px rgba(21,128,61,0.10)' : 'none', borderRadius: isSelected ? 8 : 0 }}>
                               <input type="checkbox" checked={isSelected} onChange={()=>toggleEditSelect(q.id)} />
                               <div>
-                                <div style={{ fontWeight: 700 }}>{q.title} <span className="small">(diff {q.difficulty})</span> {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>Selected</span>}</div>
+                                <div style={{ fontWeight: 700 }}>{q.title} <span className="small">({t('mqDiff')} {q.difficulty})</span> {isSelected && <span className="badge" style={{ marginLeft: 6, background: 'var(--brand-green)', color: '#fff', border: '1px solid var(--brand-green)' }}>{t('mqSelectedBadge')}</span>}</div>
                                 <div className="small">{q.stem}</div>
                                 {q.images && q.images.length > 0 && (
                                   <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
@@ -497,13 +499,13 @@ export default function ManageQuestionsExams(){
                             </div>
                           )})}
                         </div>
-                        <div className="small" style={{ marginTop: 6 }}>Selected: {editSelectedQuestions.length}</div>
+                        <div className="small" style={{ marginTop: 6 }}>{t('mqSelectedCount')} {editSelectedQuestions.length}</div>
                       </div>
                     )}
                   </>
                 )}
-                <button className="btn btn-primary" onClick={saveEdit} style={{ marginRight: 6 }}>Save</button>
-                <button className="btn btn-ghost" onClick={cancelEdit}>Cancel</button>
+                <button className="btn btn-primary" onClick={saveEdit} style={{ marginRight: 6 }}>{t('save')}</button>
+                <button className="btn btn-ghost" onClick={cancelEdit}>{t('cancel')}</button>
               </div>
             ) : (
               <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
@@ -512,14 +514,14 @@ export default function ManageQuestionsExams(){
                     {!(tab==='questions' && item.status === 'rejected') && (
                       <>
                         <button className="btn" onClick={()=>startEdit(item)} style={{ flex: 1, fontWeight: item.status === 'rejected' ? 600 : 'normal', background: item.status === 'rejected' ? '#ffc107' : undefined, color: item.status === 'rejected' ? '#222' : undefined }}>
-                          {item.status === 'rejected' ? '✏ Edit & Resubmit' : 'Edit'}
+                          {item.status === 'rejected' ? t('mqEditResubmit') : t('mqEdit')}
                         </button>
-                        <button className="btn btn-danger" onClick={()=>deleteItem(item.id)} style={{ flex: 1 }}>Delete</button>
+                        <button className="btn btn-danger" onClick={()=>deleteItem(item.id)} style={{ flex: 1 }}>{t('delete')}</button>
                       </>
                     )}
                   </>
                 ) : (
-                  <div className="small" style={{ color: '#999', fontStyle: 'italic' }}>You can only edit/delete your own items</div>
+                  <div className="small" style={{ color: '#999', fontStyle: 'italic' }}>{t('mqOwnOnly')}</div>
                 )}
               </div>
             )}
@@ -529,16 +531,16 @@ export default function ManageQuestionsExams(){
 
   return (
     <div className="card container">
-      <h3>Manage questions & exams</h3>
+      <h3>{t('mqTitle')}</h3>
       <div style={{ marginBottom: 12 }}>
-        <button onClick={()=>setTab('questions')} style={{ fontWeight: tab==='questions'?'bold':'normal' }}>Questions ({tab === 'questions' ? items.length : questionCount})</button>
-        <button onClick={()=>setTab('exams')} style={{ marginLeft: 8, fontWeight: tab==='exams'?'bold':'normal' }}>Exams ({tab === 'exams' ? items.length : examCount})</button>
+        <button onClick={()=>setTab('questions')} style={{ fontWeight: tab==='questions'?'bold':'normal' }}>{t('mqQuestions')} ({tab === 'questions' ? items.length : questionCount})</button>
+        <button onClick={()=>setTab('exams')} style={{ marginLeft: 8, fontWeight: tab==='exams'?'bold':'normal' }}>{t('mqExams')} ({tab === 'exams' ? items.length : examCount})</button>
       </div>
       {!editId && (
         <div style={{ marginBottom: 12 }}>
           <input
             className="search-box"
-            placeholder={tab === 'questions' ? 'Search questions by title, content, author, specialty...' : 'Search exams by title, specialty, mode...'}
+            placeholder={tab === 'questions' ? t('mqSearchQ') : t('mqSearchE')}
             value={search}
             onChange={e=>setSearch(e.target.value)}
           />
@@ -584,12 +586,12 @@ export default function ManageQuestionsExams(){
                 )}
               </div>
             ))}
-            {visibleItems.length === 0 && <div className="small">No items found</div>}
+            {visibleItems.length === 0 && <div className="small">{t('mqNoItems')}</div>}
           </>
         ) : (
           <>
             {visibleItems.map(item => renderItemCard(item))}
-            {visibleItems.length === 0 && <div className="small">No items found</div>}
+            {visibleItems.length === 0 && <div className="small">{t('mqNoItems')}</div>}
           </>
         )}
       </div>

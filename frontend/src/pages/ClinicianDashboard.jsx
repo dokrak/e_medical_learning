@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api'
+import { useLang } from '../LangContext'
 
 export default function ClinicianDashboard(){
   const [allResults, setAllResults] = useState([])
@@ -11,6 +12,7 @@ export default function ClinicianDashboard(){
   const [msg, setMsg] = useState('')
   const [viewMode, setViewMode] = useState('overview') // overview, student-detail, exam-analysis
   const [selectedExam, setSelectedExam] = useState(null)
+  const { t } = useLang()
 
   useEffect(() => { loadAllData() }, [])
 
@@ -30,7 +32,7 @@ export default function ClinicianDashboard(){
       }))
       setStudents(uniqueStudents)
     } catch(err) {
-      setMsg('Failed to load exam results: ' + err.message)
+      setMsg(t('cdLoadFailed') + ' ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -42,7 +44,7 @@ export default function ClinicianDashboard(){
       const r = await api.get(`/student-stats/${studentId}`)
       setStudentDetails(r.data)
     } catch(err) {
-      setMsg('Failed to load student details: ' + err.message)
+      setMsg(t('cdLoadStudentFailed') + ' ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -87,8 +89,8 @@ export default function ClinicianDashboard(){
   return (
     <div className="card container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h2>📊 Clinician Dashboard — Exam Analytics</h2>
-        <Link to="/manage" className="btn btn-ghost">Back to Manage</Link>
+        <h2>{t('cdTitle')}</h2>
+        <Link to="/manage" className="btn btn-ghost">{t('cdBackToManage')}</Link>
       </div>
 
       {msg && <div className="msg error" style={{ marginBottom: 12 }}>{msg}</div>}
@@ -99,63 +101,63 @@ export default function ClinicianDashboard(){
           className={`btn ${viewMode === 'overview' ? 'btn-primary' : 'btn-ghost'}`}
           onClick={() => { setViewMode('overview'); setSelectedStudent(null); setSelectedExam(null) }}
         >
-          Overall Stats
+          {t('cdOverallStats')}
         </button>
         <button 
           className={`btn ${viewMode === 'student-detail' ? 'btn-primary' : 'btn-ghost'}`}
           onClick={() => setViewMode('student-detail')}
         >
-          Student Performance
+          {t('cdStudentPerf')}
         </button>
         <button 
           className={`btn ${viewMode === 'exam-analysis' ? 'btn-primary' : 'btn-ghost'}`}
           onClick={() => setViewMode('exam-analysis')}
         >
-          Exam Analysis
+          {t('cdExamAnalysis')}
         </button>
       </div>
 
-      {loading && <div style={{ marginBottom: 12 }}>Loading data...</div>}
+      {loading && <div style={{ marginBottom: 12 }}>{t('cdLoadingData')}</div>}
 
       {/* OVERVIEW TAB */}
       {viewMode === 'overview' && (
         <div>
-          <h3 style={{ marginBottom: 16 }}>Platform-Wide Statistics</h3>
+          <h3 style={{ marginBottom: 16 }}>{t('cdPlatformStats')}</h3>
           
           {/* Key Metrics */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 24 }}>
             <div style={{ padding: 16, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 8, borderLeft: '4px solid var(--brand-green)' }}>
-              <div className="small">Total Exam Attempts</div>
+              <div className="small">{t('cdTotalAttempts')}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>
                 {overallStats.totalAttempts}
               </div>
             </div>
             <div style={{ padding: 16, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 8, borderLeft: '4px solid var(--brand-green)' }}>
-              <div className="small">Unique Students</div>
+              <div className="small">{t('cdUniqueStudents')}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>
                 {students.length}
               </div>
             </div>
             <div style={{ padding: 16, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 8, borderLeft: '4px solid var(--brand-green)' }}>
-              <div className="small">Average Score</div>
+              <div className="small">{t('cdAvgScore')}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>
                 {overallStats.avgScore}%
               </div>
             </div>
             <div style={{ padding: 16, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 8, borderLeft: '4px solid var(--brand-green)' }}>
-              <div className="small">Pass Rate (≥70%)</div>
+              <div className="small">{t('cdPassRate')}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>
                 {overallStats.passRate}%
               </div>
             </div>
             <div style={{ padding: 16, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 8, borderLeft: '4px solid var(--brand-green)' }}>
-              <div className="small">Highest Score</div>
+              <div className="small">{t('cdHighestScore')}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>
                 {overallStats.highestScore}%
               </div>
             </div>
             <div style={{ padding: 16, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 8, borderLeft: '4px solid var(--brand-green)' }}>
-              <div className="small">Lowest Score</div>
+              <div className="small">{t('cdLowestScore')}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>
                 {overallStats.lowestScore}%
               </div>
@@ -164,7 +166,7 @@ export default function ClinicianDashboard(){
 
           {/* Score Distribution */}
           <div style={{ marginBottom: 24, padding: 16, background: '#f0fdf7', borderRadius: 8, border: '1px solid var(--border)' }}>
-            <h4>Score Distribution</h4>
+            <h4>{t('cdScoreDist')}</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
               {[
                 { range: '90-100%', color: '#15803d', count: allResults.filter(r => r.score >= 90).length },
@@ -185,11 +187,11 @@ export default function ClinicianDashboard(){
 
           {/* Passing performance by grade */}
           <div style={{ padding: 16, background: '#f0fdf7', borderRadius: 8, border: '1px solid var(--border)' }}>
-            <h4>Passing Performance</h4>
+            <h4>{t('cdPassPerf')}</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
               <div>
-                <div><strong>Passed:</strong> {overallStats.passedCount} / {overallStats.totalAttempts}</div>
-                <div><strong>Pass Rate:</strong> {overallStats.passRate}%</div>
+                <div><strong>{t('cdPassedOf')}</strong> {overallStats.passedCount} / {overallStats.totalAttempts}</div>
+                <div><strong>{t('cdPassRateLabel')}</strong> {overallStats.passRate}%</div>
               </div>
               <div style={{ height: 30, background: '#e5e7eb', borderRadius: 4, overflow: 'hidden' }}>
                 <div 
@@ -209,11 +211,11 @@ export default function ClinicianDashboard(){
       {/* STUDENT DETAIL TAB */}
       {viewMode === 'student-detail' && (
         <div>
-          <h3 style={{ marginBottom: 16 }}>Student Performance Trends</h3>
+          <h3 style={{ marginBottom: 16 }}>{t('cdStudentTrends')}</h3>
           
           {/* Student selector */}
           <div style={{ marginBottom: 20 }}>
-            <label>Select Student:</label>
+            <label>{t('cdSelectStudent')}</label>
             <select 
               value={selectedStudent?.id || ''}
               onChange={(e) => {
@@ -229,7 +231,7 @@ export default function ClinicianDashboard(){
               }}
               style={{ marginTop: 8 }}
             >
-              <option value="">-- Choose a student --</option>
+              <option value="">{t('cdChooseStudent')}</option>
               {students.map(s => (
                 <option key={s.id} value={s.id}>{s.name} ({s.email})</option>
               ))}
@@ -247,25 +249,25 @@ export default function ClinicianDashboard(){
               {/* Performance Summary */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
                 <div style={{ padding: 12, background: '#fff', border: '1px solid var(--border)', borderRadius: 6 }}>
-                  <div className="small">Exams Taken</div>
+                  <div className="small">{t('cdExamsTaken')}</div>
                   <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--brand-green)' }}>
                     {studentDetails.attempts.length}
                   </div>
                 </div>
                 <div style={{ padding: 12, background: '#fff', border: '1px solid var(--border)', borderRadius: 6 }}>
-                  <div className="small">Average Score</div>
+                  <div className="small">{t('cdAvgScore')}</div>
                   <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--brand-green)' }}>
                     {studentDetails.avgScore}%
                   </div>
                 </div>
                 <div style={{ padding: 12, background: '#fff', border: '1px solid var(--border)', borderRadius: 6 }}>
-                  <div className="small">Best Score</div>
+                  <div className="small">{t('cdBestScore')}</div>
                   <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--brand-green)' }}>
                     {studentDetails.bestScore}%
                   </div>
                 </div>
                 <div style={{ padding: 12, background: '#fff', border: '1px solid var(--border)', borderRadius: 6 }}>
-                  <div className="small">Trend</div>
+                  <div className="small">{t('cdTrend')}</div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: studentDetails.improvement > 0 ? '#16a34a' : '#dc2626' }}>
                     {studentDetails.improvement > 0 ? '+' : ''}{studentDetails.improvement}%
                   </div>
@@ -274,7 +276,7 @@ export default function ClinicianDashboard(){
 
               {/* Score trend chart */}
               <div style={{ marginBottom: 20, padding: 16, background: '#f0fdf7', borderRadius: 8 }}>
-                <h4>Score Progression</h4>
+                <h4>{t('cdScoreProg')}</h4>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', height: 120, marginTop: 12 }}>
                   {studentDetails.attempts.slice(-12).map((attempt, idx) => (
                     <div 
@@ -297,14 +299,14 @@ export default function ClinicianDashboard(){
 
               {/* Exam history */}
               <div>
-                <h4>Exam History</h4>
+                <h4>{t('cdExamHistory')}</h4>
                 <table>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: 'left' }}>Date</th>
-                      <th style={{ textAlign: 'left' }}>Exam</th>
-                      <th style={{ textAlign: 'center' }}>Score</th>
-                      <th style={{ textAlign: 'center' }}>Status</th>
+                      <th style={{ textAlign: 'left' }}>{t('cdDate')}</th>
+                      <th style={{ textAlign: 'left' }}>{t('cdExam')}</th>
+                      <th style={{ textAlign: 'center' }}>{t('cdScore')}</th>
+                      <th style={{ textAlign: 'center' }}>{t('cdStatus')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -321,9 +323,9 @@ export default function ClinicianDashboard(){
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           {result.score >= 70 ? (
-                            <span style={{ color: 'var(--brand-green)', fontWeight: 600 }}>✓ PASSED</span>
+                            <span style={{ color: 'var(--brand-green)', fontWeight: 600 }}>{t('cdPassed')}</span>
                           ) : (
-                            <span style={{ color: '#dc2626', fontWeight: 600 }}>✗ FAILED</span>
+                            <span style={{ color: '#dc2626', fontWeight: 600 }}>{t('cdFailed')}</span>
                           )}
                         </td>
                       </tr>
@@ -339,17 +341,17 @@ export default function ClinicianDashboard(){
       {/* EXAM ANALYSIS TAB */}
       {viewMode === 'exam-analysis' && (
         <div>
-          <h3 style={{ marginBottom: 16 }}>Exam Performance Analysis</h3>
+          <h3 style={{ marginBottom: 16 }}>{t('cdExamPerfAnalysis')}</h3>
 
           {/* Exam selector */}
           <div style={{ marginBottom: 20 }}>
-            <label>Select Exam:</label>
+            <label>{t('cdSelectExam')}</label>
             <select 
               value={selectedExam || ''}
               onChange={(e) => setSelectedExam(e.target.value || null)}
               style={{ marginTop: 8 }}
             >
-              <option value="">-- Choose an exam --</option>
+              <option value="">{t('cdChooseExam')}</option>
               {Object.entries(resultsByExam).map(([examId, data]) => (
                 <option key={examId} value={examId}>{data.title}</option>
               ))}
@@ -361,25 +363,25 @@ export default function ClinicianDashboard(){
               {/* Exam stats */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
                 <div style={{ padding: 14, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 6, border: '1px solid var(--border)' }}>
-                  <div className="small">Students Attempted</div>
+                  <div className="small">{t('cdStudentsAttempted')}</div>
                   <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--brand-green)' }}>
                     {examStats.count}
                   </div>
                 </div>
                 <div style={{ padding: 14, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 6, border: '1px solid var(--border)' }}>
-                  <div className="small">Average Score</div>
+                  <div className="small">{t('cdAvgScore')}</div>
                   <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--brand-green)' }}>
                     {examStats.avgScore}%
                   </div>
                 </div>
                 <div style={{ padding: 14, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 6, border: '1px solid var(--border)' }}>
-                  <div className="small">Passed (≥70%)</div>
+                  <div className="small">{t('cdPassedCount')}</div>
                   <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--brand-green)' }}>
                     {examStats.passedCount}/{examStats.count}
                   </div>
                 </div>
                 <div style={{ padding: 14, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 6, border: '1px solid var(--border)' }}>
-                  <div className="small">Pass Rate</div>
+                  <div className="small">{t('cdPassRateLabel').replace(':', '')}</div>
                   <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--brand-green)' }}>
                     {examStats.passRate}%
                   </div>
@@ -388,7 +390,7 @@ export default function ClinicianDashboard(){
 
               {/* Score distribution for this exam */}
               <div style={{ marginBottom: 20, padding: 16, background: '#f0fdf7', borderRadius: 8 }}>
-                <h4>Score Distribution</h4>
+                <h4>{t('cdScoreDist')}</h4>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', height: 100, marginTop: 12 }}>
                   {[
                     { min: 90, max: 100, label: '90-100' },
@@ -407,7 +409,7 @@ export default function ClinicianDashboard(){
                             background: band.min >= 70 ? 'var(--brand-green)' : band.min >= 60 ? '#f59e0b' : '#dc2626',
                             borderRadius: 4
                           }}
-                          title={`${band.label}: ${count} students`}
+                          title={`${band.label}: ${count} ${t('cdStudents')}`}
                         />
                         <div style={{ fontSize: 11, marginTop: 4, fontWeight: 600 }}>{count}</div>
                         <div style={{ fontSize: 10, color: '#666' }}>{band.label}%</div>
@@ -419,15 +421,15 @@ export default function ClinicianDashboard(){
 
               {/* Student results for this exam */}
               <div>
-                <h4>Student Results</h4>
+                <h4>{t('cdStudentResults')}</h4>
                 <div style={{ overflowX: 'auto' }}>
                   <table>
                     <thead>
                       <tr>
-                        <th style={{ textAlign: 'left' }}>Student Name</th>
-                        <th style={{ textAlign: 'left' }}>Date Taken</th>
-                        <th style={{ textAlign: 'center' }}>Score</th>
-                        <th style={{ textAlign: 'center' }}>Status</th>
+                        <th style={{ textAlign: 'left' }}>{t('cdStudentName')}</th>
+                        <th style={{ textAlign: 'left' }}>{t('cdDateTaken')}</th>
+                        <th style={{ textAlign: 'center' }}>{t('cdScore')}</th>
+                        <th style={{ textAlign: 'center' }}>{t('cdStatus')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -444,9 +446,9 @@ export default function ClinicianDashboard(){
                           </td>
                           <td style={{ textAlign: 'center' }}>
                             {result.score >= 70 ? (
-                              <span style={{ color: 'var(--brand-green)', fontWeight: 600 }}>✓ PASSED</span>
+                              <span style={{ color: 'var(--brand-green)', fontWeight: 600 }}>{t('cdPassed')}</span>
                             ) : (
-                              <span style={{ color: '#dc2626', fontWeight: 600 }}>✗ FAILED</span>
+                              <span style={{ color: '#dc2626', fontWeight: 600 }}>{t('cdFailed')}</span>
                             )}
                           </td>
                         </tr>

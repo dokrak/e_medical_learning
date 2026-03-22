@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../api'
+import { useLang } from '../LangContext'
 
 export default function StudentStats(){
   const { id } = useParams()
@@ -8,6 +9,7 @@ export default function StudentStats(){
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
   const [downloadingPdf, setDownloadingPdf] = useState(null)
+  const { t } = useLang()
 
   useEffect(()=>{ load() }, [id])
 
@@ -17,7 +19,7 @@ export default function StudentStats(){
       const url = id ? `/student-stats/${id}` : '/my-stats'
       const r = await api.get(url)
       setStats(r.data)
-    }catch(err){ setMsg('Failed to load stats') }
+    }catch(err){ setMsg(t('ssLoadFailed')) }
     finally{ setLoading(false) }
   }
 
@@ -26,14 +28,14 @@ export default function StudentStats(){
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        setMsg('Not authenticated. Please login again.')
+        setMsg(t('ssNotAuth'))
         setDownloadingPdf(null)
         return
       }
       const response = await api.get(`/student-exams/${resultId}/pdf`, { responseType: 'blob' })
       
       if (!response.data || response.data.size === 0) {
-        setMsg('PDF generation failed: Empty response')
+        setMsg(t('ssPdfFailed'))
         setDownloadingPdf(null)
         return
       }
@@ -52,14 +54,14 @@ export default function StudentStats(){
     } catch(err) {
       console.error('PDF download error:', err)
       const errMsg = err.response?.data?.error || err.message || 'Unknown error'
-      setMsg('PDF download failed: ' + errMsg)
+      setMsg(t('ssPdfDownloadFailed') + ' ' + errMsg)
     } finally {
       setDownloadingPdf(null)
     }
   }
 
-  if (loading) return <div className="card container">Loading...</div>
-  if (!stats) return <div className="card container">{msg || 'No stats available'}</div>
+  if (loading) return <div className="card container">{t('loading')}</div>
+  if (!stats) return <div className="card container">{msg || t('ssNoStats')}</div>
 
   const { attempts, avgScore, bestScore, lastScore, improvement, perExam } = stats
 
@@ -69,38 +71,38 @@ export default function StudentStats(){
   return (
     <div className="card container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3>📊 Performance Report — {stats.studentId}</h3>
-        <Link to="/student" className="btn btn-ghost">Back</Link>
+        <h3>{t('ssTitle')} — {stats.studentId}</h3>
+        <Link to="/student" className="btn btn-ghost">{t('ssBack')}</Link>
       </div>
 
       <div className="panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 12 }}>
         <div style={{ padding: 12, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 6, borderLeft: '4px solid var(--brand-green)' }}>
-          <div className="small">Total Exams Taken</div>
+          <div className="small">{t('ssTotalExams')}</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>{attempts.length}</div>
         </div>
         <div style={{ padding: 12, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 6, borderLeft: '4px solid var(--brand-green)' }}>
-          <div className="small">Average Score</div>
+          <div className="small">{t('ssAvgScore')}</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>{avgScore}%</div>
         </div>
         <div style={{ padding: 12, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 6, borderLeft: '4px solid var(--brand-green)' }}>
-          <div className="small">Best Score</div>
+          <div className="small">{t('ssBestScore')}</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>{bestScore}%</div>
         </div>
         <div style={{ padding: 12, background: 'rgba(21, 128, 61, 0.06)', borderRadius: 6, borderLeft: '4px solid var(--brand-green)' }}>
-          <div className="small">Pass Rate (≥70%)</div>
+          <div className="small">{t('ssPassRate')}</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--brand-green)' }}>{passRate}%</div>
         </div>
       </div>
 
       {improvement !== undefined && (
         <div style={{ marginBottom: 12, padding: 12, background: improvement > 0 ? 'rgba(16, 185, 129, 0.08)' : 'rgba(212, 175, 55, 0.08)', borderRadius: 6, border: `2px solid ${improvement > 0 ? '#10b981' : '#fbbf24'}` }}>
-          <strong>Trend:</strong> {improvement > 0 ? `✓ Improving by +${improvement}%` : `Declining by ${improvement}%`} (comparing first half to second half of attempts)
+          <strong>{t('ssTrend')}</strong> {improvement > 0 ? t('ssImproving').replace('{0}', improvement) : t('ssDeclining').replace('{0}', improvement)} {t('ssCompareHalf')}
         </div>
       )}
 
       <div style={{ marginBottom: 16 }}>
-        <h4>Score Trend Visualization (Last 12 Attempts)</h4>
-        {attempts.length === 0 && <div className="small">No attempts yet.</div>}
+        <h4>{t('ssScoreTrend')}</h4>
+        {attempts.length === 0 && <div className="small">{t('ssNoAttempts')}</div>}
         {attempts.length > 0 && (
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 100, marginBottom: 8 }}>
             {attempts.slice(-12).map(a => (
@@ -129,18 +131,18 @@ export default function StudentStats(){
 
       {perExam && perExam.length > 0 && (
         <div style={{ marginBottom: 16 }}>
-          <h4>Performance by Exam Type</h4>
+          <h4>{t('ssPerformByExam')}</h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
             {perExam.map((e, idx) => (
               <div key={idx} style={{ padding: 12, background: '#f0fdf7', border: '1px solid var(--brand-green)', borderRadius: 6 }}>
                 <div style={{ fontWeight: 600, marginBottom: 8 }}>{e.title}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <div>
-                    <div className="small">Attempts</div>
+                    <div className="small">{t('ssAttempts')}</div>
                     <div style={{ fontSize: 18, fontWeight: 700 }}>{e.attempts}</div>
                   </div>
                   <div>
-                    <div className="small">Avg Score</div>
+                    <div className="small">{t('ssAvg')}</div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: e.avg >= 70 ? 'var(--brand-green)' : '#dc2626' }}>{e.avg}%</div>
                   </div>
                 </div>
@@ -151,18 +153,18 @@ export default function StudentStats(){
       )}
 
       <div>
-        <h4>📋 Detailed Exam History</h4>
-        {attempts.length === 0 && <div className="small">No attempts yet.</div>}
+        <h4>{t('ssHistory')}</h4>
+        {attempts.length === 0 && <div className="small">{t('ssNoAttempts')}</div>}
         {attempts.length > 0 && (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%' }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left' }}>Date</th>
-                  <th style={{ textAlign: 'left' }}>Exam</th>
-                  <th style={{ textAlign: 'center', width: 80 }}>Score</th>
-                  <th style={{ textAlign: 'center', width: 100 }}>Status</th>
-                  <th style={{ textAlign: 'center', width: 120 }}>Action</th>
+                  <th style={{ textAlign: 'left' }}>{t('ssDate')}</th>
+                  <th style={{ textAlign: 'left' }}>{t('ssExam')}</th>
+                  <th style={{ textAlign: 'center', width: 80 }}>{t('ssScore')}</th>
+                  <th style={{ textAlign: 'center', width: 100 }}>{t('ssStatus')}</th>
+                  <th style={{ textAlign: 'center', width: 120 }}>{t('ssAction')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -177,9 +179,9 @@ export default function StudentStats(){
                     </td>
                     <td style={{ padding: '10px 0', textAlign: 'center' }}>
                       {a.score >= 70 ? (
-                        <span style={{ color: 'var(--brand-green)', fontWeight: 600 }}>✓ PASSED</span>
+                        <span style={{ color: 'var(--brand-green)', fontWeight: 600 }}>{t('ssPassed')}</span>
                       ) : (
-                        <span style={{ color: '#dc2626', fontWeight: 600 }}>✗ FAILED</span>
+                        <span style={{ color: '#dc2626', fontWeight: 600 }}>{t('ssFailed')}</span>
                       )}
                     </td>
                     <td style={{ padding: '10px 0', textAlign: 'center' }}>
