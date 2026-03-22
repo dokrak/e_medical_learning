@@ -9,7 +9,7 @@ const translations = {
   takeExam: { en: 'Take Exam', th: 'ทำข้อสอบ' },
   createExam: { en: 'Create Exam', th: 'สร้างชุดข้อสอบ' },
   student: { en: 'Student', th: 'นักศึกษา' },
-  manage: { en: 'Manage', th: 'จัดการ' },
+  manage: { en: 'Manage Exam', th: 'จัดการข้อสอบ' },
   results: { en: 'Results', th: 'ผลสอบ' },
   analytics: { en: 'Analytics', th: 'วิเคราะห์' },
   moderator: { en: 'Moderator', th: 'ผู้ตรวจสอบ' },
